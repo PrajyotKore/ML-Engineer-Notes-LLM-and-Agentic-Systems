@@ -1,0 +1,31 @@
+# Single Source of Knowledge Generation Tasks
+
+- `[x]` Generate Phase 1: Foundation & Architecture
+  - `[x]` 00_ROLE_ANALYSIS.md (Role competency map, priority matrix, dependency graph)
+- `[x]` Generate Phase 2: Core ML & Deep Learning
+  - `[x]` 02_MACHINE_LEARNING_FOUNDATIONS.md
+  - `[x]` 03_DEEP_LEARNING.md
+- `[x]` Generate Phase 3: LLMs & Inference
+  - `[x]` 04_TRANSFORMERS_AND_LLMS.md
+  - `[x]` 05_POST_TRAINING.md
+  - `[x]` 09_INFERENCE_SYSTEMS.md
+- `[x]` Generate Phase 4: Systems & Scalability
+  - `[x]` 07_TRAINING_SYSTEMS.md
+  - `[x]` 08_GPU_AND_PERFORMANCE.md
+  - `[x]` 18_DISTRIBUTED_SYSTEMS.md
+- `[x]` Generate Phase 5: Agentic Systems
+  - `[x]` 10_AGENTIC_ML_SYSTEMS.md
+  - `[x]` 11_LONG_RUNNING_WORKFLOW_RELIABILITY.md
+- `[x]` Generate Phase 6: Production Engineering
+  - `[x]` 06_DATA_AND_SYNTHETIC_DATA.md
+  - `[x]` 12_EVALUATION.md
+  - `[x]` 13_PRODUCTION_ML.md
+  - `[x]` 14_OBSERVABILITY_AND_DEBUGGING.md
+  - `[x]` 15_SAFETY_AND_ROBUSTNESS.md
+- `[x]` Generate Phase 7: Synthesis & Interview Prep
+  - `[x]` 16_SYSTEM_DESIGN.md
+  - `[x]` 17_PYTHON_AND_CODING.md
+  - `[x]` 19_LEADERSHIP_AND_TECHNICAL_JUDGMENT.md
+  - `[x]` 20_INTERVIEW_QUESTION_BANK.md
+  - `[x]` 21_CASE_STUDIES.md
+  - `[x]` 22_FINAL_SYNTHESIS_PLAYBOOKS.md
