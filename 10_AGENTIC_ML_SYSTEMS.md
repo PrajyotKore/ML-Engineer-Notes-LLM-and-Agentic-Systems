@@ -1,7 +1,7 @@
-# 10_AGENTIC_ML_SYSTEMS — Technical Reference
+﻿# 10_AGENTIC_ML_SYSTEMS — Technical Reference
 
 ## 1. Role Relevance
-A1 is explicitly building a proactive AI assistant. This requires moving beyond stateless LLM chat into Agentic systems. An ML Technical Lead must understand how to architect systems that reason, plan, execute real-world APIs, maintain persistent memory, and recover from inevitable probabilistic failures. This is a P0 track.
+This role is explicitly focused on building a proactive AI assistant. This requires moving beyond stateless LLM chat into Agentic systems. An ML Engineer (LLM & Agentic Systems) must understand how to architect systems that reason, plan, execute real-world APIs, maintain persistent memory, and recover from inevitable probabilistic failures. This is a P0 track.
 
 ## 2. Prerequisites
 - Autoregressive generation.
@@ -83,11 +83,11 @@ This optimizes cost and latency across the fleet.
 - **ReAct vs Direct Tool Calling**: ReAct (forcing the LLM to output a "Thought" string before the "Action") drastically improves reasoning quality but increases latency and token cost.
 
 ## 14. Principal-Level Reasoning
-"At A1, the ML execution layer must assume the LLM will fail. I treat the LLM as an unreliable heuristic engine inside a highly reliable state machine. If an agent loops on a tool error, I don't just prompt-engineer; I architect a validation layer that intercepts the failure, logs the trajectory for SFT data collection (so we can fine-tune the failure out), and uses a cheaper model to summarize the error before returning it to the main reasoning loop."
+"As an ML Engineer (LLM & Agentic Systems), the ML execution layer must assume the LLM will fail. I treat the LLM as an unreliable heuristic engine inside a highly reliable state machine. If an agent loops on a tool error, I don't just prompt-engineer; I architect a validation layer that intercepts the failure, logs the trajectory for SFT data collection (so we can fine-tune the failure out), and uses a cheaper model to summarize the error before returning it to the main reasoning loop."
 
 ## 15. Interview Interrogation
 - *Level 2*: What is the difference between Working Memory and Semantic Memory?
 - *Level 4*: Why is JSON schema validation critical at the system boundary?
 - *Level 7*: Mathematically prove why long workflows fail, and explain how to mitigate it.
 - *Level 9*: Your agent is stuck in an infinite loop of failing to parse a complex API response. How do you architect a system to automatically break the loop and recover?
-- *Level 10*: Design a multi-agent architecture for A1 where a "Planner Agent" delegates to "Execution Agents", including state handoffs, error bubbling, and KV cache optimization.
+- *Level 10*: Design a multi-agent architecture where a "Planner Agent" delegates to "Execution Agents", including state handoffs, error bubbling, and KV cache optimization.

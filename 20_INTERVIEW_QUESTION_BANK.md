@@ -1,7 +1,7 @@
-# 20_INTERVIEW_QUESTION_BANK — Technical Reference
+﻿# 20_INTERVIEW_QUESTION_BANK — Technical Reference
 
 ## 1. Role Relevance
-This document centralizes the "Interrogation Ladder" for the A1 Technical Lead interview. You must be able to navigate from a high-level conceptual question down to the bare metal mathematics.
+This document centralizes the "Interrogation Ladder" for the ML Engineer (LLM & Agentic Systems) interview. You must be able to navigate from a high-level conceptual question down to the bare metal mathematics.
 
 ## 2. LLM Mechanics & Transformers
 - **Level 1**: What is the difference between an Encoder (BERT) and a Decoder (GPT)?

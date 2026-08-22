@@ -1,8 +1,8 @@
-# 00_ROLE_ANALYSIS — A1 Technical Lead, Machine Learning
+﻿# 00_ROLE_ANALYSIS — ML Engineer (LLM & Agentic Systems)
 
 ## 1. Role Context & Core Hypothesis
 
-**Company Context:** A1 is building a proactive AI assistant that executes real-world tasks, performs multi-step reasoning, interacts with external tools, and handles long-running workflows with high reliability under production constraints.
+**Role Context:** This role targets building a proactive AI assistant that executes real-world tasks, performs multi-step reasoning, interacts with external tools, and handles long-running workflows with high reliability under production constraints.
 
 **Core Interview Hypothesis:** "Can this candidate take an ML/LLM research idea, turn it into a trainable system, adapt it effectively, deploy it efficiently, integrate it into an agentic product, measure whether it actually works, debug it in production, and continuously improve it under latency, cost, reliability, and safety constraints?"
 
@@ -33,9 +33,9 @@ The ML execution layer sits exactly at the boundary of Research, Systems Enginee
 
 | Category | Topics | Priority | Rationale / Depth Required |
 | :--- | :--- | :--- | :--- |
-| **Agentic ML Systems** | ReAct, Tool Routing, Context/Memory | **P0** | Core to A1's product. Must reach Level 10 (Principal Reasoning). |
+| **Agentic ML Systems** | ReAct, Tool Routing, Context/Memory | **P0** | Core to the product. Must reach Level 10 (Principal Reasoning). |
 | **Long-Running Workflows** | State persistence, Idempotency, Retries | **P0** | Essential for reliable proactive assistants. |
-| **Post-Training** | SFT, LoRA, DPO, Distillation | **P0** | Primary method for aligning general models to A1 tasks. |
+| **Post-Training** | SFT, LoRA, DPO, Distillation | **P0** | Primary method for aligning general models to product tasks. |
 | **LLM & Inference** | KV Cache, PagedAttention, Speculative Decoding | **P0** | Determines unit economics, TTFT, and user experience. |
 | **GPU Architecture** | SMs, HBM, Memory Bandwidth, Tensor Cores | **P0** | Cannot optimize what you don't mechanistically understand. |
 | **Evaluation & Reliability** | LLM-as-judge, Canarying, System vs Model metrics | **P0** | Prevents silent regression in production. |

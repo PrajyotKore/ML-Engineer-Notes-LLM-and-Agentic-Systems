@@ -1,7 +1,7 @@
-# 07_TRAINING_SYSTEMS — Technical Reference
+﻿# 07_TRAINING_SYSTEMS — Technical Reference
 
 ## 1. Role Relevance
-For an A1 Technical Lead, training systems knowledge separates a researcher from an engineer. To fine-tune large models, you must know how to fit massive parameter counts and optimizer states onto GPUs without Out of Memory (OOM) errors, utilizing distributed paradigms like FSDP, Pipeline Parallelism, and Tensor Parallelism.
+For an ML Engineer (LLM & Agentic Systems), training systems knowledge separates a researcher from an engineer. To fine-tune large models, you must know how to fit massive parameter counts and optimizer states onto GPUs without Out of Memory (OOM) errors, utilizing distributed paradigms like FSDP, Pipeline Parallelism, and Tensor Parallelism.
 
 ## 2. Prerequisites
 - Backpropagation and AdamW mechanics.
@@ -90,7 +90,7 @@ To train massive models (e.g., 400B+), we combine all three:
 - **FSDP vs 3D Parallelism**: FSDP is incredibly easy to set up natively in PyTorch and works well up to ~70B parameters on fast networks. 3D Parallelism is complex (Megatron-LM) but mandatory for >100B parameter models to avoid massive cross-node All-Gather overheads.
 
 ## 14. Principal-Level Reasoning
-"When building a fine-tuning platform for A1, I would standardize on PyTorch FSDP (ZeRO-3) with BF16 mixed precision for all models up to 70B parameters. This allows any engineer to submit an SFT job without reasoning about Tensor Parallelism, while still utilizing cross-node training. I would heavily monitor NCCL bandwidth; if we are deployed on AWS without EFA/InfiniBand, FSDP will stall, and I would fall back to ZeRO-2 with gradient checkpointing."
+"When building a fine-tuning platform for production, I would standardize on PyTorch FSDP (ZeRO-3) with BF16 mixed precision for all models up to 70B parameters. This allows any engineer to submit an SFT job without reasoning about Tensor Parallelism, while still utilizing cross-node training. I would heavily monitor NCCL bandwidth; if we are deployed on AWS without EFA/InfiniBand, FSDP will stall, and I would fall back to ZeRO-2 with gradient checkpointing."
 
 ## 15. Interview Interrogation
 - *Level 2*: What is the difference between FP16 and BF16?

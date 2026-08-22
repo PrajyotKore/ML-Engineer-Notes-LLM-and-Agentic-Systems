@@ -1,7 +1,7 @@
-# 15_SAFETY_AND_ROBUSTNESS — Technical Reference
+﻿# 15_SAFETY_AND_ROBUSTNESS — Technical Reference
 
 ## 1. Role Relevance
-For an A1 Technical Lead, deploying an autonomous agent into the real world carries immense risk. If an LLM hallucination deletes a user's database or a prompt injection steals user data, the product fails instantly. You must architect deterministic safety guardrails around probabilistic models.
+For an ML Engineer (LLM & Agentic Systems), deploying an autonomous agent into the real world carries immense risk. If an LLM hallucination deletes a user's database or a prompt injection steals user data, the product fails instantly. You must architect deterministic safety guardrails around probabilistic models.
 
 ## 2. Prerequisites
 - Agent Tool Validation Boundaries.
@@ -64,11 +64,11 @@ For any action classified as "High Risk" (e.g., transferring money, deleting dat
 - **Red Teaming**: You cannot debug safety passively. You must actively attack your own system. Automated Red Teaming uses another LLM to constantly generate novel prompt injections against your staging environment, updating the regression test suite.
 
 ## 13. Principal-Level Reasoning
-"At A1, I design safety at the system boundary. I assume the LLM will eventually be breached by an indirect prompt injection. Therefore, the blast radius of any agent is strictly limited by least-privilege IAM roles. An agent summarizing emails does not possess the API token to send emails. Furthermore, all destructive actions require asynchronous Human-in-the-Loop validation managed by the durable workflow engine."
+"As an ML Engineer (LLM & Agentic Systems), I design safety at the system boundary. I assume the LLM will eventually be breached by an indirect prompt injection. Therefore, the blast radius of any agent is strictly limited by least-privilege IAM roles. An agent summarizing emails does not possess the API token to send emails. Furthermore, all destructive actions require asynchronous Human-in-the-Loop validation managed by the durable workflow engine."
 
 ## 14. Interview Interrogation
 - *Level 2*: What is the difference between direct and indirect prompt injection?
 - *Level 4*: Why is the "False Refusal Rate" an important business metric?
 - *Level 7*: How does Human-in-the-Loop integrate with a durable state machine?
 - *Level 9*: Your agent read a malicious webpage and started sending spam emails to the user's contacts. The LLM ignored its safety prompt. How do you re-architect the system to prevent this?
-- *Level 10*: Design a low-latency guardrail architecture for A1 that scrubs PII, blocks prompt injections, and validates tool outputs without adding more than 100ms to the total response time.
+- *Level 10*: Design a low-latency guardrail architecture that scrubs PII, blocks prompt injections, and validates tool outputs without adding more than 100ms to the total response time.

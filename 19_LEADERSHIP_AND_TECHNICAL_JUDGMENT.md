@@ -1,7 +1,7 @@
 # 19_LEADERSHIP_AND_TECHNICAL_JUDGMENT — Technical Reference
 
 ## 1. Role Relevance
-At the Technical Lead level, you are evaluated heavily on *judgment*, not just knowledge. The interviewer is asking: "If I give this person a $5M compute budget and a team of 5 engineers, will they build the right thing?" 
+At the senior engineering level, you are evaluated heavily on *judgment*, not just knowledge. The interviewer is asking: "If I give this person a $5M compute budget and a team of 5 engineers, will they build the right thing?" 
 You must demonstrate the ability to navigate trade-offs, say "no" to hype, and focus on product outcomes.
 
 ## 2. Core Trade-off Matrix
@@ -13,15 +13,15 @@ You must demonstrate the ability to navigate trade-offs, say "no" to hype, and f
 
 ### B. Large Model (70B) vs Small Model (8B) + RAG
 - **70B**: Highly capable, but expensive and high TTFT/TPOT. Use for complex, multi-step planning (the Router/Planner Agent).
-- **8B + RAG**: Fast, cheap. Use for extraction, summarization, and basic tool execution. At A1, the vast majority of execution steps should be routed to a small model to maintain unit economics.
+- **8B + RAG**: Fast, cheap. Use for extraction, summarization, and basic tool execution. In production, the vast majority of execution steps should be routed to a small model to maintain unit economics.
 
 ### C. Build vs Buy
 - Do not build a vector database from scratch. Use Pinecone or pgvector.
 - Do not build a durable execution engine from scratch. Use Temporal.
-- *Do* build the core agent orchestration loop, the evaluation pipeline, and the SFT data flywheel, because these are A1's proprietary IP.
+- *Do* build the core agent orchestration loop, the evaluation pipeline, and the SFT data flywheel, because these are the team's proprietary IP.
 
 ## 3. Incident Leadership Framework
-When a major production incident occurs (e.g., "The A1 agent just hallucinated and emailed a user's boss an empty draft."):
+When a major production incident occurs (e.g., "The agent just hallucinated and emailed a user's boss an empty draft."):
 1. **Mitigate**: Stop the bleeding immediately. Revert the model to the last known good version or disable the email tool globally. Do not try to debug the root cause yet.
 2. **Communicate**: Inform stakeholders of the impact and mitigation.
 3. **Investigate**: Pull the OpenTelemetry trace. Find the exact prompt and LLM output.
@@ -49,4 +49,4 @@ We measure the engineering effort vs. cost reduction for each and prioritize."
 ## 6. Interview Interrogation
 - *Level 5*: When would you choose to NOT use Machine Learning for a problem?
 - *Level 8*: Walk me through how you decide when to promote a staging model to production.
-- *Level 10*: A1 has 6 months of runway to prove the proactive assistant works. You have 3 ML engineers. Lay out your roadmap for exactly what you build in Month 1, Month 3, and Month 6.
+- *Level 10*: The team has 6 months of runway to prove the proactive assistant works. You have 3 ML engineers. Lay out your roadmap for exactly what you build in Month 1, Month 3, and Month 6.

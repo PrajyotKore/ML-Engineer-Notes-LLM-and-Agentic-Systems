@@ -1,7 +1,7 @@
-# 14_OBSERVABILITY_AND_DEBUGGING — Technical Reference
+﻿# 14_OBSERVABILITY_AND_DEBUGGING — Technical Reference
 
 ## 1. Role Relevance
-For an A1 Technical Lead, debugging a distributed, non-deterministic agentic system is the hardest part of the job. Traditional software debugging (stack traces) is insufficient when the failure is probabilistic or semantic. You must build a structured, hypothesis-driven debugging framework spanning the Data, Model, Infrastructure, and Product layers.
+For an ML Engineer (LLM & Agentic Systems), debugging a distributed, non-deterministic agentic system is the hardest part of the job. Traditional software debugging (stack traces) is insufficient when the failure is probabilistic or semantic. You must build a structured, hypothesis-driven debugging framework spanning the Data, Model, Infrastructure, and Product layers.
 
 ## 2. Prerequisites
 - Distributed Tracing (OpenTelemetry).
@@ -42,7 +42,7 @@ Every user request generates a `Trace ID`. Every step the agent takes generates 
   "parent_span_id": "step_1_planning",
   "duration_ms": 1205,
   "attributes": {
-    "model": "a1-llama-70b-v2",
+    "model": "llama-70b-v2",
     "prompt_tokens": 4050,
     "completion_tokens": 120,
     "tool_name": "book_flight",
@@ -58,7 +58,7 @@ Every user request generates a `Trace ID`. Every step the agent takes generates 
 - **Heisenbugs**: Sometimes profiling the GPU with `nsys` changes the timing enough to make a race condition disappear. This is common in asynchronous CUDA programming.
 
 ## 9. Production Architecture
-**The A1 Debugging Dashboard:**
+**The Production Debugging Dashboard:**
 A single pane of glass showing:
 - Top Left: P99 TTFT and TPOT.
 - Top Right: GPU VRAM utilization across the cluster.

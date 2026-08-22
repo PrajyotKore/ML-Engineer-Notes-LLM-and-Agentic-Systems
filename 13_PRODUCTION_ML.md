@@ -1,7 +1,7 @@
-# 13_PRODUCTION_ML — Technical Reference
+﻿# 13_PRODUCTION_ML — Technical Reference
 
 ## 1. Role Relevance
-For an A1 Technical Lead, ML is a software engineering discipline. Training a model in a notebook is useless if it cannot be versioned, deployed safely, rolled back instantly, and monitored for degradation. You must own the entire ML lifecycle from raw data to production serving.
+For an ML Engineer (LLM & Agentic Systems), ML is a software engineering discipline. Training a model in a notebook is useless if it cannot be versioned, deployed safely, rolled back instantly, and monitored for degradation. You must own the entire ML lifecycle from raw data to production serving.
 
 ## 2. Prerequisites
 - CI/CD pipelines (GitHub Actions, Jenkins).
@@ -33,10 +33,10 @@ If the KL divergence exceeds a threshold, an automated alert triggers a retraini
 apiVersion: networking.istio.io/v1alpha3
 kind: VirtualService
 metadata:
-  name: a1-agent-router
+  name: agent-router
 spec:
   hosts:
-  - a1-agent.production
+  - agent.production
   http:
   - route:
     - destination:
@@ -54,8 +54,8 @@ spec:
 - **Containerization**: GPUs require specific drivers (CUDA, cuDNN) to be mounted into the Docker container (NVIDIA Container Toolkit). A mismatch between the host CUDA version and the container's PyTorch compiled version will cause silent performance degradation or crashes.
 
 ## 9. Production Architecture
-**The A1 Rollback Mechanism:**
-Because A1 serves long-running agent workflows, rolling back a model mid-workflow is dangerous.
+**The Production Rollback Mechanism:**
+When serving long-running agent workflows, rolling back a model mid-workflow is dangerous.
 1. V1 model starts Workflow A.
 2. SRE rolls back from V2 to V1.
 3. *Affinity Routing*: The system must ensure that workflows started on V1 continue on V1 until completion, while new workflows are routed to V2, avoiding "Split Brain" agent logic.
@@ -71,11 +71,11 @@ Because A1 serves long-running agent workflows, rolling back a model mid-workflo
 - **Reproducibility Crisis**: "It worked on my machine." To debug, you must lock all random seeds (`torch.manual_seed`), lock dependencies (`requirements.txt` hashes), and ensure the exact same PyTorch and CUDA versions are used.
 
 ## 13. Principal-Level Reasoning
-"I do not allow manual deployments of models at A1. Every model must be registered via an automated CI pipeline. When it passes the offline eval suite, it is automatically deployed to a Shadow environment. We collect 24 hours of Shadow data, evaluate the difference, and only then allow a 1% Canary rollout. If P99 latency increases by 50ms during Canary, it automatically rolls back."
+"I do not allow manual deployments of models in production. Every model must be registered via an automated CI pipeline. When it passes the offline eval suite, it is automatically deployed to a Shadow environment. We collect 24 hours of Shadow data, evaluate the difference, and only then allow a 1% Canary rollout. If P99 latency increases by 50ms during Canary, it automatically rolls back."
 
 ## 14. Interview Interrogation
 - *Level 2*: What is the purpose of a Model Registry?
 - *Level 4*: Explain the difference between A/B testing, Canarying, and Shadow mode.
 - *Level 7*: How does KL Divergence help monitor production models?
 - *Level 9*: Your V2 model was deployed and latency immediately spiked 3x. The model architecture is identical to V1. What infrastructure metrics do you check? (Answer: Check batch size, KV cache hit rate, or if Tensor Cores were disabled due to driver mismatch).
-- *Level 10*: Architect the MLOps pipeline for A1 to continuously fine-tune the agent on user feedback and deploy it nightly with zero downtime.
+- *Level 10*: Architect the MLOps pipeline to continuously fine-tune the agent on user feedback and deploy it nightly with zero downtime.

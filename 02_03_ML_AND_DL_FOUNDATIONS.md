@@ -1,7 +1,7 @@
-# 02_MACHINE_LEARNING_FOUNDATIONS & 03_DEEP_LEARNING — Technical Reference
+﻿# 02_MACHINE_LEARNING_FOUNDATIONS & 03_DEEP_LEARNING — Technical Reference
 
 ## 1. Role Relevance
-For an A1 Technical Lead, deep learning foundations are the prerequisite to understanding LLMs. You cannot debug a stalled loss curve, NaNs in training, or catastrophic forgetting in SFT without a mechanistic and mathematical understanding of optimization, loss landscapes, and backpropagation.
+For an ML Engineer (LLM & Agentic Systems), deep learning foundations are the prerequisite to understanding LLMs. You cannot debug a stalled loss curve, NaNs in training, or catastrophic forgetting in SFT without a mechanistic and mathematical understanding of optimization, loss landscapes, and backpropagation.
 
 ## 2. Prerequisites
 - Linear Algebra (Vector spaces, Eigenvalues)

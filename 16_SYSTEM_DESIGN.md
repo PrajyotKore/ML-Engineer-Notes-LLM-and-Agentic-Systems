@@ -1,7 +1,7 @@
-# 16_SYSTEM_DESIGN — Technical Reference
+﻿# 16_SYSTEM_DESIGN — Technical Reference
 
 ## 1. Role Relevance
-A Principal ML Engineer / Tech Lead does not just train models; they architect the platforms that serve them. In an interview, you will likely be asked to design the end-to-end infrastructure for A1 on a whiteboard. You must demonstrate mastery over APIs, data models, control flow, scaling, and cost.
+A ML Engineer (LLM & Agentic Systems) does not just train models; they architect the platforms that serve them. In an interview, you will likely be asked to design the end-to-end infrastructure for a proactive AI assistant on a whiteboard. You must demonstrate mastery over APIs, data models, control flow, scaling, and cost.
 
 ## 2. Core System Design Framework
 When given a system design prompt, strictly follow this structure:

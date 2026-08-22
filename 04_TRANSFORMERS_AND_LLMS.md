@@ -1,7 +1,7 @@
-# 04_TRANSFORMERS_AND_LLMS — Technical Reference
+﻿# 04_TRANSFORMERS_AND_LLMS — Technical Reference
 
 ## 1. Role Relevance
-For an A1 Technical Lead, understanding the mechanics of Transformers is a P0 requirement. Everything in production—from GPU memory bounds (KV cache) to latency constraints (prefill vs. decode) to alignment constraints (long-context retrieval)—is governed by the mathematical and hardware realities of the Transformer architecture.
+For an ML Engineer (LLM & Agentic Systems), understanding the mechanics of Transformers is a P0 requirement. Everything in production—from GPU memory bounds (KV cache) to latency constraints (prefill vs. decode) to alignment constraints (long-context retrieval)—is governed by the mathematical and hardware realities of the Transformer architecture.
 
 ## 2. Prerequisites
 - Matrix operations, Softmax, Deep Learning Foundations.

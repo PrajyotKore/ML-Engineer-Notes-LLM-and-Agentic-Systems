@@ -1,6 +1,6 @@
-# Implementation Plan: A1 Technical Lead ML - Single Source of Knowledge
+﻿# Implementation Plan: ML Engineer (LLM & Agentic Systems) ML - Single Source of Knowledge
 
-This document outlines the plan to build a comprehensive, interconnected, and technically rigorous **Single Source of Knowledge (SSK)** for the Technical Lead, Machine Learning role at A1. 
+This document outlines the plan to build a comprehensive, interconnected, and technically rigorous **Single Source of Knowledge (SSK)** for the ML Engineer (LLM & Agentic Systems) role at A1. 
 
 Per your request, we will ensure rigorous use of **LaTeX** for all mathematical formulations to bridge theory with practical implementation, hardware execution, and production systems.
 

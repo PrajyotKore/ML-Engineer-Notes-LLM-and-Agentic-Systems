@@ -1,7 +1,7 @@
 # 18_DISTRIBUTED_SYSTEMS — Technical Reference
 
 ## 1. Role Relevance
-For an A1 Technical Lead, ML is inherently a distributed systems problem. Training spans thousands of GPUs. Inference spans load-balanced fleets. Agentic workflows require state persistence across crashing nodes. You must bridge PyTorch distributed mechanics with classical distributed systems principles.
+For an ML Engineer (LLM & Agentic Systems), ML is inherently a distributed systems problem. Training spans thousands of GPUs. Inference spans load-balanced fleets. Agentic workflows require state persistence across crashing nodes. You must bridge PyTorch distributed mechanics with classical distributed systems principles.
 
 ## 2. Prerequisites
 - Network topologies (Tree, Torus).
@@ -70,7 +70,7 @@ When an agent calls an external API, the workflow engine must persist the state 
 - **Distributed Tracing**: Injecting a `trace_id` at the API gateway and passing it through the router, the inference engine, and the tool-calling agent to reconstruct the exact timeline of a 5-second request.
 
 ## 12. Principal-Level Reasoning
-"When architecting A1's agent platform, I treat the LLM as a highly unreliable, stateless component. The distributed workflow engine is the source of truth. We use exactly-once semantics for tool execution via idempotency keys, affinity routing for KV cache locality, and asynchronous Pub/Sub to decouple user interaction from background reasoning tasks."
+"When architecting an agentic platform, I treat the LLM as a highly unreliable, stateless component. The distributed workflow engine is the source of truth. We use exactly-once semantics for tool execution via idempotency keys, affinity routing for KV cache locality, and asynchronous Pub/Sub to decouple user interaction from background reasoning tasks."
 
 ## 13. Interview Interrogation
 - *Level 2*: What is the difference between All-Reduce and All-Gather?

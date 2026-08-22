@@ -1,7 +1,7 @@
-# 09_INFERENCE_SYSTEMS — Technical Reference
+﻿# 09_INFERENCE_SYSTEMS — Technical Reference
 
 ## 1. Role Relevance
-For an A1 Technical Lead, inference is where the unit economics of the product are determined. You must serve a proactive agent reliably with low latency (TTFT, TPOT) while maximizing GPU utilization (Throughput/Cost). Understanding how to schedule requests, batch dynamically, and manage the KV cache is critical to production.
+For an ML Engineer (LLM & Agentic Systems), inference is where the unit economics of the product are determined. You must serve a proactive agent reliably with low latency (TTFT, TPOT) while maximizing GPU utilization (Throughput/Cost). Understanding how to schedule requests, batch dynamically, and manage the KV cache is critical to production.
 
 ## 2. Prerequisites
 - Transformer Forward Pass (Prefill vs. Decode).

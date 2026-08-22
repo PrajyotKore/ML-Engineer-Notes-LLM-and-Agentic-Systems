@@ -1,13 +1,13 @@
-# 🧠 ML-Notes — Single Source of Knowledge (SSK)
+﻿# 🧠 ML-Notes — Single Source of Knowledge (SSK)
 
-> **A comprehensive, production-grade interview preparation system for the Technical Lead, Machine Learning role at A1.**  
+> **A comprehensive, production-grade interview preparation system for the ML Engineer (LLM & Agentic Systems) role.**  
 > Bridging Mathematics → Algorithms → GPU Execution → Production Systems.
 
 ---
 
 ## 🎯 Purpose & Scope
 
-This repository is a **Single Source of Knowledge (SSK)** built for the **A1 Technical Lead, ML** interview — a role at the intersection of LLM Research, Systems Engineering, and Product Outcomes.
+This repository is a **Single Source of Knowledge (SSK)** built for the **ML Engineer (LLM & Agentic Systems)** interview — a role at the intersection of LLM Research, Systems Engineering, and Product Outcomes, focused on building a proactive AI assistant that executes real-world tasks with multi-step reasoning and high reliability.
 
 The core interview hypothesis this repo answers:
 
@@ -100,7 +100,7 @@ flowchart TD
 
 ---
 
-### Phase 4 — Agentic ML Systems *(P0 — A1 Specific)*
+### Phase 4 — Agentic ML Systems *(P0 — Product Critical)*
 
 | File | Description |
 |:---|:---|

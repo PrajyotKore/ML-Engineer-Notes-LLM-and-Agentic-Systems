@@ -1,7 +1,7 @@
-# 08_GPU_AND_PERFORMANCE — Technical Reference
+﻿# 08_GPU_AND_PERFORMANCE — Technical Reference
 
 ## 1. Role Relevance
-For an A1 Technical Lead, GPU performance is not a black box. You must understand how PyTorch operations map to physical hardware. If a training run or inference deployment is scaling poorly, you must trace the bottleneck down to the Streaming Multiprocessor (SM) or High Bandwidth Memory (HBM) level.
+For an ML Engineer (LLM & Agentic Systems), GPU performance is not a black box. You must understand how PyTorch operations map to physical hardware. If a training run or inference deployment is scaling poorly, you must trace the bottleneck down to the Streaming Multiprocessor (SM) or High Bandwidth Memory (HBM) level.
 
 ## 2. Prerequisites
 - Matrix Multiplications.

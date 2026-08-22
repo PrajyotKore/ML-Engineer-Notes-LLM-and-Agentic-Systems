@@ -1,7 +1,7 @@
-# 05_POST_TRAINING — Technical Reference
+﻿# 05_POST_TRAINING — Technical Reference
 
 ## 1. Role Relevance
-For an A1 Technical Lead, post-training (Alignment) is the primary lever to inject agentic capabilities, tool use, and safety into a base LLM. You must architect SFT and RLHF/DPO pipelines, choosing between LoRA for efficiency or full fine-tuning for maximum capability, while ensuring data quality.
+For an ML Engineer (LLM & Agentic Systems), post-training (Alignment) is the primary lever to inject agentic capabilities, tool use, and safety into a base LLM. You must architect SFT and RLHF/DPO pipelines, choosing between LoRA for efficiency or full fine-tuning for maximum capability, while ensuring data quality.
 
 ## 2. Prerequisites
 - Cross-Entropy Loss, Gradient Descent.

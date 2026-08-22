@@ -1,7 +1,7 @@
-# 11_LONG_RUNNING_WORKFLOW_RELIABILITY — Technical Reference
+﻿# 11_LONG_RUNNING_WORKFLOW_RELIABILITY — Technical Reference
 
 ## 1. Role Relevance
-A proactive assistant at A1 will execute workflows that span minutes, hours, or days (e.g., "Monitor my email for the concert tickets and book a flight when they arrive"). Standard synchronous HTTP request/response architectures will fail. An ML Technical Lead must integrate ML execution with durable, long-running workflow patterns. This is a P0 track.
+A proactive assistant will execute workflows that span minutes, hours, or days (e.g., "Monitor my email for the concert tickets and book a flight when they arrive"). Standard synchronous HTTP request/response architectures will fail. An ML Engineer (LLM & Agentic Systems) must integrate ML execution with durable, long-running workflow patterns. This is a P0 track.
 
 ## 2. Prerequisites
 - Agentic Systems (ReAct, Tool Execution).
@@ -72,11 +72,11 @@ The agent must be aware of compensation logic when planning its actions.
 - **Workflow Pausing**: A powerful debugging tool. If a workflow hits an unknown state, it pauses. The engineer (or a more powerful "supervisor agent") inspects the state, modifies variables, and unpauses it.
 
 ## 12. Principal-Level Reasoning
-"For A1's proactive assistant, I would completely separate the ML inference layer from the workflow orchestration layer. The LLM is just a pure function mapping `(Prompt, Tools) -> Action`. A durable workflow engine (like Temporal) manages the state, handles the idempotency keys, manages exponential backoff, and queues the action. If the LLM goes down, workflows pause safely. If the workflow worker goes down, the LLM isn't interrupted. This isolation is mandatory for high availability."
+"For a proactive assistant, I would completely separate the ML inference layer from the workflow orchestration layer. The LLM is just a pure function mapping `(Prompt, Tools) -> Action`. A durable workflow engine (like Temporal) manages the state, handles the idempotency keys, manages exponential backoff, and queues the action. If the LLM goes down, workflows pause safely. If the workflow worker goes down, the LLM isn't interrupted. This isolation is mandatory for high availability."
 
 ## 13. Interview Interrogation
 - *Level 2*: What is an Idempotency Key?
 - *Level 4*: Why must external APIs be idempotent in an agentic system?
 - *Level 7*: Show mathematically how adding one retry changes the success rate of a 20-step workflow.
 - *Level 9*: Your durable workflow replays a crash, but fails because the LLM generated a different tool call on the second attempt. How do you fix this architectural flaw?
-- *Level 10*: Architect the complete system for an A1 agent that monitors a stock price for a week and executes a trade, ensuring it survives daily datacenter rolling restarts.
+- *Level 10*: Architect the complete system for an agent that monitors a stock price for a week and executes a trade, ensuring it survives daily datacenter rolling restarts.

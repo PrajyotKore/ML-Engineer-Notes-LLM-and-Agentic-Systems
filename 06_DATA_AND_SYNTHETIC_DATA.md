@@ -1,7 +1,7 @@
-# 06_DATA_AND_SYNTHETIC_DATA — Technical Reference
+﻿# 06_DATA_AND_SYNTHETIC_DATA — Technical Reference
 
 ## 1. Role Relevance
-For an A1 Technical Lead, data is the highest-leverage lever to improve model and agent performance. Algorithmic tweaks rarely beat high-quality data. You must know how to build a data flywheel, generate synthetic data correctly without model collapse, and rigorously deduplicate/decontaminate datasets.
+For an ML Engineer (LLM & Agentic Systems), data is the highest-leverage lever to improve model and agent performance. Algorithmic tweaks rarely beat high-quality data. You must know how to build a data flywheel, generate synthetic data correctly without model collapse, and rigorously deduplicate/decontaminate datasets.
 
 ## 2. Prerequisites
 - Supervised Fine-Tuning (SFT) objective.
@@ -58,7 +58,7 @@ def decontaminate(train_dataset, eval_dataset, n_gram_size=13):
 - Data loading during training must not bottleneck the GPU. If `num_workers` in PyTorch's DataLoader is too low, the GPU utilization drops to 0% while waiting for CPU RAM to feed the next batch over the PCIe bus.
 
 ## 9. Production Architecture
-**The A1 Data Flywheel:**
+**The Production Data Flywheel:**
 1. Agent deployed to production.
 2. User provides explicit feedback (thumbs up/down) or implicit feedback (user abandoned the workflow).
 3. Trajectory is logged to the Data Lake.
@@ -76,11 +76,11 @@ def decontaminate(train_dataset, eval_dataset, n_gram_size=13):
 - **Model degradation after SFT**: Often caused by a sudden shift in data mixtures. If you add 10x more coding data, the model's conversational ability will mathematically drop due to catastrophic forgetting. Use perplexity checks on held-out diverse datasets to catch this.
 
 ## 13. Principal-Level Reasoning
-"At A1, I would not blindly generate 10 million synthetic tool-use examples. I would carefully design the seed prompts to cover the long tail of edge cases (e.g., API timeouts, schema mismatches). I would enforce a strict decontamination pipeline before every SFT run, using a 13-gram MinHash filter against all our production evaluation sets to ensure our progress is real, not memorized."
+"In this role, I would not blindly generate 10 million synthetic tool-use examples. I would carefully design the seed prompts to cover the long tail of edge cases (e.g., API timeouts, schema mismatches). I would enforce a strict decontamination pipeline before every SFT run, using a 13-gram MinHash filter against all our production evaluation sets to ensure our progress is real, not memorized."
 
 ## 14. Interview Interrogation
 - *Level 2*: What is data leakage?
 - *Level 4*: Why do we use MinHash instead of direct string comparison for deduplication?
 - *Level 7*: Mathematically, why does Model Collapse happen when training exclusively on synthetic data?
 - *Level 9*: Your model's performance on the internal agent benchmark skyrocketed from 40% to 90%, but user satisfaction dropped. Walk me through your data pipeline investigation.
-- *Level 10*: Architect a closed-loop data flywheel for A1 that automatically turns production failures into synthetic SFT data for the next model version.
+- *Level 10*: Architect a closed-loop data flywheel that automatically turns production failures into synthetic SFT data for the next model version.
