@@ -1,4 +1,4 @@
-﻿# 22_FINAL_SYNTHESIS_PLAYBOOKS — Technical Reference
+# 22_FINAL_SYNTHESIS_PLAYBOOKS — Technical Reference
 
 ## 1. Role Relevance
 This is your 2-Hour Final Revision Sheet before the ML Engineer (LLM & Agentic Systems) interview. It compresses the entire Single Source of Knowledge (SSK) into the highest-signal concepts.
@@ -30,7 +30,7 @@ When designing an agent on a whiteboard:
 4. **Idempotency**: All tool executions must be safe to retry.
 5. **Guardrails**: Input/Output filtering happens via separate, smaller models.
 
-## 5. The A1 Golden Rule
+## 5. The Golden Rule
 "Bridge the gap."
 You must be able to trace a high-level product failure (e.g., "The assistant didn't book my flight") down through the workflow engine, into the inference router, through the KV cache, into the Attention matrix, back to a corrupted SFT data sample. 
 **If you can seamlessly traverse from Product $\rightarrow$ Systems $\rightarrow$ Math, you will pass the ML engineering interview.**

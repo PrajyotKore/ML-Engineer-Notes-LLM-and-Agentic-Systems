@@ -12,7 +12,7 @@ Principal Engineers are hired to solve things no one else can. Interviewers will
 **Mitigation**: If gradient norm spiked, apply aggressive gradient clipping. Revert to the step 4,000 checkpoint, reduce the LR slightly, and resume.
 
 ## Case Study 2: The Agent Infinite Loop
-**Scenario**: Production alerts fire. An A1 agent has been executing for 45 minutes on a single user request.
+**Scenario**: Production alerts fire. An agent has been executing for 45 minutes on a single user request.
 **Diagnosis Framework**:
 1. *Trace Isolation*: Pull the OpenTelemetry trace for that `workflow_id`.
 2. *Observation*: The LLM calls `get_calendar_events`. The API returns `401 Unauthorized`. The LLM apologizes in its thought process and calls `get_calendar_events` again. It has done this 400 times.

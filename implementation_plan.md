@@ -1,4 +1,4 @@
-﻿# Implementation Plan: ML Engineer (LLM & Agentic Systems) ML - Single Source of Knowledge
+# Implementation Plan: ML Engineer (LLM & Agentic Systems) ML - Single Source of Knowledge
 
 This document outlines the plan to build a comprehensive, interconnected, and technically rigorous **Single Source of Knowledge (SSK)** for the ML Engineer (LLM & Agentic Systems) role at A1. 
 
@@ -6,7 +6,7 @@ Per your request, we will ensure rigorous use of **LaTeX** for all mathematical 
 
 ## User Review Required
 
-- **Job Description (JD) Confirmation**: Please provide the specific JD if there are any additional implicit or explicit requirements beyond the general A1 assistant context provided.
+- **Job Description (JD) Confirmation**: Please provide the specific JD if there are any additional implicit or explicit requirements beyond the general proactive AI assistant context provided.
 - **Competency Matrix Adjustments**: Please review the P0/P1/P2 priorities in the proposed file structure below to ensure they align perfectly with A1's specific expectations.
 
 ## Proposed Strategy & File Structure
@@ -40,7 +40,7 @@ We will generate a series of interconnected Markdown files. Each file will follo
   - SMs, Tensor Cores, Memory Bandwidth, Kernel Fusion, and arithmetic intensity.
 - `18_DISTRIBUTED_SYSTEMS.md`
 
-### Phase 5: The Agentic Assistant (A1 Specific - P0 Track)
+### Phase 5: The Agentic Assistant (Product Critical - P0 Track)
 - `10_AGENTIC_ML_SYSTEMS.md`
   - ReAct, Tool Routing, Context/Memory Management.
 - `11_LONG_RUNNING_WORKFLOW_RELIABILITY.md`

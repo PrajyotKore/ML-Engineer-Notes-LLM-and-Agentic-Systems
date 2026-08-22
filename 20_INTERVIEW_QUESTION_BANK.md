@@ -1,4 +1,4 @@
-﻿# 20_INTERVIEW_QUESTION_BANK — Technical Reference
+# 20_INTERVIEW_QUESTION_BANK — Technical Reference
 
 ## 1. Role Relevance
 This document centralizes the "Interrogation Ladder" for the ML Engineer (LLM & Agentic Systems) interview. You must be able to navigate from a high-level conceptual question down to the bare metal mathematics.
@@ -39,6 +39,6 @@ This document centralizes the "Interrogation Ladder" for the ML Engineer (LLM & 
 - **Level 9**: A new model is deployed to 1% of users (Canary). Latency is normal, but the task completion rate drops by 10%. How do you debug a semantic regression in production?
 
 ## 7. Architecture & System Design
-- **Level 5**: Design a rate-limiter for the A1 inference API.
+- **Level 5**: Design a rate-limiter for the inference API.
 - **Level 7**: Design a durable workflow engine that guarantees idempotency for agent tool calls.
-- **Level 10**: Architect the complete end-to-end A1 AI Assistant platform, from data ingestion to RLHF training to low-latency inference routing. Include fault-tolerance and cross-region failover.
+- **Level 10**: Architect the complete end-to-end AI Assistant platform, from data ingestion to RLHF training to low-latency inference routing. Include fault-tolerance and cross-region failover.

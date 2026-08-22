@@ -1,7 +1,7 @@
 # 17_PYTHON_AND_CODING — Technical Reference
 
 ## 1. Role Relevance
-A Technical Lead must code. You are expected to write clean, concurrent Python and understand PyTorch tensor operations perfectly. Interviewers will ask you to implement core ML algorithms from scratch and solve production concurrency problems.
+An ML Engineer (LLM & Agentic Systems) must code. You are expected to write clean, concurrent Python and understand PyTorch tensor operations perfectly. Interviewers will ask you to implement core ML algorithms from scratch and solve production concurrency problems.
 
 ## 2. Core Python Implementations (PyTorch / NumPy)
 

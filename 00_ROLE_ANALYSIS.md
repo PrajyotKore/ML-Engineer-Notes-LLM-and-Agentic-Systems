@@ -1,4 +1,4 @@
-﻿# 00_ROLE_ANALYSIS — ML Engineer (LLM & Agentic Systems)
+# 00_ROLE_ANALYSIS — ML Engineer (LLM & Agentic Systems)
 
 ## 1. Role Context & Core Hypothesis
 
@@ -42,7 +42,7 @@ The ML execution layer sits exactly at the boundary of Research, Systems Enginee
 | **Training Systems** | PyTorch Autograd, Mixed Precision, DDP/FSDP | **P1** | Needed to scale training efficiently without OOMs. |
 | **Data Engineering** | Synthetic Data, Pipeline Contamination | **P1** | The highest-leverage lever for model quality improvement. |
 | **Observability** | Profiling, Tracing, Distributed Debugging | **P1** | Required to resolve production incidents quickly. |
-| **Systems / ML Design** | Architecture tradeoffs, Cost/Latency scaling | **P1** | Critical for a Technical Lead overseeing the platform. |
+| **Systems / ML Design** | Architecture tradeoffs, Cost/Latency scaling | **P1** | Critical for an ML Engineer (LLM & Agentic Systems) overseeing the platform. |
 | **Deep Learning** | Attention, Transformers, Cross-Entropy | **P1** | Foundational mechanistic understanding required. |
 | **Classic ML & Python** | Concurrency, Algorithms, Basic Stats | **P2** | Supporting knowledge; expected but less differentiating. |
 
