@@ -1,52 +1,57 @@
-# 19_LEADERSHIP_AND_TECHNICAL_JUDGMENT — Technical Reference
+# 19_LEADERSHIP_AND_TECHNICAL_JUDGMENT — Staff & Principal Reference
 
-## 1. Role Relevance
-At the senior engineering level, you are evaluated heavily on *judgment*, not just knowledge. The interviewer is asking: "If I give this person a $5M compute budget and a team of 5 engineers, will they build the right thing?" 
-You must demonstrate the ability to navigate trade-offs, say "no" to hype, and focus on product outcomes.
+> **Audience**: ML Engineers, LLM Systems Engineers, and AI Researchers preparing for senior/principal technical interviews.  
+> **Core Objective**: Provide structured frameworks for navigating multi-million dollar compute trade-offs, leading critical production incidents, managing technical debt, and defending high-stakes ML engineering decisions.
 
-## 2. Core Trade-off Matrix
+---
 
-### A. Full Fine-Tuning (SFT) vs LoRA vs Prompt Engineering
-- **Prompt Engineering**: Do this first. Fastest time to market. Zero training cost. High latency cost (long context), high inference cost.
-- **LoRA**: Do this when prompt engineering hits a ceiling, or when context limits are exhausted by massive few-shot examples. Cheap training, no inference overhead (if merged).
-- **Full SFT**: Do this only when the model's fundamental representation needs to change (e.g., teaching a new language, completely altering the conversational tone), and you have massive, high-quality data.
+## 1. The Staff/Principal Trade-Off Matrix
 
-### B. Large Model (70B) vs Small Model (8B) + RAG
-- **70B**: Highly capable, but expensive and high TTFT/TPOT. Use for complex, multi-step planning (the Router/Planner Agent).
-- **8B + RAG**: Fast, cheap. Use for extraction, summarization, and basic tool execution. In production, the vast majority of execution steps should be routed to a small model to maintain unit economics.
+```
+                                  ┌───────────────────────────────┐
+                                  │      The Architectural Triad  │
+                                  │   Quality vs Latency vs Cost  │
+                                  └───────────────┬───────────────┘
+                                                  │
+                 ┌────────────────────────────────┼────────────────────────────────┐
+                 ▼                                ▼                                ▼
+      [ Data vs Algorithm ]             [ Build vs Buy ]             [ Model Size vs Systems ]
+      - Data curation (High ROI)        - Use Postgres / Temporal    - 8B + Speculative Decode vs
+      - Custom loss (High Risk)         - Build custom Core IP       - 70B Dense Model
+```
 
-### C. Build vs Buy
-- Do not build a vector database from scratch. Use Pinecone or pgvector.
-- Do not build a durable execution engine from scratch. Use Temporal.
-- *Do* build the core agent orchestration loop, the evaluation pipeline, and the SFT data flywheel, because these are the team's proprietary IP.
+### 1.1 SFT vs. LoRA vs. In-Context Prompting
+- **In-Context Prompting**: Fast prototyping, zero training compute, but high inference token cost and long TTFT.
+- **LoRA / QLoRA**: Ideal when task adaptation requires structured format compliance, fast domain adaptation, and modular adapter switching on shared base weights.
+- **Full SFT / Pre-training**: Mandatory only when shifting fundamental linguistic/reasoning representations or pre-training on domain-specific corpora (medical, legal, code).
 
-## 3. Incident Leadership Framework
-When a major production incident occurs (e.g., "The agent just hallucinated and emailed a user's boss an empty draft."):
-1. **Mitigate**: Stop the bleeding immediately. Revert the model to the last known good version or disable the email tool globally. Do not try to debug the root cause yet.
-2. **Communicate**: Inform stakeholders of the impact and mitigation.
-3. **Investigate**: Pull the OpenTelemetry trace. Find the exact prompt and LLM output.
-4. **Root Cause**: Determine why the guardrail failed (e.g., the safety model timed out and failed open instead of closed).
-5. **Prevent**: Add the trajectory to the regression test suite. Update the durable workflow to fail *closed* on guardrail timeouts.
+---
 
-## 4. Managing Complexity (The "No" Framework)
-Principal engineers actively fight complexity.
-- *Researcher*: "Let's implement a dynamic MoE router with RLHF!"
-- *Tech Lead*: "Our current offline evaluation accuracy is 85%. Before we introduce training complexity, let's look at the data. 50% of the failures are due to bad JSON formatting. I'm going to implement strict JSON schema enforcement at the system boundary instead. That will get us to 92% accuracy with zero training cost."
+## 2. Production Incident Leadership Protocol
 
-## 5. Architectural Judgment Scenarios
+When a critical production incident occurs (e.g. *"Autonomous Agent enters infinite loop ordering duplicate financial trades"*):
 
-**Scenario 1:** The team wants to use continuous RLHF in production based on user thumbs up/down.
-**Your Response:** "RLHF is notoriously unstable and susceptible to reward hacking. If we train continuously, a malicious user group could poison the model. Instead, we should log the thumbs up/down, run an offline pipeline to filter for high-quality trajectories, use an LLM-as-a-judge to verify them, and run standard SFT on the filtered dataset."
+```
+Step 1: Triage & Halt Bleed (Revert Canary / Disable Tool globally via feature flag)
+   │ (Target: < 2 minutes | Do NOT attempt deep debugging yet!)
+   ▼
+Step 2: Stakeholder Communication (Quantify blast radius and declare mitigation)
+   │
+   ▼
+Step 3: Root Cause Telemetry (Pull OpenTelemetry Traces, examine prompt/logits)
+   │
+   ▼
+Step 4: Regression Hardening (Add failing trajectory to Golden Evaluation Suite)
+   │
+   ▼
+Step 5: Blameless Post-Mortem & Architectural Remediation
+```
 
-**Scenario 2:** Inference costs are too high.
-**Your Response:** "I would attack this hierarchically. 
-1. Cache: Are we caching identical system prompts? (Prefix caching).
-2. Routing: Can we route simple tasks to an 8B model instead of the 70B model?
-3. Systems: Are we using PagedAttention and continuous batching to maximize GPU occupancy?
-4. Math: Can we quantize the KV cache to FP8 without degrading evaluation metrics?
-We measure the engineering effort vs. cost reduction for each and prioritize."
+---
 
-## 6. Interview Interrogation
-- *Level 5*: When would you choose to NOT use Machine Learning for a problem?
-- *Level 8*: Walk me through how you decide when to promote a staging model to production.
-- *Level 10*: The team has 6 months of runway to prove the proactive assistant works. You have 3 ML engineers. Lay out your roadmap for exactly what you build in Month 1, Month 3, and Month 6.
+## 3. Deep Interview Interrogation Ladder
+
+- **Level 1 (Concept)**: When should an ML engineer say "NO" to fine-tuning a model?
+- **Level 5 (Cost Optimization)**: You are tasked with cutting a $200k/month inference bill in half without degrading user retention. Walk through your hierarchical optimization plan.
+- **Level 8 (Technical Strategy)**: The research team wants to implement a novel research activation function. The systems team wants to stick to standard SwiGLU. How do you arbitrate the decision?
+- **Level 10 (Principal Engineering)**: You have a team of 4 engineers and 6 months of compute runway. Design the product and infrastructure roadmap to take a prototype agent from 60% reliability to a 99.5% enterprise SLA.

@@ -13,73 +13,74 @@ The ML execution layer sits exactly at the boundary of Research, Systems Enginee
 ## 2. Role Decomposition
 
 ### Explicit Technical Requirements
-- Python, PyTorch, JAX
-- GPU-based training and inference architecture
-- SFT, LoRA, QLoRA, DPO, Distillation
-- Data pipelines (real & synthetic)
-- Evaluation systems and latency/cost optimization
+- Python, PyTorch, CUDA, Triton
+- GPU-based training and inference architecture (vLLM, SGLang, Megatron-LM, FSDP-2)
+- SFT, LoRA, QLoRA, DPO, GRPO (Reasoning Models)
+- Data pipelines (MinHash LSH, Synthetic data curation, Decontamination)
+- Evaluation systems (SWE-bench, GAIA, Statistical significance) and latency/cost optimization
 
 ### Implicit Technical Requirements
-- **Hardware/Software Co-design Awareness**: Understanding how PyTorch ops map to CUDA kernels and memory bandwidth bounds.
+- **Hardware/Software Co-design Awareness**: Understanding how PyTorch ops map to CUDA kernels, SRAM tiling, and memory bandwidth bounds.
 - **Probabilistic Engineering**: Building deterministic, reliable long-running workflows on top of inherently non-deterministic LLM behavior.
 
-### Principal-Level Requirements
-- **Architectural Judgment**: Knowing when to use full fine-tuning vs. LoRA vs. Prompt Engineering vs. Distillation based on data scale and latency budgets.
+### Staff/Principal-Level Requirements
+- **Architectural Judgment**: Knowing when to use full fine-tuning vs. LoRA vs. Prompt Engineering vs. Distillation vs. GRPO based on data scale and latency budgets.
 - **Incident Leadership**: Ability to trace a 99th percentile (P99) latency spike from the network layer down to KV-cache fragmentation on a specific GPU.
 
 ---
 
 ## 3. Role Competency Model & Priority Matrix
 
-| Category | Topics | Priority | Rationale / Depth Required |
-| :--- | :--- | :--- | :--- |
-| **Agentic ML Systems** | ReAct, Tool Routing, Context/Memory | **P0** | Core to the product. Must reach Level 10 (Principal Reasoning). |
-| **Long-Running Workflows** | State persistence, Idempotency, Retries | **P0** | Essential for reliable proactive assistants. |
-| **Post-Training** | SFT, LoRA, DPO, Distillation | **P0** | Primary method for aligning general models to product tasks. |
-| **LLM & Inference** | KV Cache, PagedAttention, Speculative Decoding | **P0** | Determines unit economics, TTFT, and user experience. |
-| **GPU Architecture** | SMs, HBM, Memory Bandwidth, Tensor Cores | **P0** | Cannot optimize what you don't mechanistically understand. |
-| **Evaluation & Reliability** | LLM-as-judge, Canarying, System vs Model metrics | **P0** | Prevents silent regression in production. |
-| **Training Systems** | PyTorch Autograd, Mixed Precision, DDP/FSDP | **P1** | Needed to scale training efficiently without OOMs. |
-| **Data Engineering** | Synthetic Data, Pipeline Contamination | **P1** | The highest-leverage lever for model quality improvement. |
-| **Observability** | Profiling, Tracing, Distributed Debugging | **P1** | Required to resolve production incidents quickly. |
-| **Systems / ML Design** | Architecture tradeoffs, Cost/Latency scaling | **P1** | Critical for an ML Engineer (LLM & Agentic Systems) overseeing the platform. |
-| **Deep Learning** | Attention, Transformers, Cross-Entropy | **P1** | Foundational mechanistic understanding required. |
-| **Classic ML & Python** | Concurrency, Algorithms, Basic Stats | **P2** | Supporting knowledge; expected but less differentiating. |
+| Priority | Category | Topics | Files |
+| :---: | :--- | :--- | :--- |
+| **P0** | **Agentic ML Systems** | ReAct, Tool Routing, Context/Memory, MCP, FSM JSON | [10_AGENTIC_ML_SYSTEMS.md](./10_AGENTIC_ML_SYSTEMS.md) |
+| **P0** | **Long-Running Workflows** | Durable State, Temporal, Sagas, Idempotency, Retries | [11_LONG_RUNNING_WORKFLOW_RELIABILITY.md](./11_LONG_RUNNING_WORKFLOW_RELIABILITY.md) |
+| **P0** | **Post-Training & Reasoning** | SFT, LoRA, QLoRA, DPO, GRPO, Test-Time Compute | [05_POST_TRAINING.md](./05_POST_TRAINING.md) |
+| **P0** | **LLM & Inference** | PagedAttention, RadixAttention, PD Split, Chunked Prefill | [04_TRANSFORMERS_AND_LLMS.md](./04_TRANSFORMERS_AND_LLMS.md) · [09_INFERENCE_SYSTEMS.md](./09_INFERENCE_SYSTEMS.md) |
+| **P0** | **GPU Architecture** | SMs, SRAM Tiling, FlashAttention-3, Roofline Model | [08_GPU_AND_PERFORMANCE.md](./08_GPU_AND_PERFORMANCE.md) |
+| **P0** | **Evaluation & Reliability** | Z-Tests, ELO Ratings, SWE-bench, LLM-as-judge | [12_EVALUATION.md](./12_EVALUATION.md) |
+| **P1** | **Mathematical Foundations** | SVD, Low-Rank, Information Theory, AdamW, Optimization | [01_MATHEMATICAL_FOUNDATIONS.md](./01_MATHEMATICAL_FOUNDATIONS.md) |
+| **P1** | **Training Systems** | FSDP-2, 3D Parallelism, Context Parallelism, Checkpointing | [07_TRAINING_SYSTEMS.md](./07_TRAINING_SYSTEMS.md) |
+| **P1** | **Data Engineering** | MinHash LSH, Model Collapse, Synthetic Curation | [06_DATA_AND_SYNTHETIC_DATA.md](./06_DATA_AND_SYNTHETIC_DATA.md) |
+| **P1** | **Distributed Systems** | Ring All-Reduce, GPUDirect RDMA, InfiniBand NDR | [18_DISTRIBUTED_SYSTEMS.md](./18_DISTRIBUTED_SYSTEMS.md) |
+| **P1** | **Observability** | Little's Law, MFU, OpenTelemetry Tracing | [14_OBSERVABILITY_AND_DEBUGGING.md](./14_OBSERVABILITY_AND_DEBUGGING.md) |
+| **P1** | **Systems / ML Design** | Architecture Trade-offs, Cost/Latency Scaling | [16_SYSTEM_DESIGN.md](./16_SYSTEM_DESIGN.md) · [13_PRODUCTION_ML.md](./13_PRODUCTION_ML.md) |
+| **P1** | **Deep Learning** | Backpropagation, Softmax Jacobians, LayerNorm/RMSNorm | [02_03_ML_AND_DL_FOUNDATIONS.md](./02_03_ML_AND_DL_FOUNDATIONS.md) |
+| **P2** | **Python & Coding** | PyTorch Modules, FSM Parsers, Continuous Batching | [17_PYTHON_AND_CODING.md](./17_PYTHON_AND_CODING.md) |
 
 ---
 
 ## 4. Internal Dependency Graph
 
-A senior engineer must understand how decisions at the bottom of the stack cascade to the top.
-
 ```mermaid
 flowchart TD
     %% Base Layer
-    Math[Linear Algebra & Probability] --> DL[Deep Learning / Transformers]
-    DL --> LLM[LLM Mechanics: Attention, KV Cache]
+    Math[01: Mathematical Foundations: SVD, Low-Rank, Info Theory, Optimization] --> DL[02_03: Deep Learning: Backprop, RMSNorm, Loss Landscapes]
+    DL --> LLM[04: Modern LLMs: Attention, RoPE, MLA, MoE]
     
-    %% Training Layer
-    Data[Data & Synthetic Pipelines] --> PT[Post-Training: SFT, LoRA, DPO]
-    LLM --> PT
-    GPU[GPU Architecture & Memory] --> TS[Training Systems: FSDP, Checkpointing]
-    PT --> TS
-    TS --> Eval[Evaluation & Alignment]
-    
-    %% Serving Layer
-    GPU --> Inf[Inference: PagedAttention, Batching]
+    %% Hardware & Performance Layer
+    GPU[08: GPU Architecture & FlashAttention-3] --> Inf[09: Inference Systems: PagedAttention, SGLang, PD Split]
+    GPU --> TS[07: Training Systems: FSDP-2, 3D Parallelism]
+    Net[18: Distributed Systems: Ring All-Reduce, RDMA] --> TS
     LLM --> Inf
-    Eval --> Inf
+    LLM --> TS
     
-    %% Product / Agent Layer
-    Inf --> Agent[Agentic ML: ReAct, Tool Use]
-    Agent --> Rel[Long-Running Workflows]
-    Rel --> Prod[Production: Observability, Drift, Safety]
+    %% Training & Alignment Layer
+    Data[06: Data Engineering: MinHash LSH, Synthetic Flywheels] --> PT[05: Post-Training: SFT, LoRA, DPO, GRPO]
+    LLM --> PT
+    PT --> Eval[12: Evaluation: Z-Tests, ELO, SWE-bench]
+    
+    %% Serving & Agent Layer
+    Inf --> Agent[10: Agentic Systems: ReAct, FSM JSON, MCP, Hybrid RAG]
+    Agent --> Rel[11: Long-Running Workflows: Temporal, Sagas, Jitter]
+    Rel --> Prod[13/14/15: Production MLOps, Tracing, Safety Guardrails]
+    
+    %% Synthesis Layer
+    Prod --> SysDes[16/17/19/20/21/22: System Design, Production Code & Final Playbooks]
 ```
 
 ---
 
 ## 5. Depth Philosophy & Technical Bridge
 
-Every subsequent document generated in this Single Source of Knowledge (SSK) will follow the **10-Level Depth Framework**, bridging Mathematics → Algorithm → GPU Execution → Production Systems.
-
-*Next, we will proceed to generate `02_MACHINE_LEARNING_FOUNDATIONS.md` and `03_DEEP_LEARNING.md`, followed by the heavy P0 tracks.*
+Every document in this Single Source of Knowledge (SSK) follows the **10-Level Depth Framework**, bridging **Mathematics $\longleftrightarrow$ Algorithms $\longleftrightarrow$ GPU Execution $\longleftrightarrow$ Production Systems**.

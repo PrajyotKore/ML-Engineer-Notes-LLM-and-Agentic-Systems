@@ -1,59 +1,121 @@
-﻿# 16_SYSTEM_DESIGN — Technical Reference
+# 16_SYSTEM_DESIGN — Whiteboard Architecture & Calculations
 
-## 1. Role Relevance
-A ML Engineer (LLM & Agentic Systems) does not just train models; they architect the platforms that serve them. In an interview, you will likely be asked to design the end-to-end infrastructure for a proactive AI assistant on a whiteboard. You must demonstrate mastery over APIs, data models, control flow, scaling, and cost.
+> **Audience**: ML Engineers, LLM Systems Engineers, and AI Researchers preparing for senior/principal technical interviews.  
+> **Core Objective**: Provide three end-to-end, production-grade system designs with quantitative dimensioning, back-of-the-envelope math, component diagrams, and failure isolation boundaries.
 
-## 2. Core System Design Framework
-When given a system design prompt, strictly follow this structure:
-1. **Requirements Clarification**: (Functional vs Non-Functional). "Do we need streaming?", "What is the P99 latency target?", "What is our QPS?"
-2. **Back-of-the-Envelope Math**: Calculate VRAM needs, network bandwidth, and storage.
-3. **High-Level API Design**: Define the gRPC/REST endpoints.
-4. **Data Model**: Schemas for databases (Postgres, Redis, VectorDB).
-5. **High-Level Architecture (Box Drawing)**.
-6. **Deep Dives**: (Bottlenecks, Scaling, Reliability).
+---
 
-## 3. Case 1: Large-Scale LLM Inference Platform
-**Prompt**: "Design a platform to serve a 70B parameter model at 10,000 requests per minute with strict P99 latency bounds."
+## 1. The 6-Step Principal ML System Design Framework
 
-### 1. Math
-- 70B Model in BF16 = 140GB.
-- 10k RPM $\approx$ 166 QPS.
-- KV Cache: Assume 2K input tokens, 500 output tokens. Requires $\sim$ 2.5GB per request.
-- One 8xH100 node has 640GB VRAM. 140GB for weights $\rightarrow$ 500GB for KV Cache.
-- Max batch size per node $\approx 200$.
+When presented with an open-ended system design prompt in a technical interview:
 
-### 2. Architecture
-1. **API Gateway (Envoy/Nginx)**: Terminates TLS, handles rate limiting.
-2. **Router / Load Balancer**: Tracks the KV cache state across the fleet. Implements **Affinity Routing** (sending requests to nodes that already have the system prompt cached).
-3. **Inference Workers (vLLM)**: Nodes running Tensor Parallelism (TP=4). Uses Continuous Batching and PagedAttention.
-4. **Autoscaler (KEDA)**: Monitors the queue length. If queue TTFT exceeds 500ms, provisions new GPU nodes.
+1. **Clarify Requirements & Constraints** (Functional vs. Non-Functional, Latency targets, QPS, Token budgets).
+2. **Back-of-the-Envelope Dimensioning** (VRAM, FLOPs, Bandwidth, Storage, Cluster Size).
+3. **High-Level API Design** (gRPC / REST / Server-Sent Events).
+4. **Data Schemas & Storage Architecture** (Relational, Vector, Key-Value, Blob).
+5. **Detailed Component Architecture & Control Flow** (Drawing boxes and data pipelines).
+6. **Deep Dives & Failure Modes** (OOM prevention, tail latency mitigation, failover).
 
-### 3. Deep Dive: Handling Spikes
-If a popular event triggers a massive spike in QPS, spinning up new H100s takes 5+ minutes (pulling the 140GB image). We must implement **Shedding/Admission Control** at the Router to return 429 Too Many Requests, rather than accepting them and letting the KV cache OOM or TTFT spike to 30 seconds.
+---
 
-## 4. Case 2: Durable Agent Runtime
-**Prompt**: "Design the backend for a proactive assistant that books flights based on monitoring a user's inbox."
+## 2. Case Study 1: Ultra-High-Throughput Distributed LLM Serving Platform (100k QPS)
 
-### 1. Architecture
-1. **Event Bus (Kafka)**: Ingests webhooks from the email provider.
-2. **Workflow Engine (Temporal)**: Manages the state machine.
-3. **LLM Node**: Pure function. Takes (State, New Email) $\rightarrow$ Outputs (Action).
-4. **Tool Execution Node**: Parses the Action, validates against JSON schema, makes the HTTP call to the Airline API.
-5. **State DB (PostgreSQL)**: Stores the serialized execution history.
+**Prompt**: *"Design a distributed inference system to serve a 70B parameter model at 100,000 requests per minute with P99 TTFT $< 200\text{ ms}$ and TPOT $< 25\text{ ms/token}$."*
 
-### 2. Deep Dive: Reliability
-- **Idempotency**: The Tool Execution Node passes an `Idempotency-Key: hash(workflow_id + step_id)` to the Airline API.
-- **Recovery**: If the LLM Node crashes, the Workflow Engine detects the timeout and safely retries. If the Tool Node crashes, the Workflow Engine replays the event history from Postgres and retries the tool call safely because of the idempotency key.
+```
+                                    ┌────────────────────────────────────────────────────────┐
+                                    │                Anycast DNS & Cloudflare                │
+                                    └───────────────────────────┬────────────────────────────┘
+                                                                │
+                                                                ▼
+                                    ┌────────────────────────────────────────────────────────┐
+                                    │         API Gateway & Envoy Load Balancers             │
+                                    │  (TLS Termination, Rate Limiting, User Authentication) │
+                                    └───────────────────────────┬────────────────────────────┘
+                                                                │
+                                                                ▼
+                                    ┌────────────────────────────────────────────────────────┐
+                                    │            Global Radix Router Fleet                   │
+                                    │  - Evaluates Prefix Matches (RadixAttention Cache)     │
+                                    │  - Dispatches Prefill vs Decode Jobs via gRPC          │
+                                    └─────────────┬────────────────────────────┬─────────────┘
+                                                  │                            │
+                   ┌──────────────────────────────┘                            └──────────────────────────────┐
+                   ▼                                                                                          ▼
+┌────────────────────────────────────────────────────────┐                                 ┌────────────────────────────────────────────────────────┐
+│           Prefill GPU Fleet (H100 SXM5)                │                                 │            Decode GPU Fleet (H100 SXM5)                │
+│  - Compute-Bound Dense GEMMs (FlashAttention-3)        │                                 │  - Memory-Bandwidth-Bound Iteration Batching           │
+│  - Chunked Prefill (512 token blocks)                  │                                 │  - Continuous Batching (vLLM / SGLang)                 │
+│  - Generates initial KV Cache                          │                                 │  - FP8 Quantized Weights & KV Cache                    │
+└──────────────────────────┬─────────────────────────────┘                                 └──────────────────────────▲─────────────────────────────┘
+                           │                                                                                          │
+                           └────────────────────────────── RDMA KV Transfer ──────────────────────────────────────────┘
+                                                          (100 GB/s InfiniBand NDR)
+```
 
-## 5. Case 3: ML Evaluation Platform
-**Prompt**: "Design a system to continuously evaluate the performance of our agent in production."
+### 2.1 Back-of-the-Envelope Dimensioning Math
+- **Throughput**: $100,000 \text{ RPM} \approx 1,667 \text{ QPS}$.
+- **Average Workload**: $S_p = 2,048$ prompt tokens, $S_o = 256$ generated tokens.
+- **Total Prompt Tokens/sec**: $1,667 \times 2,048 \approx 3.41 \times 10^6 \text{ tokens/s}$.
+- **Total Generation Tokens/sec**: $1,667 \times 256 \approx 4.27 \times 10^5 \text{ tokens/s}$.
+- **Model Weight Footprint (70B in FP8)**: $70\text{ GB}$.
+- **Prefill Compute Needs**:
+  $$ \text{FLOPs/s} = 3.41 \times 10^6 \times 2 \times (70 \times 10^9) = 4.77 \times 10^{17} \text{ FLOPs/s} = 477 \text{ PFLOPs/s} $$
+  Assuming an H100 achieves $600\text{ TFLOPs}$ effective prefill compute:
+  $$ \text{Prefill GPUs Needed} = \frac{477 \times 10^{15}}{600 \times 10^{12}} \approx \mathbf{795 \text{ H100 GPUs}} $$
+- **Decode Memory Bandwidth Needs**:
+  Each decode GPU with TP=4 has $4 \times 3.35 \text{ TB/s} = 13.4 \text{ TB/s}$ bandwidth.
+  Loading 70B model ($70\text{ GB}$) takes $\frac{70}{13.4 \times 10^3} \approx 5.22\text{ ms/step}$.
+  With continuous batch size $B=128$, tokens/sec per 4-GPU replica $= \frac{128}{0.00522} \approx 24,500 \text{ tokens/s}$.
+  $$ \text{Decode 4-GPU Replicas Needed} = \frac{427,000}{24,500} \approx 18 \text{ Replicas} = \mathbf{72 \text{ GPUs}} $$
 
-### 1. Architecture
-1. **Log Collector (Fluentd)**: Collects asynchronous traces from the Inference and Agent nodes.
-2. **Data Lake (S3/Iceberg)**: Stores petabytes of historical trajectories.
-3. **Evaluation Job Queue (Celery/SQS)**: Batches recent trajectories.
-4. **LLM-as-a-Judge Fleet**: A dedicated cluster of cheap, fast GPUs running an 8B model to score trajectories for safety, hallucination, and task completion.
-5. **Metrics Dashboard (Grafana)**: Displays the moving average of evaluation scores.
+---
 
-### 2. Deep Dive: Preventing Eval Drift
-To prevent the LLM judge from making systemic errors, we route 1% of the trajectories to a human labeling queue (Scale AI/Labelbox). We continuously calculate the correlation between the LLM Judge scores and the Human scores. If correlation drops below 0.8, we pause automatic deployments and update the Judge's prompt.
+## 3. Case Study 2: Proactive Autonomous Agent Runtime with Durable Execution
+
+**Prompt**: *"Architect the backend platform for an AI assistant that executes multi-step web scraping, code execution, and financial transactions lasting up to 48 hours."*
+
+```
+Webhooks / Cron ──► [ Kafka Event Bus ] ──► [ Temporal Workflow Worker Pool ]
+                                                    │
+                 ┌──────────────────────────────────┼──────────────────────────────────┐
+                 ▼                                  ▼                                  ▼
+      [ Step 1: LLM Planner ]             [ Step 2: Tool Worker ]             [ Step 3: HITL Gating ]
+      - Structured JSON via FSM           - Idempotency-Key Gateway           - Async SMS/App Push
+      - Outlines / Pydantic               - gVisor / Firecracker Sandboxes    - Suspends Workflow
+```
+
+---
+
+## 4. Case Study 3: Enterprise Continuous Self-Improving RAG Pipeline
+
+```
+Knowledge Corpus (PDFs, Notion, Confluence, GitHub)
+        │
+        ▼
+[ Document Parser & Chunker ] (Semantic Chunking, 512 tokens + 10% overlap)
+        │
+        ├───► Dense Embedding (OpenAI text-embed-3) ──► [ Qdrant / Milvus Vector DB ]
+        └───► Sparse Shingles Tokenizer ─────────────► [ Elasticsearch / BM25 ]
+                                                              │
+User Query ──► [ Query Expansion ] ───────────────────────────┤
+                                                              ▼
+                                               [ Reciprocal Rank Fusion ]
+                                                              │ (Top-30 Candidates)
+                                                              ▼
+                                               [ Cross-Encoder Neural Reranker ]
+                                                              │ (Top-5 High-Signal Passages)
+                                                              ▼
+                                               [ Context Compactor ] ──► LLM Generation
+```
+
+---
+
+## 5. Deep Interview Interrogation Ladder
+
+- **Level 1 (Concept)**: What is the purpose of load-balancing via affinity routing in LLM serving?
+- **Level 3 (Math)**: Walk through the exact back-of-the-envelope calculation to size the number of GPUs needed for 1,000 QPS on a 70B model.
+- **Level 5 (Serving Architecture)**: Why does Disaggregated Prefill/Decode achieve higher hardware efficiency than unified continuous batching?
+- **Level 7 (RAG)**: Explain why Cross-Encoder neural rerankers are placed downstream of Hybrid Dense/Sparse retrieval rather than being used for initial search.
+- **Level 9 (Reliability)**: In an enterprise RAG system serving 50,000 employees, document permissions change dynamically. How do you design real-time access-control filtering into vector search without rebuilding indexes?
+- **Level 10 (Principal Engineering)**: Architect a globally distributed, multi-region agentic platform with active-active failover, KV cache synchronization across regions, and zero data loss under a full datacenter outage.

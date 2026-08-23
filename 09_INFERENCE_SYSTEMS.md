@@ -1,87 +1,282 @@
-﻿# 09_INFERENCE_SYSTEMS — Technical Reference
+# 09_INFERENCE_SYSTEMS — Mathematical & Systems Engineering Reference
 
-## 1. Role Relevance
-For an ML Engineer (LLM & Agentic Systems), inference is where the unit economics of the product are determined. You must serve a proactive agent reliably with low latency (TTFT, TPOT) while maximizing GPU utilization (Throughput/Cost). Understanding how to schedule requests, batch dynamically, and manage the KV cache is critical to production.
+> **Audience**: ML Engineers, LLM Systems Engineers, and AI Researchers preparing for senior/principal technical interviews.  
+> **Core Objective**: Provide an exhaustive mathematical, algorithmic, and systems reference on LLM Inference — covering PagedAttention, SGLang's RadixAttention, Disaggregated Prefill/Decode (PD split), Chunked Prefill scheduling, Speculative Decoding acceptance proofs, and FP8/INT4 quantization.
 
-## 2. Prerequisites
-- Transformer Forward Pass (Prefill vs. Decode).
-- KV Cache memory footprint.
-- CUDA memory hierarchies (SRAM vs. HBM).
+---
 
-## 3. First Principles
-LLM inference consists of two distinct phases:
-1. **Prefill**: Processes the entire prompt in parallel. Compute-bound (matrix multiplication).
-2. **Decode**: Generates one token at a time autoregressively. Memory-bound (reading the massive KV cache from HBM for every token).
+## 1. The Two-Phase Inference Lifecycle & Latency Modeling
 
-The goal of an inference engine (like vLLM or TRT-LLM) is to maximize the batch size during the decode phase to amortize the memory bandwidth costs.
+Autoregressive LLM generation operates in two radically distinct phases:
 
-## 4. Mechanistic Breakdown
-### Continuous Batching
-Traditional static batching waits for all requests in a batch to finish generating before starting a new batch. Continuous batching (or iteration-level scheduling) inserts new requests into the batch at the very next decode step as soon as an older request finishes, keeping GPU utilization near 100%.
+```
+[Request Arrives]
+      │
+      ▼
+┌────────────────────────────────────────────────────────┐
+│  Phase 1: Prefill (Prompt Processing)                  │
+│  - Input: Entire Prompt of S_p tokens in parallel       │
+│  - Nature: Compute-Bound (Dense GEMM on Tensor Cores)  │
+│  - Metric: Time To First Token (TTFT)                  │
+└───────────────────────┬────────────────────────────────┘
+                        │ Initial KV Cache Generated & Cached
+                        ▼
+┌────────────────────────────────────────────────────────┐
+│  Phase 2: Decode (Autoregressive Token Generation)     │
+│  - Input: 1 new token per step, reads past S_t KV cache │
+│  - Nature: Memory-Bound (Loading weights & KV from HBM)│
+│  - Metric: Time Per Output Token (TPOT) / Inter-Token  │
+└────────────────────────────────────────────────────────┘
+```
 
-### PagedAttention
-The KV cache grows dynamically as tokens are generated. Storing it contiguously causes memory fragmentation. PagedAttention divides the KV cache into fixed-size "pages" (e.g., 16 tokens) that can be stored non-contiguously in GPU VRAM, similar to virtual memory in an OS.
+### 1.1 First-Principles Latency & Throughput Formulations
 
-### Speculative Decoding
-Since decode is memory bandwidth-bound, the GPU's compute units (Tensor Cores) sit idle. Speculative decoding uses a smaller, faster "draft" model to predict $K$ tokens. The large "target" model then verifies these $K$ tokens in a single parallel step. If $N$ tokens are accepted, you get $N$ tokens for the latency of 1 step.
+Let:
+- $P$: Model parameter count (e.g. $70 \times 10^9$).
+- $S_p$: Prompt sequence length.
+- $S_o$: Generated output sequence length.
+- $B$: Concurrent batch size.
+- $C_{\text{peak}}$: Peak GPU compute throughput (FLOPs/s, e.g. $989 \times 10^{12}$ for H100 FP16).
+- $B_{\text{mem}}$: Peak GPU memory bandwidth (Bytes/s, e.g. $3.35 \times 10^{12}$ for H100 HBM3).
+- $b_{\text{model}}$: Bytes per model parameter (2 for FP16, 1 for FP8).
+- $b_{\text{kv}}$: Bytes per KV cache element (2 for FP16, 1 for FP8).
 
-## 5. Mathematical Foundations
+#### 1. Time To First Token (TTFT):
+During prefill, the model computes $2 P$ FLOPs per prompt token across batch $B$:
+$$ \text{FLOPs}_{\text{prefill}} = 2 \cdot P \cdot B \cdot S_p + 2 \cdot L \cdot N_h \cdot d_k \cdot B \cdot S_p^2 $$
+Assuming compute dominates ($S_p \gg 1$):
+$$ \mathbf{\text{TTFT} \approx \frac{2 \cdot P \cdot S_p}{\text{MFU} \cdot C_{\text{peak}}}} $$
+*Example*: Processing $S_p = 4096$ prompt tokens on a 70B model using an 8xH100 node ($\text{MFU} \approx 0.60$, $C_{\text{peak}} = 8 \times 989\text{ TFLOPs}$):
+$$ \text{TTFT} = \frac{2 \times (70 \times 10^9) \times 4096}{0.60 \times (8 \times 989 \times 10^{12})} \approx \mathbf{0.121 \text{ seconds (121 ms)}} $$
 
-### KV Cache Memory Size
-Memory per token per layer = $2 \times \text{num\_heads} \times d_{head} \times 2 \text{ bytes (FP16/BF16)}$.
-Total memory for $L$ tokens = $\text{Memory per token per layer} \times \text{num\_layers} \times L$.
+#### 2. Time Per Output Token (TPOT / Decode Step Latency):
+At each decode step, the model loads all $P$ weights and the cumulative KV cache for all $B$ requests:
+$$ \text{Bytes Transferred per Step} = (P \cdot b_{\text{model}}) + B \cdot \text{KVCache}_{\text{size}}(S_t) $$
+$$ \mathbf{\text{TPOT}(t) = \frac{P \cdot b_{\text{model}} + B \cdot (2 \cdot L \cdot N_{kv} \cdot d_h \cdot b_{\text{kv}} \cdot S_t)}{B_{\text{mem}}}} $$
 
-### Inference Latency Model
-**Time To First Token (TTFT)**: Driven by the compute time of the prefill matrix multiplication.
-$$ \text{TTFT} \approx \frac{2 \cdot N_{params} \cdot L_{prompt}}{\text{GPU\_Compute\_Bandwidth}} $$
+---
 
-**Time Per Output Token (TPOT)**: Driven by the memory bandwidth to load the model weights and the KV cache.
-$$ \text{TPOT} \approx \frac{(N_{params} \cdot 2 \text{ bytes}) + \text{Total\_KVCache\_Bytes}}{\text{GPU\_Memory\_Bandwidth}} $$
+### 1.2 The KV Cache Memory Equation
 
-*Note: TPOT assumes the batch size is small enough that compute does not dominate.*
+For a Transformer with $L$ layers, $N_{kv}$ Key/Value heads, head dimension $d_h$, sequence length $S$, and batch size $B$:
 
-## 6. Implementation
-**Prefix Caching Example:**
-When deploying agents, multiple users often share the same system prompt or tools. Instead of recomputing the prefill for the system prompt on every request, the engine hashes the system prompt tokens and stores their KV cache in a shared memory pool.
+$$ \mathbf{\text{Memory}_{\text{KV}} = 2 \times B \times S \times L \times N_{kv} \times d_h \times b_{\text{kv}} \quad [\text{Bytes}]} $$
 
-## 7. Computational Complexity
-- **Prefill**: $O(L^2 \cdot d_{model})$ compute.
-- **Decode**: $O(L \cdot d_{model})$ memory access per token.
+#### Concrete Production Sizing Example:
+- Model: LLaMA-3 70B ($L = 80, N_q = 64, N_{kv} = 8, d_h = 128$).
+- Precision: FP16 ($b_{\text{kv}} = 2\text{ bytes}$).
+- Context Length: $S = 8192$, Batch Size: $B = 32$.
 
-## 8. Hardware / GPU Behavior
-- **Memory Bandwidth Bottleneck**: An H100 has $\sim 3.3$ TB/s of memory bandwidth. A 70B parameter model in FP16 is $140$ GB. Generating one token requires loading all $140$ GB into SRAM.
-Thus, maximum theoretical speed for batch size 1 = $\frac{3300}{140} \approx 23$ tokens/second.
-This is why large batching is mandatory for throughput.
+$$ \text{Memory}_{\text{KV}} = 2 \times 32 \times 8192 \times 80 \times 8 \times 128 \times 2 = 85,899,345,920 \text{ Bytes} \approx \mathbf{80.0 \text{ GB}} $$
 
-## 9. Production Architecture
-- **Router / Admission Control**: Sits in front of the inference engines. Tracks the active KV cache utilization of the cluster. If VRAM is 90% full, it queues requests rather than sending them to the GPU to prevent OOM.
-- **Tensor Parallelism (TP) for Inference**: Splits the model across multiple GPUs within the same node (e.g., TP=4). This aggregates the memory bandwidth of 4 GPUs, dividing TPOT by 4, drastically reducing latency for large models.
+*Insight*: The KV cache alone occupies an entire 80GB H100 GPU's VRAM. Without memory management, KV cache fragmentation causes premature Out-Of-Memory (OOM) failures.
 
-## 10. Scalability
-To scale to millions of requests, you deploy identical TP replicas.
-Total System Throughput = $\text{Requests per second per replica} \times \text{Number of Replicas}$.
+---
 
-## 11. Bottlenecks
-- **KV Cache Fragmentation**: Without PagedAttention, VRAM fragments, reducing maximum batch size by 20-40%.
-- **Context Length**: A 128k context prompt takes a massive amount of VRAM, limiting the batch size to 1 or 2, severely degrading cluster throughput.
+## 2. Memory & Scheduling Engines: PagedAttention vs. RadixAttention
 
-## 12. Failure Modes
-- **Out of Memory (OOM)**: Usually happens during decode when a request generates far more tokens than anticipated and the engine runs out of free KV cache pages. Modern engines swap to CPU RAM or preempt the request.
-- **High TTFT Spikes**: Happens when a long-context request triggers a massive prefill, blocking the decode steps of all other active requests in the continuous batch.
+### 2.1 PagedAttention (vLLM Architecture)
 
-## 13. Debugging
-- **Low Throughput**: Check GPU Utilization and Memory Utilization. If VRAM is only 50% full, admission control is too conservative.
-- **High TPOT**: Batch size might be too large, causing the decode step to become compute-bound rather than memory-bound, or you are running TP=1 on a model that requires TP=2.
+In traditional serving, KV caches are allocated contiguously for maximum sequence length ($S_{\max}$), causing **$60\%-80\%$ VRAM waste** due to internal fragmentation, external fragmentation, and reservation waste.
 
-## 14. Trade-offs
-- **Throughput vs Latency**: Increasing batch size increases total tokens/sec (throughput, lowering cost) but slightly increases TPOT (latency, degrading user experience).
+#### OS Virtual Memory Analogy:
+PagedAttention partitions the KV cache into fixed-size **Physical Blocks (Pages)** (e.g. 16 or 32 tokens).
+- **Logical KV Blocks**: Continuous token indices $0 \dots S-1$.
+- **Physical Block Table**: Maps logical blocks to non-contiguous physical pages in GPU VRAM.
+- **Copy-on-Write (CoW)**: When an agent branches or forks multiple parallel generation trajectories (e.g. Tree-of-Thought, Beam Search), child processes share parent physical pages until a new token is appended.
 
-## 15. Principal-Level Reasoning
-"If users complain about latency spikes in the agent, I look at the TTFT vs TPOT metrics. If TTFT is high, it means long system prompts are blocking the queue; I would implement chunked prefill to break large prefills into smaller segments that interleave with decodes. If TPOT is high, we are likely hitting a memory bandwidth wall, and I would increase Tensor Parallelism or aggressively quantize the KV cache to FP8."
+```
+Logical Blocks (Request A):   [ Block 0 ] ──► Physical Page #14 (VRAM)
+                              [ Block 1 ] ──► Physical Page #3  (VRAM)
+                              [ Block 2 ] ──► Physical Page #89 (VRAM)
+```
 
-## 16. Interview Interrogation
-- *Level 1*: What is the difference between prefill and decode?
-- *Level 3*: Why does generating tokens get slower as the sequence gets longer?
-- *Level 6*: Explain how PagedAttention solves KV cache fragmentation.
-- *Level 8*: Why does speculative decoding increase throughput without degrading accuracy?
-- *Level 10*: Design an autoscaling inference architecture that guarantees P99 TTFT < 1 second for a heavily agentic workload with highly variable prompt lengths.
+$$\text{Memory Waste in PagedAttention} \leq \frac{\text{Block Size} - 1}{\text{Average Sequence Length}} \approx \frac{15}{2048} < \mathbf{0.73\%}$$
+
+---
+
+### 2.2 RadixAttention (SGLang Architecture)
+
+While PagedAttention manages memory per request, multi-turn AI agents and tool-calling loops frequently reuse long shared system prompts, tool schemas, and multi-turn dialogue histories.
+
+#### Radix Tree Structure:
+SGLang maintains a global **Radix Tree (Prefix Trie)** over all past and present KV cache pages in GPU VRAM:
+- Nodes in the tree represent token sequences with associated KV cache pointers.
+- When a new request arrives, SGLang traverses the Radix Tree to find the **longest common prefix match**.
+- If matched, the engine **skips prefill entirely** for the matched prefix, reducing TTFT from seconds to milliseconds.
+- **Cache Eviction Policy (LRU)**: When VRAM is full, least recently used leaf nodes are recursively evicted.
+
+```
+                  [ Root (Empty) ]
+                         │
+        ┌────────────────┴────────────────┐
+        ▼                                 ▼
+[ System Prompt & Tool Schemas (1.5k tok) ] [ Math Agent Prompt (800 tok) ]
+        │
+   ┌────┴────────────────────────┐
+   ▼                             ▼
+[ Turn 1: User Query A ]   [ Turn 1: User Query B ]
+   │
+[ Turn 2: Tool Execution Result ]
+```
+
+---
+
+## 3. Advanced Serving Architectures
+
+### 3.1 Disaggregated Prefill and Decode (PD Split / Mooncake / Splitwise)
+
+In unified serving nodes, heavy prefills and continuous decodes run on the same GPUs, causing:
+1. **Preemption Stalls**: A massive prefill monopolizes Tensor Cores, stalling active decode streams and creating massive P99 TPOT latency spikes.
+2. **Hardware Inefficiency**: Prefill requires massive compute (FLOPs-bound), while decode requires massive memory bandwidth.
+
+#### The Disaggregated Architecture:
+- **Prefill Fleet**: Compute-optimized GPUs (e.g. NVIDIA H100 with high TFLOPs) dedicated exclusively to processing prompt tokens.
+- **KV Transfer Network**: High-speed RDMA / PCIe / NVLink transfers the generated KV cache directly to the Decode Fleet.
+- **Decode Fleet**: Memory-bandwidth-optimized GPUs (or large clustered pools) dedicated exclusively to autoregressive token generation.
+
+```
+Incoming Request ──► [ Prefill Node (Compute Heavy) ] 
+                            │ 
+                            ▼ (RDMA KV Cache Transfer: ~100 GB/s)
+                     [ Decode Node (Bandwidth Heavy) ] ──► Token Stream
+```
+
+---
+
+### 3.2 Chunked Prefill & Iteration-Level Continuous Batching (Sarathi-Serve)
+
+To prevent prefill requests from starving decode steps in a unified engine:
+- Chunk long prefills into smaller segments (e.g., $C = 512$ tokens).
+- Interleave chunked prefill GEMMs with ongoing decode steps within the same continuous batch iteration:
+  $$ \text{Batch Budget} = \text{Chunked Prefill}(512 \text{ tokens}) + \sum_{i=1}^{B_{\text{decode}}} \text{Decode}(1 \text{ token}) $$
+- Keeps GPU compute utilization near 100% while strictly bounding P99 Inter-Token Latency (ITL).
+
+---
+
+## 4. Speculative Decoding Mathematics
+
+### 4.1 Target Model Verification & Expected Acceptance Length
+
+Let $M_p$ be a small, fast **Draft Model** (e.g. 1B params), and $M_q$ be the large **Target Model** (e.g. 70B params).
+1. Draft model autoregressively generates $K$ draft tokens: $(\tilde{x}_1, \dots, \tilde{x}_K)$.
+2. Target model evaluates all $K$ tokens in a **single parallel forward pass** (as a prefill).
+3. The acceptance criterion for token $\tilde{x}_{n}$ (Leviathan et al., 2023) is:
+   $$ P(\text{Accept } \tilde{x}_n) = \min\left( 1, \; \frac{q(\tilde{x}_n \mid x_{<n})}{p(\tilde{x}_n \mid x_{<n})} \right) $$
+   If rejected, sample replacement token from the residual distribution:
+   $$ P_{\text{res}}(x) = \frac{\max(0, q(x) - p(x))}{1 - \sum_y \min(p(y), q(y))} $$
+
+#### Mathematical Proof: Expected Tokens per Step ($\mathbb{E}[N]$)
+Let $\alpha \in [0, 1]$ be the average acceptance probability per token:
+$$ \mathbb{E}[N] = 1 + \sum_{k=1}^K \alpha^k = 1 + \frac{\alpha(1 - \alpha^K)}{1 - \alpha} = \mathbf{\frac{1 - \alpha^{K+1}}{1 - \alpha}} $$
+
+- If $\alpha = 0.8$ and $K = 5$:
+  $$ \mathbb{E}[N] = \frac{1 - 0.8^6}{1 - 0.8} = \frac{1 - 0.262}{0.2} = \mathbf{3.69 \text{ tokens/step}} $$
+
+- **Theoretical Latency Speedup**:
+  Let $t_p$ be the draft step time, and $t_q$ be the target step time ($t_p \ll t_q$).
+  $$ \text{Speedup} = \frac{\mathbb{E}[N] \cdot t_q}{K \cdot t_p + t_q} = \frac{\frac{1 - \alpha^{K+1}}{1 - \alpha}}{1 + K \frac{t_p}{t_q}} $$
+
+---
+
+## 5. Quantization Mathematics: FP8, INT8, and INT4
+
+```
+FP16:  1 Sign | 5 Exponent | 10 Mantissa  (Dynamic Range: 10^-5 to 6.5x10^4)
+FP8 E4M3: 1 Sign | 4 Exponent | 3 Mantissa  (Higher Precision: Best for Weights & Activations)
+FP8 E5M2: 1 Sign | 5 Exponent | 2 Mantissa  (Wider Dynamic Range: Best for Gradients & KV Cache)
+```
+
+### 5.1 Symmetric Block Quantization
+Given continuous weight vector $W \in \mathbb{R}^N$:
+$$ s = \frac{\max(|W|)}{2^{b-1} - 1} \quad \text{(Quantization Scale Factor)} $$
+$$ W_{\text{quant}} = \text{clamp}\left( \left\lfloor \frac{W}{s} \right\rceil, \; -2^{b-1}, \; 2^{b-1} - 1 \right) $$
+$$ W_{\text{dequant}} = W_{\text{quant}} \times s $$
+
+### 5.2 SmoothQuant: Outlier Migration (Xiao et al., 2023)
+In LLMs, activations have extreme systematic outlier channels ($> 100\times$ normal values), making activation quantization difficult.  
+SmoothQuant mathematically migrates the quantization difficulty from activations $X$ to weights $W$ by scaling channels with diagonal matrix $S = \text{diag}(s)$:
+
+$$ Y = X W = (X S^{-1}) (S W) = \hat{X} \hat{W} $$
+Where the per-channel scale $s_j$ is:
+$$ s_j = \frac{\max(|X_j|)^\alpha}{\max(|W_j|)^{1 - \alpha}} \quad (\alpha = 0.5 \text{ splits difficulty equally}) $$
+
+---
+
+## 6. PyTorch Simulation: Paged KV-Cache Allocator
+
+```python
+import torch
+from typing import List, Dict
+
+class PagedKVCacheManager:
+    """
+    Physical Block Memory Allocator for PagedAttention.
+    """
+    def __init__(self, num_blocks: int, block_size: int, num_layers: int, num_heads: int, head_dim: int):
+        self.block_size = block_size
+        self.num_layers = num_layers
+        self.num_heads = num_heads
+        self.head_dim = head_dim
+        
+        # Allocate physical memory pool: [Num_Blocks, Num_Layers, 2 (K/V), Block_Size, Num_Heads, Head_Dim]
+        self.gpu_memory_pool = torch.zeros(
+            (num_blocks, num_layers, 2, block_size, num_heads, head_dim),
+            dtype=torch.float16,
+            device="cuda" if torch.cuda.is_available() else "cpu"
+        )
+        
+        # Free list tracking available physical block IDs
+        self.free_blocks = list(range(num_blocks))
+        self.block_tables: Dict[int, List[int]] = {} # Request ID -> [Physical Block IDs]
+
+    def allocate_request(self, request_id: int, prompt_len: int) -> List[int]:
+        num_blocks_needed = (prompt_len + self.block_size - 1) // self.block_size
+        assert len(self.free_blocks) >= num_blocks_needed, "Out of Memory (OOM): No free physical blocks!"
+        
+        allocated = [self.free_blocks.pop(0) for _ in range(num_blocks_needed)]
+        self.block_tables[request_id] = allocated
+        return allocated
+
+    def append_token(self, request_id: int, current_len: int) -> int:
+        """
+        Allocates a new block if the current sequence length crosses block boundary.
+        """
+        if current_len % self.block_size == 0:
+            assert len(self.free_blocks) > 0, "OOM during token decode!"
+            new_block = self.free_blocks.pop(0)
+            self.block_tables[request_id].append(new_block)
+            return new_block
+        return self.block_tables[request_id][-1]
+
+    def free_request(self, request_id: int):
+        if request_id in self.block_tables:
+            self.free_blocks.extend(self.block_tables[request_id])
+            del self.block_tables[request_id]
+
+if __name__ == "__main__":
+    manager = PagedKVCacheManager(num_blocks=100, block_size=16, num_layers=4, num_heads=8, head_dim=64)
+    req1_blocks = manager.allocate_request(request_id=1, prompt_len=35) # Requires 3 blocks
+    assert len(req1_blocks) == 3
+    print(f"Request 1 assigned physical blocks: {req1_blocks}")
+    
+    # Simulate generating tokens until new page is triggered
+    manager.append_token(request_id=1, current_len=48) # 48 % 16 == 0 -> Allocates 4th block
+    assert len(manager.block_tables[1]) == 4
+    print(f"Request 1 expanded to physical blocks: {manager.block_tables[1]}")
+    
+    manager.free_request(request_id=1)
+    assert len(manager.free_blocks) == 100
+    print("Paged KV Cache Allocation and Free Lifecycle Verified.")
+```
+
+---
+
+## 7. Deep Interview Interrogation Ladder
+
+- **Level 1 (Concept)**: What is the primary hardware difference between the prefill phase and the decode phase in LLM serving?
+- **Level 3 (Derivation)**: Calculate the exact KV cache memory footprint for a 70B parameter model ($L=80, N_{kv}=8, d_h=128$) at batch size 64 with 8k context in FP16.
+- **Level 5 (Mechanics)**: How does PagedAttention eliminate external and internal memory fragmentation?
+- **Level 7 (Speculative Decoding Proof)**: Prove mathematically why the expected number of tokens accepted per step in Speculative Decoding is $\frac{1 - \alpha^{K+1}}{1 - \alpha}$.
+- **Level 9 (Serving Architecture)**: Why does unified serving suffer from P99 latency spikes during long prefills, and how does Disaggregated Prefill/Decode (PD Disaggregation) resolve it?
+- **Level 10 (Principal Engineering)**: Design an inference cluster architecture serving a high-volume agentic workflow with shared system prompts and dynamic multi-step branching. Detail the cache eviction policy, KV transfer protocol across nodes, and speculative draft validation strategy.
