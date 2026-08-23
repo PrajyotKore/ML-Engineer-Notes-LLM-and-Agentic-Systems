@@ -1,0 +1,57 @@
+<!DOCTYPE html>
+<html lang="en" class="dark">
+<head>
+  <meta charset="UTF-8">
+  <title>Role Analysis & Competency Map</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Fira+Code:wght@400;500;600&family=Inter:wght@300;400;500;600;700;800&family=Outfit:wght@500;600;700;800&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/katex@0.16.9/dist/katex.min.css">
+  <script defer src="https://cdn.jsdelivr.net/npm/katex@0.16.9/dist/katex.min.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/marked@11.1.1/marked.min.js"></script>
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/prism/1.29.0/themes/prism-tomorrow.min.css">
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/prism/1.29.0/prism.min.js"></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/prism/1.29.0/components/prism-python.min.js"></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/prism/1.29.0/components/prism-json.min.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/mermaid@10.8.0/dist/mermaid.min.js"></script>
+  <style>
+    body { font-family: 'Inter', sans-serif; background: #0a0d14; color: #f1f5f9; line-height: 1.7; padding: 40px 20px; }
+    .container { max-width: 900px; margin: 0 auto; background: #111622; padding: 40px; border-radius: 12px; border: 1px solid rgba(255,255,255,0.08); }
+    h1 { font-family: 'Outfit', sans-serif; font-size: 2.2rem; border-bottom: 1px solid rgba(255,255,255,0.1); padding-bottom: 12px; color: #fff; }
+    h2 { font-family: 'Outfit', sans-serif; font-size: 1.5rem; margin-top: 36px; color: #e2e8f0; }
+    h3 { font-size: 1.2rem; margin-top: 24px; color: #cbd5e1; }
+    p, li { color: #cbd5e1; }
+    code { font-family: 'Fira Code', monospace; background: rgba(255,255,255,0.08); color: #f472b6; padding: 2px 6px; border-radius: 4px; }
+    pre { background: #0f141f !important; padding: 16px !important; border-radius: 8px; overflow-x: auto; }
+    pre code { background: transparent !important; color: #e2e8f0; }
+    table { width: 100%; border-collapse: collapse; margin: 20px 0; background: rgba(0,0,0,0.2); }
+    th, td { border: 1px solid rgba(255,255,255,0.08); padding: 10px 14px; text-align: left; }
+    th { background: rgba(255,255,255,0.05); }
+    blockquote { border-left: 4px solid #6366f1; background: rgba(99,102,241,0.08); padding: 12px 18px; border-radius: 0 8px 8px 0; }
+    .nav-back { display: inline-block; margin-bottom: 20px; color: #818cf8; text-decoration: none; font-size: 0.9rem; }
+    .nav-back:hover { text-decoration: underline; }
+  </style>
+</head>
+<body>
+  <div class="container">
+    <a href="../index.html" class="nav-back">← Back to Master Knowledge Hub</a>
+    <div id="content"></div>
+  </div>
+  <script>
+    const rawMarkdown = "# 00_ROLE_ANALYSIS \u2014 ML Engineer (LLM & Agentic Systems)\n\n## 1. Role Context & Core Hypothesis\n\n**Role Context:** This role targets building a proactive AI assistant that executes real-world tasks, performs multi-step reasoning, interacts with external tools, and handles long-running workflows with high reliability under production constraints.\n\n**Core Interview Hypothesis:** \"Can this candidate take an ML/LLM research idea, turn it into a trainable system, adapt it effectively, deploy it efficiently, integrate it into an agentic product, measure whether it actually works, debug it in production, and continuously improve it under latency, cost, reliability, and safety constraints?\"\n\nThe ML execution layer sits exactly at the boundary of Research, Systems Engineering, and Product Outcomes. The candidate must span these seamlessly.\n\n---\n\n## 2. Role Decomposition\n\n### Explicit Technical Requirements\n- Python, PyTorch, CUDA, Triton\n- GPU-based training and inference architecture (vLLM, SGLang, Megatron-LM, FSDP-2)\n- SFT, LoRA, QLoRA, DPO, GRPO (Reasoning Models)\n- Data pipelines (MinHash LSH, Synthetic data curation, Decontamination)\n- Evaluation systems (SWE-bench, GAIA, Statistical significance) and latency/cost optimization\n\n### Implicit Technical Requirements\n- **Hardware/Software Co-design Awareness**: Understanding how PyTorch ops map to CUDA kernels, SRAM tiling, and memory bandwidth bounds.\n- **Probabilistic Engineering**: Building deterministic, reliable long-running workflows on top of inherently non-deterministic LLM behavior.\n\n### Staff/Principal-Level Requirements\n- **Architectural Judgment**: Knowing when to use full fine-tuning vs. LoRA vs. Prompt Engineering vs. Distillation vs. GRPO based on data scale and latency budgets.\n- **Incident Leadership**: Ability to trace a 99th percentile (P99) latency spike from the network layer down to KV-cache fragmentation on a specific GPU.\n\n---\n\n## 3. Role Competency Model & Priority Matrix\n\n| Priority | Category | Topics | Files |\n| :---: | :--- | :--- | :--- |\n| **P0** | **Agentic ML Systems** | ReAct, Tool Routing, Context/Memory, MCP, FSM JSON | [10_AGENTIC_ML_SYSTEMS.md](./10_AGENTIC_ML_SYSTEMS.md) |\n| **P0** | **Long-Running Workflows** | Durable State, Temporal, Sagas, Idempotency, Retries | [11_LONG_RUNNING_WORKFLOW_RELIABILITY.md](./11_LONG_RUNNING_WORKFLOW_RELIABILITY.md) |\n| **P0** | **Post-Training & Reasoning** | SFT, LoRA, QLoRA, DPO, GRPO, Test-Time Compute | [05_POST_TRAINING.md](./05_POST_TRAINING.md) |\n| **P0** | **LLM & Inference** | PagedAttention, RadixAttention, PD Split, Chunked Prefill | [04_TRANSFORMERS_AND_LLMS.md](./04_TRANSFORMERS_AND_LLMS.md) \u00b7 [09_INFERENCE_SYSTEMS.md](./09_INFERENCE_SYSTEMS.md) |\n| **P0** | **GPU Architecture** | SMs, SRAM Tiling, FlashAttention-3, Roofline Model | [08_GPU_AND_PERFORMANCE.md](./08_GPU_AND_PERFORMANCE.md) |\n| **P0** | **Evaluation & Reliability** | Z-Tests, ELO Ratings, SWE-bench, LLM-as-judge | [12_EVALUATION.md](./12_EVALUATION.md) |\n| **P1** | **Mathematical Foundations** | SVD, Low-Rank, Information Theory, AdamW, Optimization | [01_MATHEMATICAL_FOUNDATIONS.md](./01_MATHEMATICAL_FOUNDATIONS.md) |\n| **P1** | **Training Systems** | FSDP-2, 3D Parallelism, Context Parallelism, Checkpointing | [07_TRAINING_SYSTEMS.md](./07_TRAINING_SYSTEMS.md) |\n| **P1** | **Data Engineering** | MinHash LSH, Model Collapse, Synthetic Curation | [06_DATA_AND_SYNTHETIC_DATA.md](./06_DATA_AND_SYNTHETIC_DATA.md) |\n| **P1** | **Distributed Systems** | Ring All-Reduce, GPUDirect RDMA, InfiniBand NDR | [18_DISTRIBUTED_SYSTEMS.md](./18_DISTRIBUTED_SYSTEMS.md) |\n| **P1** | **Observability** | Little's Law, MFU, OpenTelemetry Tracing | [14_OBSERVABILITY_AND_DEBUGGING.md](./14_OBSERVABILITY_AND_DEBUGGING.md) |\n| **P1** | **Systems / ML Design** | Architecture Trade-offs, Cost/Latency Scaling | [16_SYSTEM_DESIGN.md](./16_SYSTEM_DESIGN.md) \u00b7 [13_PRODUCTION_ML.md](./13_PRODUCTION_ML.md) |\n| **P1** | **Deep Learning** | Backpropagation, Softmax Jacobians, LayerNorm/RMSNorm | [02_03_ML_AND_DL_FOUNDATIONS.md](./02_03_ML_AND_DL_FOUNDATIONS.md) |\n| **P2** | **Python & Coding** | PyTorch Modules, FSM Parsers, Continuous Batching | [17_PYTHON_AND_CODING.md](./17_PYTHON_AND_CODING.md) |\n\n---\n\n## 4. Internal Dependency Graph\n\n```mermaid\nflowchart TD\n    %% Base Layer\n    Math[01: Mathematical Foundations: SVD, Low-Rank, Info Theory, Optimization] --> DL[02_03: Deep Learning: Backprop, RMSNorm, Loss Landscapes]\n    DL --> LLM[04: Modern LLMs: Attention, RoPE, MLA, MoE]\n    \n    %% Hardware & Performance Layer\n    GPU[08: GPU Architecture & FlashAttention-3] --> Inf[09: Inference Systems: PagedAttention, SGLang, PD Split]\n    GPU --> TS[07: Training Systems: FSDP-2, 3D Parallelism]\n    Net[18: Distributed Systems: Ring All-Reduce, RDMA] --> TS\n    LLM --> Inf\n    LLM --> TS\n    \n    %% Training & Alignment Layer\n    Data[06: Data Engineering: MinHash LSH, Synthetic Flywheels] --> PT[05: Post-Training: SFT, LoRA, DPO, GRPO]\n    LLM --> PT\n    PT --> Eval[12: Evaluation: Z-Tests, ELO, SWE-bench]\n    \n    %% Serving & Agent Layer\n    Inf --> Agent[10: Agentic Systems: ReAct, FSM JSON, MCP, Hybrid RAG]\n    Agent --> Rel[11: Long-Running Workflows: Temporal, Sagas, Jitter]\n    Rel --> Prod[13/14/15: Production MLOps, Tracing, Safety Guardrails]\n    \n    %% Synthesis Layer\n    Prod --> SysDes[16/17/19/20/21/22: System Design, Production Code & Final Playbooks]\n```\n\n---\n\n## 5. Depth Philosophy & Technical Bridge\n\nEvery document in this Single Source of Knowledge (SSK) follows the **10-Level Depth Framework**, bridging **Mathematics $\\longleftrightarrow$ Algorithms $\\longleftrightarrow$ GPU Execution $\\longleftrightarrow$ Production Systems**.\n";
+    function renderMath(text) {
+      const blockMath = [];
+      text = text.replace(/\$\$([\s\S]*?)\$\$/g, (m, math) => { blockMath.push(math); return `%%%BM_${blockMath.length-1}%%%`; });
+      const inlineMath = [];
+      text = text.replace(/\$([^\$\n]+?)\$/g, (m, math) => { inlineMath.push(math); return `%%%IM_${inlineMath.length-1}%%%`; });
+      let html = marked.parse(text);
+      html = html.replace(/%%%BM_(\d+)%%%/g, (m, id) => katex.renderToString(blockMath[parseInt(id)], { displayMode: true, throwOnError: false }));
+      html = html.replace(/%%%IM_(\d+)%%%/g, (m, id) => katex.renderToString(inlineMath[parseInt(id)], { displayMode: false, throwOnError: false }));
+      return html;
+    }
+    document.getElementById('content').innerHTML = renderMath(rawMarkdown);
+    Prism.highlightAll();
+    mermaid.initialize({ startOnLoad: true, theme: 'dark' });
+  </script>
+</body>
+</html>
