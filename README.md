@@ -3,7 +3,7 @@
 > **A comprehensive, mathematically intensive, and production-grade master reference for ML Engineers (LLM & Agentic Systems).**  
 > Bridging **Rigorous Mathematics $\longleftrightarrow$ Algorithms $\longleftrightarrow$ GPU Bare Metal $\longleftrightarrow$ Production Distributed Systems**.
 
-🌐 **Live Web App (GitHub Pages)**: **[https://prajyotkore.github.io/ML-Notes/](https://prajyotkore.github.io/ML-Notes/)**  
+🌐 **Live Web App (GitHub Pages)**: **[https://prajyotkore.github.io/ML-Engineer-Notes-LLM-and-Agentic-Systems/](https://prajyotkore.github.io/ML-Engineer-Notes-LLM-and-Agentic-Systems/)**  
 *Features instant search, KaTeX mathematical formula rendering, Prism.js code syntax highlighting, and interactive Mermaid architecture diagrams.*
 
 ---
