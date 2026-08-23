@@ -3,7 +3,8 @@
 > **A comprehensive, mathematically intensive, and production-grade master reference for ML Engineers (LLM & Agentic Systems).**  
 > Bridging **Rigorous Mathematics $\longleftrightarrow$ Algorithms $\longleftrightarrow$ GPU Bare Metal $\longleftrightarrow$ Production Distributed Systems**.
 
-🌐 **Interactive Web Reader**: Open [index.html](file:///c:/Users/pakor/OneDrive/Documents/GitHub/ML-Notes/index.html) in your browser to view the entire master documentation hub with KaTeX math rendering, Prism code syntax highlighting, live search, and Mermaid diagrams. Standalone HTML pages are also compiled in the [`html/`](file:///c:/Users/pakor/OneDrive/Documents/GitHub/ML-Notes/html/) directory.
+🌐 **Live Web App (GitHub Pages)**: **[https://prajyotkore.github.io/ML-Notes/](https://prajyotkore.github.io/ML-Notes/)**  
+*Features instant search, KaTeX mathematical formula rendering, Prism.js code syntax highlighting, and interactive Mermaid architecture diagrams.*
 
 ---
 
