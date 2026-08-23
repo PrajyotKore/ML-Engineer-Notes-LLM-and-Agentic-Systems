@@ -55,28 +55,28 @@ The ML execution layer sits exactly at the boundary of Research, Systems Enginee
 ```mermaid
 flowchart TD
     %% Base Layer
-    Math[01: Mathematical Foundations: SVD, Low-Rank, Info Theory, Optimization] --> DL[02_03: Deep Learning: Backprop, RMSNorm, Loss Landscapes]
-    DL --> LLM[04: Modern LLMs: Attention, RoPE, MLA, MoE]
+    Math["01: Mathematical Foundations (SVD, Info Theory, Optimization)"] --> DL["02_03: Deep Learning (Backprop, RMSNorm, Loss Landscapes)"]
+    DL --> LLM["04: Modern LLMs (Attention, RoPE, MLA, MoE)"]
     
     %% Hardware & Performance Layer
-    GPU[08: GPU Architecture & FlashAttention-3] --> Inf[09: Inference Systems: PagedAttention, SGLang, PD Split]
-    GPU --> TS[07: Training Systems: FSDP-2, 3D Parallelism]
-    Net[18: Distributed Systems: Ring All-Reduce, RDMA] --> TS
+    GPU["08: GPU Architecture & FlashAttention-3"] --> Inf["09: Inference Systems (PagedAttention, SGLang, PD Split)"]
+    GPU --> TS["07: Training Systems (FSDP-2, 3D Parallelism)"]
+    Net["18: Distributed Systems (Ring All-Reduce, RDMA)"] --> TS
     LLM --> Inf
     LLM --> TS
     
     %% Training & Alignment Layer
-    Data[06: Data Engineering: MinHash LSH, Synthetic Flywheels] --> PT[05: Post-Training: SFT, LoRA, DPO, GRPO]
+    Data["06: Data Engineering (MinHash LSH, Synthetic Flywheels)"] --> PT["05: Post-Training (SFT, LoRA, DPO, GRPO)"]
     LLM --> PT
-    PT --> Eval[12: Evaluation: Z-Tests, ELO, SWE-bench]
+    PT --> Eval["12: Evaluation (Z-Tests, ELO, SWE-bench)"]
     
     %% Serving & Agent Layer
-    Inf --> Agent[10: Agentic Systems: ReAct, FSM JSON, MCP, Hybrid RAG]
-    Agent --> Rel[11: Long-Running Workflows: Temporal, Sagas, Jitter]
-    Rel --> Prod[13/14/15: Production MLOps, Tracing, Safety Guardrails]
+    Inf --> Agent["10: Agentic Systems (ReAct, FSM JSON, MCP, Hybrid RAG)"]
+    Agent --> Rel["11: Long-Running Workflows (Temporal, Sagas, Jitter)"]
+    Rel --> Prod["13/14/15: Production MLOps, Tracing, Safety Guardrails"]
     
     %% Synthesis Layer
-    Prod --> SysDes[16/17/19/20/21/22: System Design, Production Code & Final Playbooks]
+    Prod --> SysDes["16-22: System Design, Production Code & Playbooks"]
 ```
 
 ---

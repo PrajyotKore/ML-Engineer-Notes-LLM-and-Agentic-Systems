@@ -16,20 +16,21 @@
   <script src="https://cdn.jsdelivr.net/npm/mermaid@10.8.0/dist/mermaid.min.js"></script>
   <style>
     body { font-family: 'Inter', sans-serif; background: #0a0d14; color: #f1f5f9; line-height: 1.7; padding: 40px 20px; }
-    .container { max-width: 900px; margin: 0 auto; background: #111622; padding: 40px; border-radius: 12px; border: 1px solid rgba(255,255,255,0.08); }
-    h1 { font-family: 'Outfit', sans-serif; font-size: 2.2rem; border-bottom: 1px solid rgba(255,255,255,0.1); padding-bottom: 12px; color: #fff; }
-    h2 { font-family: 'Outfit', sans-serif; font-size: 1.5rem; margin-top: 36px; color: #e2e8f0; }
+    .container { max-width: 960px; margin: 0 auto; background: #111622; padding: 48px; border-radius: 12px; border: 1px solid rgba(255,255,255,0.08); }
+    h1 { font-family: 'Outfit', sans-serif; font-size: 2.2rem; border-bottom: 1px solid rgba(255,255,255,0.1); padding-bottom: 12px; color: #fff; margin-bottom: 24px; }
+    h2 { font-family: 'Outfit', sans-serif; font-size: 1.5rem; margin-top: 36px; color: #e2e8f0; border-bottom: 1px solid rgba(255,255,255,0.05); padding-bottom: 8px; }
     h3 { font-size: 1.2rem; margin-top: 24px; color: #cbd5e1; }
-    p, li { color: #cbd5e1; }
+    p, li { color: #cbd5e1; margin-bottom: 12px; }
     code { font-family: 'Fira Code', monospace; background: rgba(255,255,255,0.08); color: #f472b6; padding: 2px 6px; border-radius: 4px; }
-    pre { background: #0f141f !important; padding: 16px !important; border-radius: 8px; overflow-x: auto; }
+    pre { background: #0f141f !important; padding: 18px !important; border-radius: 8px; overflow-x: auto; margin-bottom: 20px; border: 1px solid rgba(255,255,255,0.08); }
     pre code { background: transparent !important; color: #e2e8f0; }
-    table { width: 100%; border-collapse: collapse; margin: 20px 0; background: rgba(0,0,0,0.2); }
-    th, td { border: 1px solid rgba(255,255,255,0.08); padding: 10px 14px; text-align: left; }
-    th { background: rgba(255,255,255,0.05); }
-    blockquote { border-left: 4px solid #6366f1; background: rgba(99,102,241,0.08); padding: 12px 18px; border-radius: 0 8px 8px 0; }
-    .nav-back { display: inline-block; margin-bottom: 20px; color: #818cf8; text-decoration: none; font-size: 0.9rem; }
+    table { width: 100%; border-collapse: collapse; margin: 24px 0; background: rgba(0,0,0,0.2); border: 1px solid rgba(255,255,255,0.08); }
+    th, td { border: 1px solid rgba(255,255,255,0.08); padding: 12px 14px; text-align: left; }
+    th { background: rgba(255,255,255,0.05); color: #fff; }
+    blockquote { border-left: 4px solid #6366f1; background: rgba(99,102,241,0.08); padding: 14px 18px; border-radius: 0 8px 8px 0; margin-bottom: 20px; }
+    .nav-back { display: inline-block; margin-bottom: 24px; color: #818cf8; text-decoration: none; font-size: 0.9rem; font-weight: 500; }
     .nav-back:hover { text-decoration: underline; }
+    .mermaid { background: rgba(15,20,31,0.9); padding: 20px; border-radius: 8px; margin: 20px 0; display: flex; justify-content: center; }
   </style>
 </head>
 <body>
@@ -39,19 +40,32 @@
   </div>
   <script>
     const rawMarkdown = "# 19_LEADERSHIP_AND_TECHNICAL_JUDGMENT \u2014 Staff & Principal Reference\n\n> **Audience**: ML Engineers, LLM Systems Engineers, and AI Researchers preparing for senior/principal technical interviews.  \n> **Core Objective**: Provide structured frameworks for navigating multi-million dollar compute trade-offs, leading critical production incidents, managing technical debt, and defending high-stakes ML engineering decisions.\n\n---\n\n## 1. The Staff/Principal Trade-Off Matrix\n\n```\n                                  \u250c\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2510\n                                  \u2502      The Architectural Triad  \u2502\n                                  \u2502   Quality vs Latency vs Cost  \u2502\n                                  \u2514\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u252c\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2518\n                                                  \u2502\n                 \u250c\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u253c\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2510\n                 \u25bc                                \u25bc                                \u25bc\n      [ Data vs Algorithm ]             [ Build vs Buy ]             [ Model Size vs Systems ]\n      - Data curation (High ROI)        - Use Postgres / Temporal    - 8B + Speculative Decode vs\n      - Custom loss (High Risk)         - Build custom Core IP       - 70B Dense Model\n```\n\n### 1.1 SFT vs. LoRA vs. In-Context Prompting\n- **In-Context Prompting**: Fast prototyping, zero training compute, but high inference token cost and long TTFT.\n- **LoRA / QLoRA**: Ideal when task adaptation requires structured format compliance, fast domain adaptation, and modular adapter switching on shared base weights.\n- **Full SFT / Pre-training**: Mandatory only when shifting fundamental linguistic/reasoning representations or pre-training on domain-specific corpora (medical, legal, code).\n\n---\n\n## 2. Production Incident Leadership Protocol\n\nWhen a critical production incident occurs (e.g. *\"Autonomous Agent enters infinite loop ordering duplicate financial trades\"*):\n\n```\nStep 1: Triage & Halt Bleed (Revert Canary / Disable Tool globally via feature flag)\n   \u2502 (Target: < 2 minutes | Do NOT attempt deep debugging yet!)\n   \u25bc\nStep 2: Stakeholder Communication (Quantify blast radius and declare mitigation)\n   \u2502\n   \u25bc\nStep 3: Root Cause Telemetry (Pull OpenTelemetry Traces, examine prompt/logits)\n   \u2502\n   \u25bc\nStep 4: Regression Hardening (Add failing trajectory to Golden Evaluation Suite)\n   \u2502\n   \u25bc\nStep 5: Blameless Post-Mortem & Architectural Remediation\n```\n\n---\n\n## 3. Deep Interview Interrogation Ladder\n\n- **Level 1 (Concept)**: When should an ML engineer say \"NO\" to fine-tuning a model?\n- **Level 5 (Cost Optimization)**: You are tasked with cutting a $200k/month inference bill in half without degrading user retention. Walk through your hierarchical optimization plan.\n- **Level 8 (Technical Strategy)**: The research team wants to implement a novel research activation function. The systems team wants to stick to standard SwiGLU. How do you arbitrate the decision?\n- **Level 10 (Principal Engineering)**: You have a team of 4 engineers and 6 months of compute runway. Design the product and infrastructure roadmap to take a prototype agent from 60% reliability to a 99.5% enterprise SLA.\n";
-    function renderMath(text) {
+    function renderMarkdown(rawText) {
       const blockMath = [];
-      text = text.replace(/\$\$([\s\S]*?)\$\$/g, (m, math) => { blockMath.push(math); return `%%%BM_${blockMath.length-1}%%%`; });
+      let text = rawText.replace(/\$\$([\s\S]*?)\$\$/g, (m, math) => { blockMath.push(math.trim()); return `%%%BM_${blockMath.length-1}%%%`; });
       const inlineMath = [];
-      text = text.replace(/\$([^\$\n]+?)\$/g, (m, math) => { inlineMath.push(math); return `%%%IM_${inlineMath.length-1}%%%`; });
+      text = text.replace(/\$([^\$\n]+?)\$/g, (m, math) => { inlineMath.push(math.trim()); return `%%%IM_${inlineMath.length-1}%%%`; });
       let html = marked.parse(text);
-      html = html.replace(/%%%BM_(\d+)%%%/g, (m, id) => katex.renderToString(blockMath[parseInt(id)], { displayMode: true, throwOnError: false }));
-      html = html.replace(/%%%IM_(\d+)%%%/g, (m, id) => katex.renderToString(inlineMath[parseInt(id)], { displayMode: false, throwOnError: false }));
+      html = html.replace(/%%%BM_(\d+)%%%/g, (m, id) => {
+        try { return katex.renderToString(blockMath[parseInt(id)], { displayMode: true, throwOnError: false }); } catch(e) { return `<pre>${blockMath[parseInt(id)]}</pre>`; }
+      });
+      html = html.replace(/%%%IM_(\d+)%%%/g, (m, id) => {
+        try { return katex.renderToString(inlineMath[parseInt(id)], { displayMode: false, throwOnError: false }); } catch(e) { return `<code>${inlineMath[parseInt(id)]}</code>`; }
+      });
       return html;
     }
-    document.getElementById('content').innerHTML = renderMath(rawMarkdown);
+    document.getElementById('content').innerHTML = renderMarkdown(rawMarkdown);
     Prism.highlightAll();
-    mermaid.initialize({ startOnLoad: true, theme: 'dark' });
+    mermaid.initialize({ startOnLoad: false, theme: 'dark' });
+    document.querySelectorAll('.language-mermaid').forEach(el => {
+      const parent = el.parentElement;
+      const code = el.textContent;
+      const div = document.createElement('div');
+      div.className = 'mermaid';
+      div.textContent = code;
+      parent.replaceWith(div);
+    });
+    mermaid.run();
   </script>
 </body>
 </html>

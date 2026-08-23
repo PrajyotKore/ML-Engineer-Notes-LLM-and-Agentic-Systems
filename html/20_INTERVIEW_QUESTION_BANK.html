@@ -16,20 +16,21 @@
   <script src="https://cdn.jsdelivr.net/npm/mermaid@10.8.0/dist/mermaid.min.js"></script>
   <style>
     body { font-family: 'Inter', sans-serif; background: #0a0d14; color: #f1f5f9; line-height: 1.7; padding: 40px 20px; }
-    .container { max-width: 900px; margin: 0 auto; background: #111622; padding: 40px; border-radius: 12px; border: 1px solid rgba(255,255,255,0.08); }
-    h1 { font-family: 'Outfit', sans-serif; font-size: 2.2rem; border-bottom: 1px solid rgba(255,255,255,0.1); padding-bottom: 12px; color: #fff; }
-    h2 { font-family: 'Outfit', sans-serif; font-size: 1.5rem; margin-top: 36px; color: #e2e8f0; }
+    .container { max-width: 960px; margin: 0 auto; background: #111622; padding: 48px; border-radius: 12px; border: 1px solid rgba(255,255,255,0.08); }
+    h1 { font-family: 'Outfit', sans-serif; font-size: 2.2rem; border-bottom: 1px solid rgba(255,255,255,0.1); padding-bottom: 12px; color: #fff; margin-bottom: 24px; }
+    h2 { font-family: 'Outfit', sans-serif; font-size: 1.5rem; margin-top: 36px; color: #e2e8f0; border-bottom: 1px solid rgba(255,255,255,0.05); padding-bottom: 8px; }
     h3 { font-size: 1.2rem; margin-top: 24px; color: #cbd5e1; }
-    p, li { color: #cbd5e1; }
+    p, li { color: #cbd5e1; margin-bottom: 12px; }
     code { font-family: 'Fira Code', monospace; background: rgba(255,255,255,0.08); color: #f472b6; padding: 2px 6px; border-radius: 4px; }
-    pre { background: #0f141f !important; padding: 16px !important; border-radius: 8px; overflow-x: auto; }
+    pre { background: #0f141f !important; padding: 18px !important; border-radius: 8px; overflow-x: auto; margin-bottom: 20px; border: 1px solid rgba(255,255,255,0.08); }
     pre code { background: transparent !important; color: #e2e8f0; }
-    table { width: 100%; border-collapse: collapse; margin: 20px 0; background: rgba(0,0,0,0.2); }
-    th, td { border: 1px solid rgba(255,255,255,0.08); padding: 10px 14px; text-align: left; }
-    th { background: rgba(255,255,255,0.05); }
-    blockquote { border-left: 4px solid #6366f1; background: rgba(99,102,241,0.08); padding: 12px 18px; border-radius: 0 8px 8px 0; }
-    .nav-back { display: inline-block; margin-bottom: 20px; color: #818cf8; text-decoration: none; font-size: 0.9rem; }
+    table { width: 100%; border-collapse: collapse; margin: 24px 0; background: rgba(0,0,0,0.2); border: 1px solid rgba(255,255,255,0.08); }
+    th, td { border: 1px solid rgba(255,255,255,0.08); padding: 12px 14px; text-align: left; }
+    th { background: rgba(255,255,255,0.05); color: #fff; }
+    blockquote { border-left: 4px solid #6366f1; background: rgba(99,102,241,0.08); padding: 14px 18px; border-radius: 0 8px 8px 0; margin-bottom: 20px; }
+    .nav-back { display: inline-block; margin-bottom: 24px; color: #818cf8; text-decoration: none; font-size: 0.9rem; font-weight: 500; }
     .nav-back:hover { text-decoration: underline; }
+    .mermaid { background: rgba(15,20,31,0.9); padding: 20px; border-radius: 8px; margin: 20px 0; display: flex; justify-content: center; }
   </style>
 </head>
 <body>
@@ -39,19 +40,32 @@
   </div>
   <script>
     const rawMarkdown = "# 20_INTERVIEW_QUESTION_BANK \u2014 50+ Graded Interview Questions\n\n> **Audience**: Candidates preparing for Senior, Staff, and Principal ML / LLM Systems Engineer interviews.  \n> **Structure**: Graded from **Level 1 (Foundations)** to **Level 10 (Principal Systems Architecture)**.\n\n---\n\n## 1. Mathematics, Attention & Transformer Mechanics\n\n- **Level 1**: What is the mathematical difference between an autoregressive decoder and a masked encoder?\n- **Level 2**: Why is the Softmax function invariant to constant addition ($z - c$)?\n- **Level 3**: Derive the analytical gradient of Cross-Entropy Loss with Softmax: $\\nabla_z \\mathcal{L} = p - y$.\n- **Level 4**: Prove mathematically why Query-Key dot products have variance equal to $d_k$, and why scaling by $\\frac{1}{\\sqrt{d_k}}$ is mandatory.\n- **Level 5**: In Rotary Position Embedding (RoPE), prove that $\\langle R_m q, R_n k \\rangle = g(q, k, m-n)$ preserves relative distance.\n- **Level 6**: Compare MHA, MQA, GQA, and MLA in terms of KV Cache footprint and compute FLOPs.\n- **Level 7**: Walk through the low-rank Key-Value compression and decoupled RoPE projections in Multi-Head Latent Attention (MLA).\n- **Level 8**: How does YaRN (Yet another RoPE extensioN) scale context windows without degrading local token relationships?\n- **Level 9**: Explain why SwiGLU requires $d_{ff} = \\frac{8}{3} d_{\\text{model}}$ to maintain exact parameter parity with standard ReLU FFN.\n- **Level 10**: Derive the memory layout and online softmax incremental update equations for FlashAttention-1, 2, and 3 on NVIDIA H100 GPUs.\n\n---\n\n## 2. Post-Training, Alignment & Reasoning Models\n\n- **Level 1**: What is the difference between SFT and Preference Optimization?\n- **Level 2**: Why do we mask prompt tokens from the SFT loss calculation?\n- **Level 3**: Derive the Bradley-Terry preference probability model from first principles.\n- **Level 4**: In LoRA, why is matrix $B$ initialized to zero and matrix $A$ to Gaussian noise?\n- **Level 5**: Walk through the complete mathematical derivation of DPO from the RLHF objective. Why does the partition function $Z(x)$ cancel out?\n- **Level 6**: Explain the NormalFloat4 (NF4) quantile construction in QLoRA.\n- **Level 7**: How does Group Relative Policy Optimization (GRPO) compute advantages without a Critic model?\n- **Level 8**: Why do rule-based verifiable rewards prevent reward hacking compared to neural reward models in mathematical reasoning tasks?\n- **Level 9**: Derive the analytical gradient of the DPO loss and explain the function of the implicit error weight $\\sigma(\\hat{r}_l - \\hat{r}_w)$.\n- **Level 10**: Design an automated test-time compute scaling harness combining Monte Carlo Tree Search (MCTS), Process Reward Models (PRMs), and GRPO for code generation.\n\n---\n\n## 3. GPU Architecture, Performance & Inference Systems\n\n- **Level 1**: What is the difference between Time To First Token (TTFT) and Time Per Output Token (TPOT)?\n- **Level 2**: Why is autoregressive decode memory-bandwidth bound at batch size 1?\n- **Level 3**: Calculate the critical ridge point $I^*$ in the Roofline Model for an NVIDIA H100 GPU.\n- **Level 4**: Calculate the exact KV cache memory footprint for a 70B model at batch size 32 and 8k context in FP16.\n- **Level 5**: How does PagedAttention eliminate memory fragmentation in GPU VRAM?\n- **Level 6**: Explain the Radix Tree prefix caching mechanism in SGLang.\n- **Level 7**: Prove mathematically why the expected number of tokens accepted per step in Speculative Decoding is $\\frac{1 - \\alpha^{K+1}}{1 - \\alpha}$.\n- **Level 8**: How does SmoothQuant mathematically migrate quantization outliers from activations to weights?\n- **Level 9**: Compare FP8 E4M3 and E5M2 data formats. Which format is optimal for weights vs. gradients?\n- **Level 10**: Architect a Disaggregated Prefill and Decode (PD Split) cluster for a 100k QPS serving platform with RDMA KV-cache transfers.\n\n---\n\n## 4. Distributed Systems & Training Infrastructures\n\n- **Level 1**: What is Data Parallelism vs. Model Parallelism?\n- **Level 2**: Why does AdamW require 16 bytes of static memory per parameter?\n- **Level 3**: Prove that Ring All-Reduce communication volume per node is $2 \\left(\\frac{N-1}{N}\\right) M$, independent of node count $N$.\n- **Level 4**: Explain the memory savings and communication primitives in ZeRO-1, ZeRO-2, and ZeRO-3 (FSDP).\n- **Level 5**: How does Megatron-LM split Linear layers in Tensor Parallelism using Column and Row Parallel layers?\n- **Level 6**: Derive the Pipeline Bubble Fraction $F_{\\text{bubble}} = \\frac{p-1}{m+p-1}$ for a 1F1B schedule.\n- **Level 7**: Compare Ring Attention and DeepSpeed Ulysses for context parallelism at 512k sequence lengths.\n- **Level 8**: What is GPUDirect RDMA and how does it bypass host CPU memory during inter-node transfers?\n- **Level 9**: Explain how DeepSeek-V3 implements Auxiliary-Loss-Free load balancing across Mixture-of-Experts (MoE) nodes.\n- **Level 10**: Design the 4D Parallelism strategy (TP $\\times$ PP $\\times$ EP $\\times$ DP) and network topology for training a 1-trillion parameter model across 16,384 GPUs.\n\n---\n\n## 5. Agentic Systems, Reliability & Production Engineering\n\n- **Level 1**: What is the ReAct loop?\n- **Level 2**: Why does an agent with 95% single-step accuracy fail on a 20-step task?\n- **Level 3**: How does FSM logit biasing guarantee 100% valid JSON schema adherence?\n- **Level 4**: Derive the Two-Proportion Z-Test formula for A/B testing and calculate the sample size needed to detect a 2% gain.\n- **Level 5**: How does Full Jitter in Exponential Backoff eliminate Thundering Herds?\n- **Level 6**: Explain the Bradley-Terry ELO rating update formula used in Chatbot Arena.\n- **Level 7**: How does the Distributed Saga pattern handle compensation rollbacks during multi-system agent failures?\n- **Level 8**: Calculate the Population Stability Index (PSI) and explain the standard threshold bounds for data drift.\n- **Level 9**: Design an OpenTelemetry distributed tracing schema for recursive multi-agent reflection loops.\n- **Level 10**: Architect an enterprise-grade autonomous agent platform with Firecracker microVM sandboxing, Model Context Protocol (MCP), and Temporal durable execution capable of handling 50,000 concurrent long-running workflows.\n";
-    function renderMath(text) {
+    function renderMarkdown(rawText) {
       const blockMath = [];
-      text = text.replace(/\$\$([\s\S]*?)\$\$/g, (m, math) => { blockMath.push(math); return `%%%BM_${blockMath.length-1}%%%`; });
+      let text = rawText.replace(/\$\$([\s\S]*?)\$\$/g, (m, math) => { blockMath.push(math.trim()); return `%%%BM_${blockMath.length-1}%%%`; });
       const inlineMath = [];
-      text = text.replace(/\$([^\$\n]+?)\$/g, (m, math) => { inlineMath.push(math); return `%%%IM_${inlineMath.length-1}%%%`; });
+      text = text.replace(/\$([^\$\n]+?)\$/g, (m, math) => { inlineMath.push(math.trim()); return `%%%IM_${inlineMath.length-1}%%%`; });
       let html = marked.parse(text);
-      html = html.replace(/%%%BM_(\d+)%%%/g, (m, id) => katex.renderToString(blockMath[parseInt(id)], { displayMode: true, throwOnError: false }));
-      html = html.replace(/%%%IM_(\d+)%%%/g, (m, id) => katex.renderToString(inlineMath[parseInt(id)], { displayMode: false, throwOnError: false }));
+      html = html.replace(/%%%BM_(\d+)%%%/g, (m, id) => {
+        try { return katex.renderToString(blockMath[parseInt(id)], { displayMode: true, throwOnError: false }); } catch(e) { return `<pre>${blockMath[parseInt(id)]}</pre>`; }
+      });
+      html = html.replace(/%%%IM_(\d+)%%%/g, (m, id) => {
+        try { return katex.renderToString(inlineMath[parseInt(id)], { displayMode: false, throwOnError: false }); } catch(e) { return `<code>${inlineMath[parseInt(id)]}</code>`; }
+      });
       return html;
     }
-    document.getElementById('content').innerHTML = renderMath(rawMarkdown);
+    document.getElementById('content').innerHTML = renderMarkdown(rawMarkdown);
     Prism.highlightAll();
-    mermaid.initialize({ startOnLoad: true, theme: 'dark' });
+    mermaid.initialize({ startOnLoad: false, theme: 'dark' });
+    document.querySelectorAll('.language-mermaid').forEach(el => {
+      const parent = el.parentElement;
+      const code = el.textContent;
+      const div = document.createElement('div');
+      div.className = 'mermaid';
+      div.textContent = code;
+      parent.replaceWith(div);
+    });
+    mermaid.run();
   </script>
 </body>
 </html>

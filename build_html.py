@@ -55,7 +55,7 @@ INDEX_HTML = r"""<!DOCTYPE html>
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>ML Engineer (LLM & Agentic Systems) — Master Reference</title>
+  <title>ML Engineer (LLM & Agentic Systems) — Master Reference Hub</title>
   
   <!-- Fonts -->
   <link rel="preconnect" href="https://fonts.googleapis.com">
@@ -65,7 +65,6 @@ INDEX_HTML = r"""<!DOCTYPE html>
   <!-- KaTeX for LaTeX Math -->
   <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/katex@0.16.9/dist/katex.min.css">
   <script defer src="https://cdn.jsdelivr.net/npm/katex@0.16.9/dist/katex.min.js"></script>
-  <script defer src="https://cdn.jsdelivr.net/npm/katex@0.16.9/dist/contrib/auto-render.min.js"></script>
 
   <!-- Marked (Markdown Parser) -->
   <script src="https://cdn.jsdelivr.net/npm/marked@11.1.1/marked.min.js"></script>
@@ -437,6 +436,53 @@ INDEX_HTML = r"""<!DOCTYPE html>
       overflow-y: hidden;
     }
 
+    /* Mermaid diagrams container */
+    .mermaid {
+      background: rgba(15, 20, 31, 0.9);
+      border: 1px solid var(--border-color);
+      border-radius: 8px;
+      padding: 20px;
+      margin-bottom: 24px;
+      display: flex;
+      justify-content: center;
+    }
+
+    /* Navigation Footer */
+    .doc-nav-footer {
+      display: flex;
+      justify-content: space-between;
+      margin-top: 60px;
+      padding-top: 24px;
+      border-top: 1px solid var(--border-color);
+    }
+    .doc-nav-btn {
+      display: flex;
+      flex-direction: column;
+      text-decoration: none;
+      padding: 12px 20px;
+      background: var(--bg-secondary);
+      border: 1px solid var(--border-color);
+      border-radius: 8px;
+      transition: all 0.2s;
+      cursor: pointer;
+    }
+    .doc-nav-btn:hover {
+      border-color: var(--accent-primary);
+      background: var(--bg-hover);
+    }
+    .doc-nav-btn .label {
+      font-size: 0.72rem;
+      color: var(--text-muted);
+      text-transform: uppercase;
+      letter-spacing: 0.05em;
+    }
+    .doc-nav-btn .title {
+      font-size: 0.9rem;
+      color: #818cf8;
+      font-weight: 600;
+      margin-top: 2px;
+    }
+
     /* Right TOC Sidebar */
     aside.toc-sidebar {
       width: var(--toc-width);
@@ -548,6 +594,14 @@ INDEX_HTML = r"""<!DOCTYPE html>
 
     let currentDocIndex = 0;
 
+    // Check URL Hash on Load
+    function getDocIndexFromHash() {
+      const hash = window.location.hash.replace('#', '');
+      if (!hash) return 0;
+      const foundIdx = DOCS.findIndex(d => d.id === hash || d.file.replace('.md', '') === hash);
+      return foundIdx !== -1 ? foundIdx : 0;
+    }
+
     // Initialize Navigation List
     function initNav() {
       const navList = document.getElementById('navList');
@@ -567,7 +621,12 @@ INDEX_HTML = r"""<!DOCTYPE html>
         const li = document.createElement('li');
         const a = document.createElement('a');
         a.className = `nav-item ${idx === currentDocIndex ? 'active' : ''}`;
-        a.onclick = () => loadDoc(idx);
+        a.href = `#${doc.id}`;
+        a.onclick = (e) => {
+          e.preventDefault();
+          window.location.hash = doc.id;
+          loadDoc(idx);
+        };
 
         const titleSpan = document.createElement('span');
         titleSpan.textContent = doc.file.replace('.md', '');
@@ -601,33 +660,39 @@ INDEX_HTML = r"""<!DOCTYPE html>
       // 1. Protect block math $$...$$
       const blockMath = [];
       let text = rawText.replace(/\$\$([\s\S]*?)\$\$/g, (match, math) => {
-        blockMath.push(math);
+        blockMath.push(math.trim());
         return `%%%BLOCK_MATH_${blockMath.length - 1}%%%`;
       });
 
       // 2. Protect inline math $...$
       const inlineMath = [];
       text = text.replace(/\$([^\$\n]+?)\$/g, (match, math) => {
-        inlineMath.push(math);
+        inlineMath.push(math.trim());
         return `%%%INLINE_MATH_${inlineMath.length - 1}%%%`;
       });
 
       // 3. Parse Markdown
       let html = marked.parse(text);
 
-      // 4. Restore block math
+      // 4. Restore block math with KaTeX
       html = html.replace(/%%%BLOCK_MATH_(\d+)%%%/g, (match, id) => {
         try {
-          return katex.renderToString(blockMath[parseInt(id)], { displayMode: true, throwOnError: false });
+          if (typeof katex !== 'undefined') {
+            return katex.renderToString(blockMath[parseInt(id)], { displayMode: true, throwOnError: false });
+          }
+          return `<div class="katex-display">$$${blockMath[parseInt(id)]}$$</div>`;
         } catch (e) {
           return `<pre class="math-error">${blockMath[parseInt(id)]}</pre>`;
         }
       });
 
-      // 5. Restore inline math
+      // 5. Restore inline math with KaTeX
       html = html.replace(/%%%INLINE_MATH_(\d+)%%%/g, (match, id) => {
         try {
-          return katex.renderToString(inlineMath[parseInt(id)], { displayMode: false, throwOnError: false });
+          if (typeof katex !== 'undefined') {
+            return katex.renderToString(inlineMath[parseInt(id)], { displayMode: false, throwOnError: false });
+          }
+          return `<code>$${inlineMath[parseInt(id)]}$</code>`;
         } catch (e) {
           return `<code>${inlineMath[parseInt(id)]}</code>`;
         }
@@ -647,12 +712,16 @@ INDEX_HTML = r"""<!DOCTYPE html>
 
         const li = document.createElement('li');
         li.className = 'toc-item';
-        if (h.tagName === 'H3') li.style.paddingLeft = '24px';
+        if (h.tagName === 'H3') li.style.paddingLeft = '18px';
 
         const a = document.createElement('a');
         a.className = 'toc-link';
         a.href = `#${id}`;
         a.textContent = h.textContent.replace(/^[0-9.]+\s*/, '');
+        a.onclick = (e) => {
+          e.preventDefault();
+          h.scrollIntoView({ behavior: 'smooth' });
+        };
         li.appendChild(a);
         tocList.appendChild(li);
       });
@@ -669,20 +738,40 @@ INDEX_HTML = r"""<!DOCTYPE html>
       const contentDiv = document.getElementById('docContent');
       contentDiv.innerHTML = renderMarkdownWithKaTeX(doc.content);
 
+      // Add Next / Previous navigation footer
+      const prevDoc = idx > 0 ? DOCS[idx - 1] : null;
+      const nextDoc = idx < DOCS.length - 1 ? DOCS[idx + 1] : null;
+      
+      let navFooterHtml = '<div class="doc-nav-footer">';
+      if (prevDoc) {
+        navFooterHtml += `<div class="doc-nav-btn" onclick="loadDoc(${idx - 1})"><span class="label">← Previous</span><span class="title">${prevDoc.file.replace('.md', '')}</span></div>`;
+      } else {
+        navFooterHtml += '<div></div>';
+      }
+      if (nextDoc) {
+        navFooterHtml += `<div class="doc-nav-btn" onclick="loadDoc(${idx + 1})" style="text-align: right;"><span class="label">Next →</span><span class="title">${nextDoc.file.replace('.md', '')}</span></div>`;
+      }
+      navFooterHtml += '</div>';
+      contentDiv.insertAdjacentHTML('beforeend', navFooterHtml);
+
       // Re-run Prism highlight
-      Prism.highlightAllUnder(contentDiv);
+      if (typeof Prism !== 'undefined') {
+        Prism.highlightAllUnder(contentDiv);
+      }
 
       // Re-run Mermaid
-      mermaid.initialize({ startOnLoad: false, theme: 'dark' });
-      document.querySelectorAll('.language-mermaid').forEach(el => {
-        const parent = el.parentElement;
-        const code = el.textContent;
-        const div = document.createElement('div');
-        div.className = 'mermaid';
-        div.textContent = code;
-        parent.replaceWith(div);
-      });
-      mermaid.run();
+      if (typeof mermaid !== 'undefined') {
+        mermaid.initialize({ startOnLoad: false, theme: 'dark', securityLevel: 'loose' });
+        document.querySelectorAll('.language-mermaid').forEach(el => {
+          const parent = el.parentElement;
+          const code = el.textContent;
+          const div = document.createElement('div');
+          div.className = 'mermaid';
+          div.textContent = code;
+          parent.replaceWith(div);
+        });
+        mermaid.run();
+      }
 
       // Generate TOC
       generateTOC();
@@ -691,10 +780,18 @@ INDEX_HTML = r"""<!DOCTYPE html>
       document.querySelector('.main-viewport').scrollTop = 0;
     }
 
+    // Hash change handler
+    window.addEventListener('hashchange', () => {
+      const idx = getDocIndexFromHash();
+      if (idx !== currentDocIndex) {
+        loadDoc(idx);
+      }
+    });
+
     // Initialize
     window.addEventListener('DOMContentLoaded', () => {
-      initNav();
-      loadDoc(0);
+      const initialIdx = getDocIndexFromHash();
+      loadDoc(initialIdx);
     });
   </script>
 </body>
@@ -728,20 +825,21 @@ STANDALONE_TEMPLATE = r"""<!DOCTYPE html>
   <script src="https://cdn.jsdelivr.net/npm/mermaid@10.8.0/dist/mermaid.min.js"></script>
   <style>
     body { font-family: 'Inter', sans-serif; background: #0a0d14; color: #f1f5f9; line-height: 1.7; padding: 40px 20px; }
-    .container { max-width: 900px; margin: 0 auto; background: #111622; padding: 40px; border-radius: 12px; border: 1px solid rgba(255,255,255,0.08); }
-    h1 { font-family: 'Outfit', sans-serif; font-size: 2.2rem; border-bottom: 1px solid rgba(255,255,255,0.1); padding-bottom: 12px; color: #fff; }
-    h2 { font-family: 'Outfit', sans-serif; font-size: 1.5rem; margin-top: 36px; color: #e2e8f0; }
+    .container { max-width: 960px; margin: 0 auto; background: #111622; padding: 48px; border-radius: 12px; border: 1px solid rgba(255,255,255,0.08); }
+    h1 { font-family: 'Outfit', sans-serif; font-size: 2.2rem; border-bottom: 1px solid rgba(255,255,255,0.1); padding-bottom: 12px; color: #fff; margin-bottom: 24px; }
+    h2 { font-family: 'Outfit', sans-serif; font-size: 1.5rem; margin-top: 36px; color: #e2e8f0; border-bottom: 1px solid rgba(255,255,255,0.05); padding-bottom: 8px; }
     h3 { font-size: 1.2rem; margin-top: 24px; color: #cbd5e1; }
-    p, li { color: #cbd5e1; }
+    p, li { color: #cbd5e1; margin-bottom: 12px; }
     code { font-family: 'Fira Code', monospace; background: rgba(255,255,255,0.08); color: #f472b6; padding: 2px 6px; border-radius: 4px; }
-    pre { background: #0f141f !important; padding: 16px !important; border-radius: 8px; overflow-x: auto; }
+    pre { background: #0f141f !important; padding: 18px !important; border-radius: 8px; overflow-x: auto; margin-bottom: 20px; border: 1px solid rgba(255,255,255,0.08); }
     pre code { background: transparent !important; color: #e2e8f0; }
-    table { width: 100%; border-collapse: collapse; margin: 20px 0; background: rgba(0,0,0,0.2); }
-    th, td { border: 1px solid rgba(255,255,255,0.08); padding: 10px 14px; text-align: left; }
-    th { background: rgba(255,255,255,0.05); }
-    blockquote { border-left: 4px solid #6366f1; background: rgba(99,102,241,0.08); padding: 12px 18px; border-radius: 0 8px 8px 0; }
-    .nav-back { display: inline-block; margin-bottom: 20px; color: #818cf8; text-decoration: none; font-size: 0.9rem; }
+    table { width: 100%; border-collapse: collapse; margin: 24px 0; background: rgba(0,0,0,0.2); border: 1px solid rgba(255,255,255,0.08); }
+    th, td { border: 1px solid rgba(255,255,255,0.08); padding: 12px 14px; text-align: left; }
+    th { background: rgba(255,255,255,0.05); color: #fff; }
+    blockquote { border-left: 4px solid #6366f1; background: rgba(99,102,241,0.08); padding: 14px 18px; border-radius: 0 8px 8px 0; margin-bottom: 20px; }
+    .nav-back { display: inline-block; margin-bottom: 24px; color: #818cf8; text-decoration: none; font-size: 0.9rem; font-weight: 500; }
     .nav-back:hover { text-decoration: underline; }
+    .mermaid { background: rgba(15,20,31,0.9); padding: 20px; border-radius: 8px; margin: 20px 0; display: flex; justify-content: center; }
   </style>
 </head>
 <body>
@@ -751,19 +849,32 @@ STANDALONE_TEMPLATE = r"""<!DOCTYPE html>
   </div>
   <script>
     const rawMarkdown = {{CONTENT_JSON}};
-    function renderMath(text) {
+    function renderMarkdown(rawText) {
       const blockMath = [];
-      text = text.replace(/\$\$([\s\S]*?)\$\$/g, (m, math) => { blockMath.push(math); return `%%%BM_${blockMath.length-1}%%%`; });
+      let text = rawText.replace(/\$\$([\s\S]*?)\$\$/g, (m, math) => { blockMath.push(math.trim()); return `%%%BM_${blockMath.length-1}%%%`; });
       const inlineMath = [];
-      text = text.replace(/\$([^\$\n]+?)\$/g, (m, math) => { inlineMath.push(math); return `%%%IM_${inlineMath.length-1}%%%`; });
+      text = text.replace(/\$([^\$\n]+?)\$/g, (m, math) => { inlineMath.push(math.trim()); return `%%%IM_${inlineMath.length-1}%%%`; });
       let html = marked.parse(text);
-      html = html.replace(/%%%BM_(\d+)%%%/g, (m, id) => katex.renderToString(blockMath[parseInt(id)], { displayMode: true, throwOnError: false }));
-      html = html.replace(/%%%IM_(\d+)%%%/g, (m, id) => katex.renderToString(inlineMath[parseInt(id)], { displayMode: false, throwOnError: false }));
+      html = html.replace(/%%%BM_(\d+)%%%/g, (m, id) => {
+        try { return katex.renderToString(blockMath[parseInt(id)], { displayMode: true, throwOnError: false }); } catch(e) { return `<pre>${blockMath[parseInt(id)]}</pre>`; }
+      });
+      html = html.replace(/%%%IM_(\d+)%%%/g, (m, id) => {
+        try { return katex.renderToString(inlineMath[parseInt(id)], { displayMode: false, throwOnError: false }); } catch(e) { return `<code>${inlineMath[parseInt(id)]}</code>`; }
+      });
       return html;
     }
-    document.getElementById('content').innerHTML = renderMath(rawMarkdown);
+    document.getElementById('content').innerHTML = renderMarkdown(rawMarkdown);
     Prism.highlightAll();
-    mermaid.initialize({ startOnLoad: true, theme: 'dark' });
+    mermaid.initialize({ startOnLoad: false, theme: 'dark' });
+    document.querySelectorAll('.language-mermaid').forEach(el => {
+      const parent = el.parentElement;
+      const code = el.textContent;
+      const div = document.createElement('div');
+      div.className = 'mermaid';
+      div.textContent = code;
+      parent.replaceWith(div);
+    });
+    mermaid.run();
   </script>
 </body>
 </html>
