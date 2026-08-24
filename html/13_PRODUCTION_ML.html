@@ -8,7 +8,7 @@
   <link href="https://fonts.googleapis.com/css2?family=Fira+Code:wght@400;500;600&family=Inter:wght@300;400;500;600;700;800&family=Outfit:wght@500;600;700;800&display=swap" rel="stylesheet">
   <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/katex@0.16.9/dist/katex.min.css">
   <script defer src="https://cdn.jsdelivr.net/npm/katex@0.16.9/dist/katex.min.js"></script>
-  <script src="https://cdn.jsdelivr.net/npm/marked@11.1.1/marked.min.js"></script>
+  <script defer src="https://cdn.jsdelivr.net/npm/katex@0.16.9/dist/contrib/auto-render.min.js"></script>
   <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/prism/1.29.0/themes/prism-tomorrow.min.css">
   <script src="https://cdnjs.cloudflare.com/ajax/libs/prism/1.29.0/prism.min.js"></script>
   <script src="https://cdnjs.cloudflare.com/ajax/libs/prism/1.29.0/components/prism-python.min.js"></script>
@@ -35,37 +35,153 @@
 </head>
 <body>
   <div class="container">
-    <a href="../index.html" class="nav-back">← Back to Master Knowledge Hub</a>
-    <div id="content"></div>
+    <a href="../index.html#13_PRODUCTION_ML" class="nav-back">← Back to Master Knowledge Hub</a>
+    <div id="content"><h1>13_PRODUCTION_ML — Mathematical &amp; MLOps Engineering Reference</h1>
+<blockquote>
+<p><strong>Audience</strong>: ML Engineers, LLM Systems Engineers, and AI Researchers preparing for senior/principal technical interviews.<br />
+<strong>Core Objective</strong>: Provide an exhaustive reference on production machine learning and MLOps — covering mathematical drift detection (PSI, KL Divergence, KS Test), safe rollout architectures (Canary, Shadow, Blue-Green), session pinning during rolling deployments, and automated CI/CD model promotion pipelines.</p>
+</blockquote>
+<hr />
+<h2>1. Mathematical Foundations of Distribution Drift Detection</h2>
+<p>In production, user queries and data distributions change continuously over time (Covariate Shift: <span class="katex-inline">$P(X)$</span> changes while <span class="katex-inline">$P(Y \mid X)$</span> remains fixed; Concept Drift: <span class="katex-inline">$P(Y \mid X)$</span> changes).</p>
+<pre><code>Training Distribution P_train(X) ────────► Model Frozen
+                                               │
+                                               ▼
+Production Distribution P_prod(X) ───────► Measure Drift: PSI, KL Divergence, KS-Test
+                                               │
+                                               ▼ (If PSI &gt; 0.25)
+                                          Trigger Automated Retraining Pipeline
+</code></pre>
+<h3>1.1 Population Stability Index (PSI)</h3>
+<p>Let the continuous feature or token distribution be binned into <span class="katex-inline">$K$</span> discrete quantile buckets.<br />
+Let <span class="katex-inline">$E_i$</span> be the expected proportion of samples in bucket <span class="katex-inline">$i$</span> from the baseline/training distribution (<span class="katex-inline">$P$</span>), and <span class="katex-inline">$A_i$</span> be the actual proportion of samples in bucket <span class="katex-inline">$i$</span> from production (<span class="katex-inline">$Q$</span>).</p>
+<div class="katex-display">$$\mathbf{\text{PSI} = \sum_{i=1}^K (A_i - E_i) \cdot \ln\left( \frac{A_i}{E_i} \right)}$$</div>
+
+<h4>Mathematical Properties of PSI:</h4>
+<ul>
+<li>Each term <span class="katex-inline">$(A_i - E_i) \ln(A_i / E_i) \geq 0$</span> because if <span class="katex-inline">$A_i &gt; E_i$</span>, then <span class="katex-inline">$\ln(A_i / E_i) &gt; 0$</span>, and if <span class="katex-inline">$A_i &lt; E_i$</span>, then <span class="katex-inline">$\ln(A_i / E_i) &lt; 0$</span>.</li>
+<li><strong>Symmetric Metric</strong>: PSI represents the symmetric KL divergence: <span class="katex-inline">$\text{PSI} = D_{KL}(A \parallel E) + D_{KL}(E \parallel A)$</span>.</li>
+<li><strong>Standard Industry Thresholds</strong>:</li>
+<li><span class="katex-inline">$\text{PSI} &lt; 0.10$</span>: <strong>No Significant Shift</strong> (Baseline stable).</li>
+<li><span class="katex-inline">$0.10 \leq \text{PSI} &lt; 0.25$</span>: <strong>Moderate Drift</strong> (Warn / Investigate).</li>
+<li><span class="katex-inline">$\text{PSI} \geq 0.25$</span>: <strong>Actionable Severe Drift</strong> (Block canary deployment / Trigger retraining).</li>
+</ul>
+<hr />
+<h3>1.2 Two-Sample Kolmogorov-Smirnov (KS) Test</h3>
+<p>For continuous metrics (e.g. prompt token lengths, latency distributions):<br />
+Let <span class="katex-inline">$F_{\text{train}}(x)$</span> and <span class="katex-inline">$F_{\text{prod}}(x)$</span> be empirical cumulative distribution functions (eCDFs).</p>
+<p>The KS statistic <span class="katex-inline">$D$</span> is the supremum distance between the two eCDFs:</p>
+<div class="katex-display">$$\mathbf{D = \sup_x |F_{\text{train}}(x) - F_{\text{prod}}(x)|}$$</div>
+
+<p>Reject the null hypothesis (distributions are identical) at significance level <span class="katex-inline">$\alpha = 0.05$</span> if:</p>
+<div class="katex-display">$$D &gt; c(\alpha) \sqrt{\frac{n_1 + n_2}{n_1 n_2}} \quad \left(c(0.05) = 1.36\right)$$</div>
+
+<hr />
+<h2>2. Production Deployment Strategies: Canary, Shadow, and Blue-Green</h2>
+<pre><code>┌─────────────────────────────────────────────────────────────────────────────┐
+│ 1. Blue-Green Deployment: Instant Cutover (100% Blue -&gt; 100% Green)          │
+│    - Zero downtime, but maximum blast radius if Green has a hidden bug!     │
+├─────────────────────────────────────────────────────────────────────────────┤
+│ 2. Canary Deployment: Incremental Traffic Shifting (1% -&gt; 5% -&gt; 25% -&gt; 100%)│
+│    - Minimizes blast radius, monitors P99 latency and error rates online    │
+├─────────────────────────────────────────────────────────────────────────────┤
+│ 3. Shadow / Dark Launch: Dual-Inference (100% Live -&gt; V1, Mirror -&gt; V2)     │
+│    - V2 runs silently on live traffic; outputs compared offline (Zero Risk) │
+└─────────────────────────────────────────────────────────────────────────────┘
+</code></pre>
+<hr />
+<h2>3. Session Pinning &amp; Affinity Routing in Agentic Systems</h2>
+<p>In multi-step long-running agent workflows:<br />
+If a rolling deployment updates Model V1 to Model V2 while an agent is at Step 3 of a 10-step plan:<br />
+- <strong>The Split-Brain Failure</strong>: Model V2 receives the intermediate context, interprets tool schemas slightly differently, and emits incompatible action arguments, crashing the workflow.</p>
+<h4>The Architectural Solution:</h4>
+<ul>
+<li><strong>Affinity Session Pinning</strong>: The API Gateway inspects the <code>workflow_id</code>.</li>
+<li>Active workflows remain strictly pinned to Model V1 replicas until completion.</li>
+<li>New workflow requests are routed to the Model V2 Canary.</li>
+</ul>
+<pre><code>Incoming Request ──► [ Istio / Envoy Router ]
+                            │
+            ┌───────────────┴───────────────┐
+            ▼ (Existing Workflow ID)         ▼ (New Session)
+    [ Model V1 Replicas ]           [ Model V2 Canary (5%) ]
+    (Pinned until completion)       (Evaluated on new traffic)
+</code></pre>
+<hr />
+<h2>4. Python Implementation: Population Stability Index (PSI) Calculator</h2>
+<pre><code class="language-python">import numpy as np
+
+def calculate_psi(expected: np.ndarray, actual: np.ndarray, num_buckets: int = 10, eps: float = 1e-4) -&gt; float:
+    &quot;&quot;&quot;
+    Calculates the Population Stability Index (PSI) between baseline and production distributions.
+    &quot;&quot;&quot;
+    # Define quantile bin boundaries based on expected distribution
+    percentiles = np.linspace(0, 100, num_buckets + 1)
+    bin_edges = np.percentile(expected, percentiles)
+    bin_edges[0] -= 1e-5
+    bin_edges[-1] += 1e-5
+
+    # Compute frequency counts in each bucket
+    expected_counts, _ = np.histogram(expected, bins=bin_edges)
+    actual_counts, _ = np.histogram(actual, bins=bin_edges)
+
+    # Convert to proportions
+    expected_pct = expected_counts / len(expected)
+    actual_pct = actual_counts / len(actual)
+
+    # Apply epsilon smoothing to prevent log(0) or division by zero
+    expected_pct = np.clip(expected_pct, eps, 1.0)
+    actual_pct = np.clip(actual_pct, eps, 1.0)
+
+    # PSI = ∑ (Actual - Expected) * ln(Actual / Expected)
+    psi_value = np.sum((actual_pct - expected_pct) * np.log(actual_pct / expected_pct))
+    return float(psi_value)
+
+if __name__ == &quot;__main__&quot;:
+    np.random.seed(42)
+    baseline_tokens = np.random.normal(loc=500, scale=100, size=10000)
+    stable_production = np.random.normal(loc=505, scale=102, size=5000)
+    drifted_production = np.random.normal(loc=750, scale=150, size=5000)
+
+    psi_stable = calculate_psi(baseline_tokens, stable_production)
+    psi_drift = calculate_psi(baseline_tokens, drifted_production)
+
+    print(f&quot;PSI (Stable Production): {psi_stable:.4f} (Status: STABLE)&quot;)
+    print(f&quot;PSI (Drifted Production): {psi_drift:.4f} (Status: SEVERE DRIFT)&quot;)
+
+    assert psi_stable &lt; 0.10, &quot;Expected stable PSI &lt; 0.10!&quot;
+    assert psi_drift &gt; 0.25, &quot;Expected drifted PSI &gt; 0.25!&quot;
+    print(&quot;PSI Drift Engine Verified Successfully.&quot;)
+</code></pre>
+<hr />
+<h2>5. Deep Interview Interrogation Ladder</h2>
+<ul>
+<li><strong>Level 1 (Concept)</strong>: What is the purpose of a Model Registry in MLOps?</li>
+<li><strong>Level 3 (Math)</strong>: Write the mathematical formula for Population Stability Index (PSI) and explain the standard threshold values.</li>
+<li><strong>Level 5 (Deployments)</strong>: Compare Blue-Green, Canary, and Shadow (Dark Launch) deployments in terms of cost, latency, and blast radius.</li>
+<li><strong>Level 7 (Drift)</strong>: Explain the mathematical difference between Covariate Shift and Concept Drift.</li>
+<li><strong>Level 9 (Agent Workflows)</strong>: Why does rolling model deployment break long-running agent workflows, and how does session-affinity routing prevent split-brain state?</li>
+<li><strong>Level 10 (Principal Engineering)</strong>: Design an automated MLOps CI/CD platform that continuously fine-tunes a 70B agent on high-quality production logs, validates against a 5,000-prompt offline suite, provisions a Shadow deployment, evaluates PSI drift, and promotes to Canary with zero human intervention.</li>
+</ul></div>
   </div>
   <script>
-    const rawMarkdown = "# 13_PRODUCTION_ML \u2014 Mathematical & MLOps Engineering Reference\n\n> **Audience**: ML Engineers, LLM Systems Engineers, and AI Researchers preparing for senior/principal technical interviews.  \n> **Core Objective**: Provide an exhaustive reference on production machine learning and MLOps \u2014 covering mathematical drift detection (PSI, KL Divergence, KS Test), safe rollout architectures (Canary, Shadow, Blue-Green), session pinning during rolling deployments, and automated CI/CD model promotion pipelines.\n\n---\n\n## 1. Mathematical Foundations of Distribution Drift Detection\n\nIn production, user queries and data distributions change continuously over time (Covariate Shift: $P(X)$ changes while $P(Y \\mid X)$ remains fixed; Concept Drift: $P(Y \\mid X)$ changes).\n\n```\nTraining Distribution P_train(X) \u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u25ba Model Frozen\n                                               \u2502\n                                               \u25bc\nProduction Distribution P_prod(X) \u2500\u2500\u2500\u2500\u2500\u2500\u2500\u25ba Measure Drift: PSI, KL Divergence, KS-Test\n                                               \u2502\n                                               \u25bc (If PSI > 0.25)\n                                          Trigger Automated Retraining Pipeline\n```\n\n### 1.1 Population Stability Index (PSI)\n\nLet the continuous feature or token distribution be binned into $K$ discrete quantile buckets.  \nLet $E_i$ be the expected proportion of samples in bucket $i$ from the baseline/training distribution ($P$), and $A_i$ be the actual proportion of samples in bucket $i$ from production ($Q$).\n\n$$ \\mathbf{\\text{PSI} = \\sum_{i=1}^K (A_i - E_i) \\cdot \\ln\\left( \\frac{A_i}{E_i} \\right)} $$\n\n#### Mathematical Properties of PSI:\n- Each term $(A_i - E_i) \\ln(A_i / E_i) \\geq 0$ because if $A_i > E_i$, then $\\ln(A_i / E_i) > 0$, and if $A_i < E_i$, then $\\ln(A_i / E_i) < 0$.\n- **Symmetric Metric**: PSI represents the symmetric KL divergence: $\\text{PSI} = D_{KL}(A \\parallel E) + D_{KL}(E \\parallel A)$.\n- **Standard Industry Thresholds**:\n  - $\\text{PSI} < 0.10$: **No Significant Shift** (Baseline stable).\n  - $0.10 \\leq \\text{PSI} < 0.25$: **Moderate Drift** (Warn / Investigate).\n  - $\\text{PSI} \\geq 0.25$: **Actionable Severe Drift** (Block canary deployment / Trigger retraining).\n\n---\n\n### 1.2 Two-Sample Kolmogorov-Smirnov (KS) Test\n\nFor continuous metrics (e.g. prompt token lengths, latency distributions):\nLet $F_{\\text{train}}(x)$ and $F_{\\text{prod}}(x)$ be empirical cumulative distribution functions (eCDFs).\n\nThe KS statistic $D$ is the supremum distance between the two eCDFs:\n$$ \\mathbf{D = \\sup_x |F_{\\text{train}}(x) - F_{\\text{prod}}(x)|} $$\n\nReject the null hypothesis (distributions are identical) at significance level $\\alpha = 0.05$ if:\n$$ D > c(\\alpha) \\sqrt{\\frac{n_1 + n_2}{n_1 n_2}} \\quad \\left(c(0.05) = 1.36\\right) $$\n\n---\n\n## 2. Production Deployment Strategies: Canary, Shadow, and Blue-Green\n\n```\n\u250c\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2510\n\u2502 1. Blue-Green Deployment: Instant Cutover (100% Blue -> 100% Green)          \u2502\n\u2502    - Zero downtime, but maximum blast radius if Green has a hidden bug!     \u2502\n\u251c\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2524\n\u2502 2. Canary Deployment: Incremental Traffic Shifting (1% -> 5% -> 25% -> 100%)\u2502\n\u2502    - Minimizes blast radius, monitors P99 latency and error rates online    \u2502\n\u251c\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2524\n\u2502 3. Shadow / Dark Launch: Dual-Inference (100% Live -> V1, Mirror -> V2)     \u2502\n\u2502    - V2 runs silently on live traffic; outputs compared offline (Zero Risk) \u2502\n\u2514\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2518\n```\n\n---\n\n## 3. Session Pinning & Affinity Routing in Agentic Systems\n\nIn multi-step long-running agent workflows:\nIf a rolling deployment updates Model V1 to Model V2 while an agent is at Step 3 of a 10-step plan:\n- **The Split-Brain Failure**: Model V2 receives the intermediate context, interprets tool schemas slightly differently, and emits incompatible action arguments, crashing the workflow.\n\n#### The Architectural Solution:\n- **Affinity Session Pinning**: The API Gateway inspects the `workflow_id`.\n- Active workflows remain strictly pinned to Model V1 replicas until completion.\n- New workflow requests are routed to the Model V2 Canary.\n\n```\nIncoming Request \u2500\u2500\u25ba [ Istio / Envoy Router ]\n                            \u2502\n            \u250c\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2534\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2510\n            \u25bc (Existing Workflow ID)         \u25bc (New Session)\n    [ Model V1 Replicas ]           [ Model V2 Canary (5%) ]\n    (Pinned until completion)       (Evaluated on new traffic)\n```\n\n---\n\n## 4. Python Implementation: Population Stability Index (PSI) Calculator\n\n```python\nimport numpy as np\n\ndef calculate_psi(expected: np.ndarray, actual: np.ndarray, num_buckets: int = 10, eps: float = 1e-4) -> float:\n    \"\"\"\n    Calculates the Population Stability Index (PSI) between baseline and production distributions.\n    \"\"\"\n    # Define quantile bin boundaries based on expected distribution\n    percentiles = np.linspace(0, 100, num_buckets + 1)\n    bin_edges = np.percentile(expected, percentiles)\n    bin_edges[0] -= 1e-5\n    bin_edges[-1] += 1e-5\n\n    # Compute frequency counts in each bucket\n    expected_counts, _ = np.histogram(expected, bins=bin_edges)\n    actual_counts, _ = np.histogram(actual, bins=bin_edges)\n\n    # Convert to proportions\n    expected_pct = expected_counts / len(expected)\n    actual_pct = actual_counts / len(actual)\n\n    # Apply epsilon smoothing to prevent log(0) or division by zero\n    expected_pct = np.clip(expected_pct, eps, 1.0)\n    actual_pct = np.clip(actual_pct, eps, 1.0)\n\n    # PSI = \u2211 (Actual - Expected) * ln(Actual / Expected)\n    psi_value = np.sum((actual_pct - expected_pct) * np.log(actual_pct / expected_pct))\n    return float(psi_value)\n\nif __name__ == \"__main__\":\n    np.random.seed(42)\n    baseline_tokens = np.random.normal(loc=500, scale=100, size=10000)\n    stable_production = np.random.normal(loc=505, scale=102, size=5000)\n    drifted_production = np.random.normal(loc=750, scale=150, size=5000)\n\n    psi_stable = calculate_psi(baseline_tokens, stable_production)\n    psi_drift = calculate_psi(baseline_tokens, drifted_production)\n\n    print(f\"PSI (Stable Production): {psi_stable:.4f} (Status: STABLE)\")\n    print(f\"PSI (Drifted Production): {psi_drift:.4f} (Status: SEVERE DRIFT)\")\n\n    assert psi_stable < 0.10, \"Expected stable PSI < 0.10!\"\n    assert psi_drift > 0.25, \"Expected drifted PSI > 0.25!\"\n    print(\"PSI Drift Engine Verified Successfully.\")\n```\n\n---\n\n## 5. Deep Interview Interrogation Ladder\n\n- **Level 1 (Concept)**: What is the purpose of a Model Registry in MLOps?\n- **Level 3 (Math)**: Write the mathematical formula for Population Stability Index (PSI) and explain the standard threshold values.\n- **Level 5 (Deployments)**: Compare Blue-Green, Canary, and Shadow (Dark Launch) deployments in terms of cost, latency, and blast radius.\n- **Level 7 (Drift)**: Explain the mathematical difference between Covariate Shift and Concept Drift.\n- **Level 9 (Agent Workflows)**: Why does rolling model deployment break long-running agent workflows, and how does session-affinity routing prevent split-brain state?\n- **Level 10 (Principal Engineering)**: Design an automated MLOps CI/CD platform that continuously fine-tunes a 70B agent on high-quality production logs, validates against a 5,000-prompt offline suite, provisions a Shadow deployment, evaluates PSI drift, and promotes to Canary with zero human intervention.\n";
-    function renderMarkdown(rawText) {
-      const blockMath = [];
-      let text = rawText.replace(/\$\$([\s\S]*?)\$\$/g, (m, math) => { blockMath.push(math.trim()); return `%%%BM_${blockMath.length-1}%%%`; });
-      const inlineMath = [];
-      text = text.replace(/\$([^\$\n]+?)\$/g, (m, math) => { inlineMath.push(math.trim()); return `%%%IM_${inlineMath.length-1}%%%`; });
-      let html = marked.parse(text);
-      html = html.replace(/%%%BM_(\d+)%%%/g, (m, id) => {
-        try { return katex.renderToString(blockMath[parseInt(id)], { displayMode: true, throwOnError: false }); } catch(e) { return `<pre>${blockMath[parseInt(id)]}</pre>`; }
-      });
-      html = html.replace(/%%%IM_(\d+)%%%/g, (m, id) => {
-        try { return katex.renderToString(inlineMath[parseInt(id)], { displayMode: false, throwOnError: false }); } catch(e) { return `<code>${inlineMath[parseInt(id)]}</code>`; }
-      });
-      return html;
-    }
-    document.getElementById('content').innerHTML = renderMarkdown(rawMarkdown);
-    Prism.highlightAll();
-    mermaid.initialize({ startOnLoad: false, theme: 'dark' });
-    document.querySelectorAll('.language-mermaid').forEach(el => {
-      const parent = el.parentElement;
-      const code = el.textContent;
-      const div = document.createElement('div');
-      div.className = 'mermaid';
-      div.textContent = code;
-      parent.replaceWith(div);
+    document.addEventListener('DOMContentLoaded', () => {
+      try {
+        if (typeof renderMathInElement !== 'undefined') {
+          renderMathInElement(document.getElementById('content'), {
+            delimiters: [
+              { left: '$$', right: '$$', display: true },
+              { left: '$', right: '$', display: false }
+            ],
+            throwOnError: false
+          });
+        }
+      } catch(e){}
+      try { Prism.highlightAll(); } catch(e){}
+      try {
+        mermaid.initialize({ startOnLoad: true, theme: 'dark' });
+      } catch(e){}
     });
-    mermaid.run();
   </script>
 </body>
 </html>

@@ -8,7 +8,7 @@
   <link href="https://fonts.googleapis.com/css2?family=Fira+Code:wght@400;500;600&family=Inter:wght@300;400;500;600;700;800&family=Outfit:wght@500;600;700;800&display=swap" rel="stylesheet">
   <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/katex@0.16.9/dist/katex.min.css">
   <script defer src="https://cdn.jsdelivr.net/npm/katex@0.16.9/dist/katex.min.js"></script>
-  <script src="https://cdn.jsdelivr.net/npm/marked@11.1.1/marked.min.js"></script>
+  <script defer src="https://cdn.jsdelivr.net/npm/katex@0.16.9/dist/contrib/auto-render.min.js"></script>
   <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/prism/1.29.0/themes/prism-tomorrow.min.css">
   <script src="https://cdnjs.cloudflare.com/ajax/libs/prism/1.29.0/prism.min.js"></script>
   <script src="https://cdnjs.cloudflare.com/ajax/libs/prism/1.29.0/components/prism-python.min.js"></script>
@@ -35,37 +35,202 @@
 </head>
 <body>
   <div class="container">
-    <a href="../index.html" class="nav-back">← Back to Master Knowledge Hub</a>
-    <div id="content"></div>
+    <a href="../index.html#06_DATA_AND_SYNTHETIC_DATA" class="nav-back">← Back to Master Knowledge Hub</a>
+    <div id="content"><h1>06_DATA_AND_SYNTHETIC_DATA — Mathematical &amp; Mechanistic Reference</h1>
+<blockquote>
+<p><strong>Audience</strong>: ML Engineers, LLM Systems Engineers, and AI Researchers preparing for senior/principal technical interviews.<br />
+<strong>Core Objective</strong>: Provide an exhaustive mathematical and algorithmic reference on data engineering for LLMs — covering MinHash LSH deduplication proofs, Model Collapse dynamics, decontamination metrics, synthetic data generation pipelines, and closed-loop production flywheels.</p>
+</blockquote>
+<hr />
+<h2>1. Deduplication Mathematics: MinHash &amp; Locality Sensitive Hashing (LSH)</h2>
+<p>Comparing all pairs in a dataset of <span class="katex-inline">$N = 10^8$</span> documents requires <span class="katex-inline">$\binom{N}{2} = \frac{N(N-1)}{2} \approx 5 \times 10^{15}$</span> comparisons, which is computationally intractable (<span class="katex-inline">$O(N^2)$</span>). MinHash with LSH reduces this to <strong><span class="katex-inline">$O(N)$</span> linear time</strong>.</p>
+<h3>1.1 Jaccard Similarity on <span class="katex-inline">$k$</span>-Shingles</h3>
+<p>Let document <span class="katex-inline">$D$</span> be represented as a set of <span class="katex-inline">$k$</span>-shingles (character or token <span class="katex-inline">$k$</span>-grams) <span class="katex-inline">$S(D)$</span>.<br />
+The Jaccard Similarity between documents <span class="katex-inline">$A$</span> and <span class="katex-inline">$B$</span> is:</p>
+<div class="katex-display">$$J(A, B) = \frac{|S(A) \cap S(B)|}{|S(A) \cup S(B)|} \in [0, 1]$$</div>
+
+<hr />
+<h3>1.2 The MinHash Theorem</h3>
+<p>Let <span class="katex-inline">$\pi$</span> be a random permutation of the universal vocabulary of shingles <span class="katex-inline">$\mathcal{U}$</span>.<br />
+Define the MinHash function <span class="katex-inline">$h_\pi(S) = \min_{s \in S} \pi(s)$</span>.</p>
+<h4>Theorem:</h4>
+<div class="katex-display">$$\mathbb{P}\left[ h_\pi(S(A)) = h_\pi(S(B)) \right] = J(A, B)$$</div>
+
+<h4>Step-by-Step Proof:</h4>
+<p>Let the universe of shingles <span class="katex-inline">$\mathcal{U}$</span> be partitioned into three disjoint sets:<br />
+1. <span class="katex-inline">$X$</span>: Shingles present in both <span class="katex-inline">$A$</span> and <span class="katex-inline">$B$</span> (<span class="katex-inline">$S(A) \cap S(B)$</span>). <span class="katex-inline">$|X| = |S(A) \cap S(B)|$</span>.<br />
+2. <span class="katex-inline">$Y$</span>: Shingles present in <span class="katex-inline">$A$</span> but not <span class="katex-inline">$B$</span> (<span class="katex-inline">$S(A) \setminus S(B)$</span>).<br />
+3. <span class="katex-inline">$Z$</span>: Shingles present in <span class="katex-inline">$B$</span> but not <span class="katex-inline">$A$</span> (<span class="katex-inline">$S(B) \setminus S(A)$</span>).<br />
+4. Shingles in neither <span class="katex-inline">$A$</span> nor <span class="katex-inline">$B$</span> do not affect <span class="katex-inline">$h_\pi(S(A) \cup S(B))$</span>.</p>
+<p>The union size is <span class="katex-inline">$|S(A) \cup S(B)| = |X| + |Y| + |Z|$</span>.<br />
+Under a uniform random permutation <span class="katex-inline">$\pi$</span>, every element in <span class="katex-inline">$S(A) \cup S(B)$</span> has an equal probability of being mapped to the minimum value.<br />
+The event <span class="katex-inline">$h_\pi(S(A)) = h_\pi(S(B))$</span> occurs if and only if the minimum element in <span class="katex-inline">$S(A) \cup S(B)$</span> falls into region <span class="katex-inline">$X$</span> (the intersection):</p>
+<div class="katex-display">$$\mathbb{P}\left[ h_\pi(S(A)) = h_\pi(S(B)) \right] = \frac{|X|}{|X| + |Y| + |Z|} = \frac{|S(A) \cap S(B)|}{|S(A) \cup S(B)|} = J(A, B)$$</div>
+
+<p><em>Implication</em>: By computing <span class="katex-inline">$K$</span> independent MinHash functions <span class="katex-inline">$[h_1(A), \dots, h_K(A)]$</span>, the empirical fraction of matching hash values is an <strong>unbiased estimator</strong> of <span class="katex-inline">$J(A, B)$</span>.</p>
+<hr />
+<h3>1.3 Locality Sensitive Hashing (LSH) S-Curve Analysis</h3>
+<p>To avoid all-to-all hash signature comparisons, we divide the <span class="katex-inline">$K$</span> hash values into <span class="katex-inline">$b$</span> bands of <span class="katex-inline">$r$</span> rows (<span class="katex-inline">$K = b \cdot r$</span>).</p>
+<pre><code>Document Signature (K = b · r hashes)
+┌──────────────┐ ─── Band 1 (r hashes) ───► Hash to Bucket (exact match required)
+├──────────────┤ ─── Band 2 (r hashes) ───► Hash to Bucket
+├──────────────┤ ─── ...
+└──────────────┘ ─── Band b (r hashes) ───► Hash to Bucket
+</code></pre>
+<p>Two documents <span class="katex-inline">$A$</span> and <span class="katex-inline">$B$</span> with Jaccard similarity <span class="katex-inline">$s = J(A, B)$</span> become candidate duplicates if they match in <strong>at least one band</strong>:<br />
+1. Probability of all <span class="katex-inline">$r$</span> hashes matching in a single band: <span class="katex-inline">$s^r$</span><br />
+2. Probability of not matching in a single band: <span class="katex-inline">$1 - s^r$</span><br />
+3. Probability of not matching in all <span class="katex-inline">$b$</span> bands: <span class="katex-inline">$(1 - s^r)^b$</span><br />
+4. Probability of matching in at least one band (Candidate Pair):<br />
+   <div class="katex-display">$$\mathbf{P(\text{Candidate Pair}) = 1 - (1 - s^r)^b}$$</div>
+</p>
+<pre><code>   P(Candidate)
+   1.0 ┼               ┌─────────────
+       │              /
+   0.5 ┼─────────────┼─ (Threshold s*)
+       │            /
+   0.0 ┼───────────┘
+       └─────────────┼───────────────► Jaccard Similarity s
+                    s* = (1/b)^(1/r)
+</code></pre>
+<ul>
+<li><strong>The Characteristic Threshold <span class="katex-inline">$s^*$</span></strong>:<br />
+  <div class="katex-display">$$1 - (1 - (s^*)^r)^b = 0.5 \implies (1 - (s^*)^r)^b = 0.5 \implies s^* \approx \left(\frac{1}{b}\right)^{1/r}$$</div></li>
+</ul>
+<p><em>Example</em>: Setting <span class="katex-inline">$b = 20$</span> bands and <span class="katex-inline">$r = 5$</span> rows (<span class="katex-inline">$K = 100$</span> hashes) yields <span class="katex-inline">$s^* = (1/20)^{1/5} \approx 0.549$</span>. Pairs with similarity <span class="katex-inline">$&gt; 0.7$</span> have <span class="katex-inline">$&gt; 98\%$</span> probability of collision, while pairs with <span class="katex-inline">$&lt; 0.3$</span> similarity have <span class="katex-inline">$&lt; 0.1\%$</span> collision rate.</p>
+<hr />
+<h2>2. Model Collapse: The Information-Theoretic Hazard</h2>
+<h3>2.1 Mathematical Formulation of Model Collapse (Shumailov et al., 2024)</h3>
+<p>Consider a recursive data flywheel where generation <span class="katex-inline">$n+1$</span> is trained exclusively on synthetic outputs produced by generation <span class="katex-inline">$n$</span>:</p>
+<div class="katex-display">$$P_{n+1}(x) = \arg\min_Q \mathbb{D}_{\text{KL}}\left( \hat{P}_n(x) \parallel Q(x) \right)$$</div>
+
+<p>Let the true data distribution be a Gaussian <span class="katex-inline">$P_0(x) = \mathcal{N}(\mu_0, \sigma_0^2)$</span>.<br />
+At each generation <span class="katex-inline">$n$</span>, the model samples a finite dataset <span class="katex-inline">$\mathcal{D}_n = \{x_1, \dots, x_{M_n}\} \sim P_n(x)$</span> and fits parameters <span class="katex-inline">$\mu_{n+1}, \sigma_{n+1}^2$</span>.</p>
+<h4>Mean and Variance Dynamics:</h4>
+<ol>
+<li><strong>Mean Drift</strong>:<br />
+   <div class="katex-display">$$\mu_{n+1} = \frac{1}{M_n} \sum_{i=1}^{M_n} x_i \implies \mathbb{E}[\mu_{n+1}] = \mu_0, \quad \text{Var}(\mu_n) = \sigma_0^2 \sum_{k=0}^{n-1} \frac{1}{M_k}$$</div></li>
+</ol>
+<p>As generations progress (<span class="katex-inline">$n \to \infty$</span>), the variance of the estimated mean grows linearly with generation count: <span class="katex-inline">$\text{Var}(\mu_n) \to \infty$</span>. The model drifts far away from the true distribution mean.</p>
+<ol start="2">
+<li><strong>Variance Shrinkage &amp; Tail Loss</strong>:<br />
+   <div class="katex-display">$$\mathbb{E}[\sigma_{n+1}^2] = \sigma_n^2 \left( 1 - \frac{1}{M_n} \right) = \sigma_0^2 \prod_{k=0}^n \left( 1 - \frac{1}{M_k} \right)$$</div></li>
+</ol>
+<p>As <span class="katex-inline">$n \to \infty$</span>:<br />
+   <div class="katex-display">$$\lim_{n \to \infty} \sigma_n^2 = 0$$</div>
+</p>
+<div class="katex-display">$$\mathbf{\lim_{n \to \infty} P_n(x) = \delta(x - \mu_\infty)}$$</div>
+
+<p><strong>Conclusion</strong>: The model distribution collapses to a <strong>Dirac delta function (point mass)</strong>. The model loses all linguistic and conceptual diversity, repeating only the most generic, high-probability tokens.</p>
+<hr />
+<h3>2.2 Mitigation: Anchored Synthetic Flywheels</h3>
+<p>To prevent model collapse:<br />
+1. <strong>Human Anchor</strong>: Mix synthetic data with a fixed minimum fraction (<span class="katex-inline">$\geq 20\%$</span>) of pristine human data.<br />
+2. <strong>Rejection Sampling / Verifiers</strong>: Filter synthetic generation using deterministic code execution sandboxes or high-precision unit tests rather than raw unconditional generations.</p>
+<hr />
+<h2>3. Benchmark Decontamination Mathematics</h2>
+<p>If evaluation benchmark questions leak into the pre-training or fine-tuning corpus, evaluation benchmarks measure <strong>memorization</strong> rather than generalization.</p>
+<h3>3.1 <span class="katex-inline">$N$</span>-Gram Bloom Filter Decontamination</h3>
+<p>Given test benchmark documents <span class="katex-inline">$\mathcal{D}_{\text{eval}}$</span>, extract all 13-token shingles <span class="katex-inline">$\mathcal{S}_{\text{eval}}$</span>.<br />
+Construct a <strong>Bloom Filter</strong> of <span class="katex-inline">$m$</span> bits and <span class="katex-inline">$k$</span> independent hash functions:</p>
+<div class="katex-display">$$k = \frac{m}{|S_{\text{eval}}|} \ln 2$$</div>
+<p>The theoretical False Positive Rate is:</p>
+<div class="katex-display">$$p_{\text{FP}} = \left( 1 - e^{-k |S_{\text{eval}}| / m} \right)^k$$</div>
+
+<p>A training document <span class="katex-inline">$D_{\text{train}}$</span> is flagged and removed if:</p>
+<div class="katex-display">$$\frac{|\{s \in S(D_{\text{train}}) : s \in \text{BloomFilter}(\mathcal{S}_{\text{eval}})\}|}{|S(D_{\text{train}})|} &gt; \tau_{\text{overlap}} \quad (\tau_{\text{overlap}} = 0.05)$$</div>
+
+<hr />
+<h2>4. PyTorch &amp; Python Implementation: MinHash LSH and Bloom Filter</h2>
+<pre><code class="language-python">import hashlib
+import numpy as np
+
+class MinHashLSH:
+    &quot;&quot;&quot;
+    MinHash with Locality Sensitive Hashing for document deduplication.
+    &quot;&quot;&quot;
+    def __init__(self, num_hashes: int = 100, num_bands: int = 20):
+        assert num_hashes % num_bands == 0
+        self.num_hashes = num_hashes
+        self.num_bands = num_bands
+        self.rows_per_band = num_hashes // num_bands
+
+        # Random hash coefficients: (a * x + b) % prime
+        np.random.seed(42)
+        self.a = np.random.randint(1, 2**31 - 1, size=num_hashes, dtype=np.int64)
+        self.b = np.random.randint(0, 2**31 - 1, size=num_hashes, dtype=np.int64)
+        self.prime = 2147483647 # 2^31 - 1 (Mersenne prime)
+
+    def _get_shingle_hashes(self, text: str, k: int = 5) -&gt; np.ndarray:
+        words = text.lower().split()
+        shingles = [&quot; &quot;.join(words[i:i+k]) for i in range(max(1, len(words) - k + 1))]
+        hashes = np.array([int(hashlib.md5(s.encode('utf-8')).hexdigest()[:8], 16) for s in shingles], dtype=np.int64)
+        return hashes
+
+    def compute_minhash(self, text: str) -&gt; np.ndarray:
+        shingle_hashes = self._get_shingle_hashes(text)
+        if len(shingle_hashes) == 0:
+            return np.zeros(self.num_hashes, dtype=np.int64)
+
+        # Matrix multiply: (num_hashes, len(shingles))
+        all_hashes = (np.outer(self.a, shingle_hashes) + self.b[:, None]) % self.prime
+        return np.min(all_hashes, axis=1)
+
+    def get_band_buckets(self, signature: np.ndarray) -&gt; list:
+        buckets = []
+        for i in range(self.num_bands):
+            start = i * self.rows_per_band
+            end = start + self.rows_per_band
+            band_slice = signature[start:end]
+            band_hash = hash(tuple(band_slice))
+            buckets.append((i, band_hash))
+        return buckets
+
+if __name__ == &quot;__main__&quot;:
+    lsh = MinHashLSH(num_hashes=100, num_bands=20)
+    doc1 = &quot;The Transformer attention mechanism uses scaled dot product attention for language modeling.&quot;
+    doc2 = &quot;The Transformer attention mechanism uses scaled dot product attention for sequence modeling.&quot;
+    doc3 = &quot;Convolutional neural networks apply kernel filters over spatial image grids for computer vision.&quot;
+
+    sig1 = lsh.compute_minhash(doc1)
+    sig2 = lsh.compute_minhash(doc2)
+    sig3 = lsh.compute_minhash(doc3)
+
+    jaccard_1_2 = np.mean(sig1 == sig2)
+    jaccard_1_3 = np.mean(sig1 == sig3)
+
+    print(f&quot;Estimated Jaccard(Doc1, Doc2): {jaccard_1_2:.2f} (Near Duplicate)&quot;)
+    print(f&quot;Estimated Jaccard(Doc1, Doc3): {jaccard_1_3:.2f} (Dissimilar)&quot;)
+</code></pre>
+<hr />
+<h2>5. Deep Interview Interrogation Ladder</h2>
+<ul>
+<li><strong>Level 1 (Concept)</strong>: What is the Jaccard similarity between two sets of text shingles?</li>
+<li><strong>Level 3 (Proof)</strong>: Prove mathematically why the probability of two documents having identical MinHash values equals their exact Jaccard similarity.</li>
+<li><strong>Level 5 (LSH Derivation)</strong>: Derive the characteristic S-curve threshold <span class="katex-inline">$s^* = (1/b)^{1/r}$</span> in Locality Sensitive Hashing.</li>
+<li><strong>Level 7 (Model Collapse)</strong>: Explain mathematically why recursive training on synthetic data causes the variance of the learned distribution to converge to zero.</li>
+<li><strong>Level 9 (Decontamination)</strong>: Design a petabyte-scale deduplication and benchmark decontamination pipeline using PySpark, MinHash LSH, and Bloom Filters for a 15-trillion token pre-training run.</li>
+<li><strong>Level 10 (Principal Engineering)</strong>: You observe that after 3 iterations of fine-tuning an agent on its own tool-use trajectories, the model's tool error recovery rate drops from 85% to 20%. Diagnose the mathematical root cause and architect a closed-loop data flywheel that fixes it.</li>
+</ul></div>
   </div>
   <script>
-    const rawMarkdown = "# 06_DATA_AND_SYNTHETIC_DATA \u2014 Mathematical & Mechanistic Reference\n\n> **Audience**: ML Engineers, LLM Systems Engineers, and AI Researchers preparing for senior/principal technical interviews.  \n> **Core Objective**: Provide an exhaustive mathematical and algorithmic reference on data engineering for LLMs \u2014 covering MinHash LSH deduplication proofs, Model Collapse dynamics, decontamination metrics, synthetic data generation pipelines, and closed-loop production flywheels.\n\n---\n\n## 1. Deduplication Mathematics: MinHash & Locality Sensitive Hashing (LSH)\n\nComparing all pairs in a dataset of $N = 10^8$ documents requires $\\binom{N}{2} = \\frac{N(N-1)}{2} \\approx 5 \\times 10^{15}$ comparisons, which is computationally intractable ($O(N^2)$). MinHash with LSH reduces this to **$O(N)$ linear time**.\n\n### 1.1 Jaccard Similarity on $k$-Shingles\nLet document $D$ be represented as a set of $k$-shingles (character or token $k$-grams) $S(D)$.  \nThe Jaccard Similarity between documents $A$ and $B$ is:\n\n$$ J(A, B) = \\frac{|S(A) \\cap S(B)|}{|S(A) \\cup S(B)|} \\in [0, 1] $$\n\n---\n\n### 1.2 The MinHash Theorem\n\nLet $\\pi$ be a random permutation of the universal vocabulary of shingles $\\mathcal{U}$.  \nDefine the MinHash function $h_\\pi(S) = \\min_{s \\in S} \\pi(s)$.\n\n#### Theorem:\n$$ \\mathbb{P}\\left[ h_\\pi(S(A)) = h_\\pi(S(B)) \\right] = J(A, B) $$\n\n#### Step-by-Step Proof:\nLet the universe of shingles $\\mathcal{U}$ be partitioned into three disjoint sets:\n1. $X$: Shingles present in both $A$ and $B$ ($S(A) \\cap S(B)$). $|X| = |S(A) \\cap S(B)|$.\n2. $Y$: Shingles present in $A$ but not $B$ ($S(A) \\setminus S(B)$).\n3. $Z$: Shingles present in $B$ but not $A$ ($S(B) \\setminus S(A)$).\n4. Shingles in neither $A$ nor $B$ do not affect $h_\\pi(S(A) \\cup S(B))$.\n\nThe union size is $|S(A) \\cup S(B)| = |X| + |Y| + |Z|$.  \nUnder a uniform random permutation $\\pi$, every element in $S(A) \\cup S(B)$ has an equal probability of being mapped to the minimum value.  \nThe event $h_\\pi(S(A)) = h_\\pi(S(B))$ occurs if and only if the minimum element in $S(A) \\cup S(B)$ falls into region $X$ (the intersection):\n$$ \\mathbb{P}\\left[ h_\\pi(S(A)) = h_\\pi(S(B)) \\right] = \\frac{|X|}{|X| + |Y| + |Z|} = \\frac{|S(A) \\cap S(B)|}{|S(A) \\cup S(B)|} = J(A, B) $$\n\n*Implication*: By computing $K$ independent MinHash functions $[h_1(A), \\dots, h_K(A)]$, the empirical fraction of matching hash values is an **unbiased estimator** of $J(A, B)$.\n\n---\n\n### 1.3 Locality Sensitive Hashing (LSH) S-Curve Analysis\n\nTo avoid all-to-all hash signature comparisons, we divide the $K$ hash values into $b$ bands of $r$ rows ($K = b \\cdot r$).\n\n```\nDocument Signature (K = b \u00b7 r hashes)\n\u250c\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2510 \u2500\u2500\u2500 Band 1 (r hashes) \u2500\u2500\u2500\u25ba Hash to Bucket (exact match required)\n\u251c\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2524 \u2500\u2500\u2500 Band 2 (r hashes) \u2500\u2500\u2500\u25ba Hash to Bucket\n\u251c\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2524 \u2500\u2500\u2500 ...\n\u2514\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2518 \u2500\u2500\u2500 Band b (r hashes) \u2500\u2500\u2500\u25ba Hash to Bucket\n```\n\nTwo documents $A$ and $B$ with Jaccard similarity $s = J(A, B)$ become candidate duplicates if they match in **at least one band**:\n1. Probability of all $r$ hashes matching in a single band: $s^r$\n2. Probability of not matching in a single band: $1 - s^r$\n3. Probability of not matching in all $b$ bands: $(1 - s^r)^b$\n4. Probability of matching in at least one band (Candidate Pair):\n   $$ \\mathbf{P(\\text{Candidate Pair}) = 1 - (1 - s^r)^b} $$\n\n```\n   P(Candidate)\n   1.0 \u253c               \u250c\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\n       \u2502              /\n   0.5 \u253c\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u253c\u2500 (Threshold s*)\n       \u2502            /\n   0.0 \u253c\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2518\n       \u2514\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u253c\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u25ba Jaccard Similarity s\n                    s* = (1/b)^(1/r)\n```\n\n- **The Characteristic Threshold $s^*$**:\n  $$ 1 - (1 - (s^*)^r)^b = 0.5 \\implies (1 - (s^*)^r)^b = 0.5 \\implies s^* \\approx \\left(\\frac{1}{b}\\right)^{1/r} $$\n  *Example*: Setting $b = 20$ bands and $r = 5$ rows ($K = 100$ hashes) yields $s^* = (1/20)^{1/5} \\approx 0.549$. Pairs with similarity $> 0.7$ have $> 98\\%$ probability of collision, while pairs with $< 0.3$ similarity have $< 0.1\\%$ collision rate.\n\n---\n\n## 2. Model Collapse: The Information-Theoretic Hazard\n\n### 2.1 Mathematical Formulation of Model Collapse (Shumailov et al., 2024)\n\nConsider a recursive data flywheel where generation $n+1$ is trained exclusively on synthetic outputs produced by generation $n$:\n$$ P_{n+1}(x) = \\arg\\min_Q \\mathbb{D}_{\\text{KL}}\\left( \\hat{P}_n(x) \\parallel Q(x) \\right) $$\n\nLet the true data distribution be a Gaussian $P_0(x) = \\mathcal{N}(\\mu_0, \\sigma_0^2)$.  \nAt each generation $n$, the model samples a finite dataset $\\mathcal{D}_n = \\{x_1, \\dots, x_{M_n}\\} \\sim P_n(x)$ and fits parameters $\\mu_{n+1}, \\sigma_{n+1}^2$.\n\n#### Mean and Variance Dynamics:\n1. **Mean Drift**:\n   $$ \\mu_{n+1} = \\frac{1}{M_n} \\sum_{i=1}^{M_n} x_i \\implies \\mathbb{E}[\\mu_{n+1}] = \\mu_0, \\quad \\text{Var}(\\mu_n) = \\sigma_0^2 \\sum_{k=0}^{n-1} \\frac{1}{M_k} $$\n   As generations progress ($n \\to \\infty$), the variance of the estimated mean grows linearly with generation count: $\\text{Var}(\\mu_n) \\to \\infty$. The model drifts far away from the true distribution mean.\n\n2. **Variance Shrinkage & Tail Loss**:\n   $$ \\mathbb{E}[\\sigma_{n+1}^2] = \\sigma_n^2 \\left( 1 - \\frac{1}{M_n} \\right) = \\sigma_0^2 \\prod_{k=0}^n \\left( 1 - \\frac{1}{M_k} \\right) $$\n   As $n \\to \\infty$:\n   $$ \\lim_{n \\to \\infty} \\sigma_n^2 = 0 $$\n\n$$\\mathbf{\\lim_{n \\to \\infty} P_n(x) = \\delta(x - \\mu_\\infty)}$$\n\n**Conclusion**: The model distribution collapses to a **Dirac delta function (point mass)**. The model loses all linguistic and conceptual diversity, repeating only the most generic, high-probability tokens.\n\n---\n\n### 2.2 Mitigation: Anchored Synthetic Flywheels\nTo prevent model collapse:\n1. **Human Anchor**: Mix synthetic data with a fixed minimum fraction ($\\geq 20\\%$) of pristine human data.\n2. **Rejection Sampling / Verifiers**: Filter synthetic generation using deterministic code execution sandboxes or high-precision unit tests rather than raw unconditional generations.\n\n---\n\n## 3. Benchmark Decontamination Mathematics\n\nIf evaluation benchmark questions leak into the pre-training or fine-tuning corpus, evaluation benchmarks measure **memorization** rather than generalization.\n\n### 3.1 $N$-Gram Bloom Filter Decontamination\n\nGiven test benchmark documents $\\mathcal{D}_{\\text{eval}}$, extract all 13-token shingles $\\mathcal{S}_{\\text{eval}}$.  \nConstruct a **Bloom Filter** of $m$ bits and $k$ independent hash functions:\n$$ k = \\frac{m}{|S_{\\text{eval}}|} \\ln 2 $$\nThe theoretical False Positive Rate is:\n$$ p_{\\text{FP}} = \\left( 1 - e^{-k |S_{\\text{eval}}| / m} \\right)^k $$\n\nA training document $D_{\\text{train}}$ is flagged and removed if:\n$$ \\frac{|\\{s \\in S(D_{\\text{train}}) : s \\in \\text{BloomFilter}(\\mathcal{S}_{\\text{eval}})\\}|}{|S(D_{\\text{train}})|} > \\tau_{\\text{overlap}} \\quad (\\tau_{\\text{overlap}} = 0.05) $$\n\n---\n\n## 4. PyTorch & Python Implementation: MinHash LSH and Bloom Filter\n\n```python\nimport hashlib\nimport numpy as np\n\nclass MinHashLSH:\n    \"\"\"\n    MinHash with Locality Sensitive Hashing for document deduplication.\n    \"\"\"\n    def __init__(self, num_hashes: int = 100, num_bands: int = 20):\n        assert num_hashes % num_bands == 0\n        self.num_hashes = num_hashes\n        self.num_bands = num_bands\n        self.rows_per_band = num_hashes // num_bands\n        \n        # Random hash coefficients: (a * x + b) % prime\n        np.random.seed(42)\n        self.a = np.random.randint(1, 2**31 - 1, size=num_hashes, dtype=np.int64)\n        self.b = np.random.randint(0, 2**31 - 1, size=num_hashes, dtype=np.int64)\n        self.prime = 2147483647 # 2^31 - 1 (Mersenne prime)\n\n    def _get_shingle_hashes(self, text: str, k: int = 5) -> np.ndarray:\n        words = text.lower().split()\n        shingles = [\" \".join(words[i:i+k]) for i in range(max(1, len(words) - k + 1))]\n        hashes = np.array([int(hashlib.md5(s.encode('utf-8')).hexdigest()[:8], 16) for s in shingles], dtype=np.int64)\n        return hashes\n\n    def compute_minhash(self, text: str) -> np.ndarray:\n        shingle_hashes = self._get_shingle_hashes(text)\n        if len(shingle_hashes) == 0:\n            return np.zeros(self.num_hashes, dtype=np.int64)\n        \n        # Matrix multiply: (num_hashes, len(shingles))\n        all_hashes = (np.outer(self.a, shingle_hashes) + self.b[:, None]) % self.prime\n        return np.min(all_hashes, axis=1)\n\n    def get_band_buckets(self, signature: np.ndarray) -> list:\n        buckets = []\n        for i in range(self.num_bands):\n            start = i * self.rows_per_band\n            end = start + self.rows_per_band\n            band_slice = signature[start:end]\n            band_hash = hash(tuple(band_slice))\n            buckets.append((i, band_hash))\n        return buckets\n\nif __name__ == \"__main__\":\n    lsh = MinHashLSH(num_hashes=100, num_bands=20)\n    doc1 = \"The Transformer attention mechanism uses scaled dot product attention for language modeling.\"\n    doc2 = \"The Transformer attention mechanism uses scaled dot product attention for sequence modeling.\"\n    doc3 = \"Convolutional neural networks apply kernel filters over spatial image grids for computer vision.\"\n    \n    sig1 = lsh.compute_minhash(doc1)\n    sig2 = lsh.compute_minhash(doc2)\n    sig3 = lsh.compute_minhash(doc3)\n    \n    jaccard_1_2 = np.mean(sig1 == sig2)\n    jaccard_1_3 = np.mean(sig1 == sig3)\n    \n    print(f\"Estimated Jaccard(Doc1, Doc2): {jaccard_1_2:.2f} (Near Duplicate)\")\n    print(f\"Estimated Jaccard(Doc1, Doc3): {jaccard_1_3:.2f} (Dissimilar)\")\n```\n\n---\n\n## 5. Deep Interview Interrogation Ladder\n\n- **Level 1 (Concept)**: What is the Jaccard similarity between two sets of text shingles?\n- **Level 3 (Proof)**: Prove mathematically why the probability of two documents having identical MinHash values equals their exact Jaccard similarity.\n- **Level 5 (LSH Derivation)**: Derive the characteristic S-curve threshold $s^* = (1/b)^{1/r}$ in Locality Sensitive Hashing.\n- **Level 7 (Model Collapse)**: Explain mathematically why recursive training on synthetic data causes the variance of the learned distribution to converge to zero.\n- **Level 9 (Decontamination)**: Design a petabyte-scale deduplication and benchmark decontamination pipeline using PySpark, MinHash LSH, and Bloom Filters for a 15-trillion token pre-training run.\n- **Level 10 (Principal Engineering)**: You observe that after 3 iterations of fine-tuning an agent on its own tool-use trajectories, the model's tool error recovery rate drops from 85% to 20%. Diagnose the mathematical root cause and architect a closed-loop data flywheel that fixes it.\n";
-    function renderMarkdown(rawText) {
-      const blockMath = [];
-      let text = rawText.replace(/\$\$([\s\S]*?)\$\$/g, (m, math) => { blockMath.push(math.trim()); return `%%%BM_${blockMath.length-1}%%%`; });
-      const inlineMath = [];
-      text = text.replace(/\$([^\$\n]+?)\$/g, (m, math) => { inlineMath.push(math.trim()); return `%%%IM_${inlineMath.length-1}%%%`; });
-      let html = marked.parse(text);
-      html = html.replace(/%%%BM_(\d+)%%%/g, (m, id) => {
-        try { return katex.renderToString(blockMath[parseInt(id)], { displayMode: true, throwOnError: false }); } catch(e) { return `<pre>${blockMath[parseInt(id)]}</pre>`; }
-      });
-      html = html.replace(/%%%IM_(\d+)%%%/g, (m, id) => {
-        try { return katex.renderToString(inlineMath[parseInt(id)], { displayMode: false, throwOnError: false }); } catch(e) { return `<code>${inlineMath[parseInt(id)]}</code>`; }
-      });
-      return html;
-    }
-    document.getElementById('content').innerHTML = renderMarkdown(rawMarkdown);
-    Prism.highlightAll();
-    mermaid.initialize({ startOnLoad: false, theme: 'dark' });
-    document.querySelectorAll('.language-mermaid').forEach(el => {
-      const parent = el.parentElement;
-      const code = el.textContent;
-      const div = document.createElement('div');
-      div.className = 'mermaid';
-      div.textContent = code;
-      parent.replaceWith(div);
+    document.addEventListener('DOMContentLoaded', () => {
+      try {
+        if (typeof renderMathInElement !== 'undefined') {
+          renderMathInElement(document.getElementById('content'), {
+            delimiters: [
+              { left: '$$', right: '$$', display: true },
+              { left: '$', right: '$', display: false }
+            ],
+            throwOnError: false
+          });
+        }
+      } catch(e){}
+      try { Prism.highlightAll(); } catch(e){}
+      try {
+        mermaid.initialize({ startOnLoad: true, theme: 'dark' });
+      } catch(e){}
     });
-    mermaid.run();
   </script>
 </body>
 </html>

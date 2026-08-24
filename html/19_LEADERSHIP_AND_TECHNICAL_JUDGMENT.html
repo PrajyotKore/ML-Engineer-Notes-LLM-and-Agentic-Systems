@@ -8,7 +8,7 @@
   <link href="https://fonts.googleapis.com/css2?family=Fira+Code:wght@400;500;600&family=Inter:wght@300;400;500;600;700;800&family=Outfit:wght@500;600;700;800&display=swap" rel="stylesheet">
   <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/katex@0.16.9/dist/katex.min.css">
   <script defer src="https://cdn.jsdelivr.net/npm/katex@0.16.9/dist/katex.min.js"></script>
-  <script src="https://cdn.jsdelivr.net/npm/marked@11.1.1/marked.min.js"></script>
+  <script defer src="https://cdn.jsdelivr.net/npm/katex@0.16.9/dist/contrib/auto-render.min.js"></script>
   <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/prism/1.29.0/themes/prism-tomorrow.min.css">
   <script src="https://cdnjs.cloudflare.com/ajax/libs/prism/1.29.0/prism.min.js"></script>
   <script src="https://cdnjs.cloudflare.com/ajax/libs/prism/1.29.0/components/prism-python.min.js"></script>
@@ -35,37 +35,75 @@
 </head>
 <body>
   <div class="container">
-    <a href="../index.html" class="nav-back">← Back to Master Knowledge Hub</a>
-    <div id="content"></div>
+    <a href="../index.html#19_LEADERSHIP_AND_TECHNICAL_JUDGMENT" class="nav-back">← Back to Master Knowledge Hub</a>
+    <div id="content"><h1>19_LEADERSHIP_AND_TECHNICAL_JUDGMENT — Staff &amp; Principal Reference</h1>
+<blockquote>
+<p><strong>Audience</strong>: ML Engineers, LLM Systems Engineers, and AI Researchers preparing for senior/principal technical interviews.<br />
+<strong>Core Objective</strong>: Provide structured frameworks for navigating multi-million dollar compute trade-offs, leading critical production incidents, managing technical debt, and defending high-stakes ML engineering decisions.</p>
+</blockquote>
+<hr />
+<h2>1. The Staff/Principal Trade-Off Matrix</h2>
+<pre><code>                                  ┌───────────────────────────────┐
+                                  │      The Architectural Triad  │
+                                  │   Quality vs Latency vs Cost  │
+                                  └───────────────┬───────────────┘
+                                                  │
+                 ┌────────────────────────────────┼────────────────────────────────┐
+                 ▼                                ▼                                ▼
+      [ Data vs Algorithm ]             [ Build vs Buy ]             [ Model Size vs Systems ]
+      - Data curation (High ROI)        - Use Postgres / Temporal    - 8B + Speculative Decode vs
+      - Custom loss (High Risk)         - Build custom Core IP       - 70B Dense Model
+</code></pre>
+<h3>1.1 SFT vs. LoRA vs. In-Context Prompting</h3>
+<ul>
+<li><strong>In-Context Prompting</strong>: Fast prototyping, zero training compute, but high inference token cost and long TTFT.</li>
+<li><strong>LoRA / QLoRA</strong>: Ideal when task adaptation requires structured format compliance, fast domain adaptation, and modular adapter switching on shared base weights.</li>
+<li><strong>Full SFT / Pre-training</strong>: Mandatory only when shifting fundamental linguistic/reasoning representations or pre-training on domain-specific corpora (medical, legal, code).</li>
+</ul>
+<hr />
+<h2>2. Production Incident Leadership Protocol</h2>
+<p>When a critical production incident occurs (e.g. <em>"Autonomous Agent enters infinite loop ordering duplicate financial trades"</em>):</p>
+<pre><code>Step 1: Triage &amp; Halt Bleed (Revert Canary / Disable Tool globally via feature flag)
+   │ (Target: &lt; 2 minutes | Do NOT attempt deep debugging yet!)
+   ▼
+Step 2: Stakeholder Communication (Quantify blast radius and declare mitigation)
+   │
+   ▼
+Step 3: Root Cause Telemetry (Pull OpenTelemetry Traces, examine prompt/logits)
+   │
+   ▼
+Step 4: Regression Hardening (Add failing trajectory to Golden Evaluation Suite)
+   │
+   ▼
+Step 5: Blameless Post-Mortem &amp; Architectural Remediation
+</code></pre>
+<hr />
+<h2>3. Deep Interview Interrogation Ladder</h2>
+<ul>
+<li><strong>Level 1 (Concept)</strong>: When should an ML engineer say "NO" to fine-tuning a model?</li>
+<li><strong>Level 5 (Cost Optimization)</strong>: You are tasked with cutting a $200k/month inference bill in half without degrading user retention. Walk through your hierarchical optimization plan.</li>
+<li><strong>Level 8 (Technical Strategy)</strong>: The research team wants to implement a novel research activation function. The systems team wants to stick to standard SwiGLU. How do you arbitrate the decision?</li>
+<li><strong>Level 10 (Principal Engineering)</strong>: You have a team of 4 engineers and 6 months of compute runway. Design the product and infrastructure roadmap to take a prototype agent from 60% reliability to a 99.5% enterprise SLA.</li>
+</ul></div>
   </div>
   <script>
-    const rawMarkdown = "# 19_LEADERSHIP_AND_TECHNICAL_JUDGMENT \u2014 Staff & Principal Reference\n\n> **Audience**: ML Engineers, LLM Systems Engineers, and AI Researchers preparing for senior/principal technical interviews.  \n> **Core Objective**: Provide structured frameworks for navigating multi-million dollar compute trade-offs, leading critical production incidents, managing technical debt, and defending high-stakes ML engineering decisions.\n\n---\n\n## 1. The Staff/Principal Trade-Off Matrix\n\n```\n                                  \u250c\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2510\n                                  \u2502      The Architectural Triad  \u2502\n                                  \u2502   Quality vs Latency vs Cost  \u2502\n                                  \u2514\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u252c\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2518\n                                                  \u2502\n                 \u250c\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u253c\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2510\n                 \u25bc                                \u25bc                                \u25bc\n      [ Data vs Algorithm ]             [ Build vs Buy ]             [ Model Size vs Systems ]\n      - Data curation (High ROI)        - Use Postgres / Temporal    - 8B + Speculative Decode vs\n      - Custom loss (High Risk)         - Build custom Core IP       - 70B Dense Model\n```\n\n### 1.1 SFT vs. LoRA vs. In-Context Prompting\n- **In-Context Prompting**: Fast prototyping, zero training compute, but high inference token cost and long TTFT.\n- **LoRA / QLoRA**: Ideal when task adaptation requires structured format compliance, fast domain adaptation, and modular adapter switching on shared base weights.\n- **Full SFT / Pre-training**: Mandatory only when shifting fundamental linguistic/reasoning representations or pre-training on domain-specific corpora (medical, legal, code).\n\n---\n\n## 2. Production Incident Leadership Protocol\n\nWhen a critical production incident occurs (e.g. *\"Autonomous Agent enters infinite loop ordering duplicate financial trades\"*):\n\n```\nStep 1: Triage & Halt Bleed (Revert Canary / Disable Tool globally via feature flag)\n   \u2502 (Target: < 2 minutes | Do NOT attempt deep debugging yet!)\n   \u25bc\nStep 2: Stakeholder Communication (Quantify blast radius and declare mitigation)\n   \u2502\n   \u25bc\nStep 3: Root Cause Telemetry (Pull OpenTelemetry Traces, examine prompt/logits)\n   \u2502\n   \u25bc\nStep 4: Regression Hardening (Add failing trajectory to Golden Evaluation Suite)\n   \u2502\n   \u25bc\nStep 5: Blameless Post-Mortem & Architectural Remediation\n```\n\n---\n\n## 3. Deep Interview Interrogation Ladder\n\n- **Level 1 (Concept)**: When should an ML engineer say \"NO\" to fine-tuning a model?\n- **Level 5 (Cost Optimization)**: You are tasked with cutting a $200k/month inference bill in half without degrading user retention. Walk through your hierarchical optimization plan.\n- **Level 8 (Technical Strategy)**: The research team wants to implement a novel research activation function. The systems team wants to stick to standard SwiGLU. How do you arbitrate the decision?\n- **Level 10 (Principal Engineering)**: You have a team of 4 engineers and 6 months of compute runway. Design the product and infrastructure roadmap to take a prototype agent from 60% reliability to a 99.5% enterprise SLA.\n";
-    function renderMarkdown(rawText) {
-      const blockMath = [];
-      let text = rawText.replace(/\$\$([\s\S]*?)\$\$/g, (m, math) => { blockMath.push(math.trim()); return `%%%BM_${blockMath.length-1}%%%`; });
-      const inlineMath = [];
-      text = text.replace(/\$([^\$\n]+?)\$/g, (m, math) => { inlineMath.push(math.trim()); return `%%%IM_${inlineMath.length-1}%%%`; });
-      let html = marked.parse(text);
-      html = html.replace(/%%%BM_(\d+)%%%/g, (m, id) => {
-        try { return katex.renderToString(blockMath[parseInt(id)], { displayMode: true, throwOnError: false }); } catch(e) { return `<pre>${blockMath[parseInt(id)]}</pre>`; }
-      });
-      html = html.replace(/%%%IM_(\d+)%%%/g, (m, id) => {
-        try { return katex.renderToString(inlineMath[parseInt(id)], { displayMode: false, throwOnError: false }); } catch(e) { return `<code>${inlineMath[parseInt(id)]}</code>`; }
-      });
-      return html;
-    }
-    document.getElementById('content').innerHTML = renderMarkdown(rawMarkdown);
-    Prism.highlightAll();
-    mermaid.initialize({ startOnLoad: false, theme: 'dark' });
-    document.querySelectorAll('.language-mermaid').forEach(el => {
-      const parent = el.parentElement;
-      const code = el.textContent;
-      const div = document.createElement('div');
-      div.className = 'mermaid';
-      div.textContent = code;
-      parent.replaceWith(div);
+    document.addEventListener('DOMContentLoaded', () => {
+      try {
+        if (typeof renderMathInElement !== 'undefined') {
+          renderMathInElement(document.getElementById('content'), {
+            delimiters: [
+              { left: '$$', right: '$$', display: true },
+              { left: '$', right: '$', display: false }
+            ],
+            throwOnError: false
+          });
+        }
+      } catch(e){}
+      try { Prism.highlightAll(); } catch(e){}
+      try {
+        mermaid.initialize({ startOnLoad: true, theme: 'dark' });
+      } catch(e){}
     });
-    mermaid.run();
   </script>
 </body>
 </html>

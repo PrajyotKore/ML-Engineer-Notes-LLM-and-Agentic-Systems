@@ -8,7 +8,7 @@
   <link href="https://fonts.googleapis.com/css2?family=Fira+Code:wght@400;500;600&family=Inter:wght@300;400;500;600;700;800&family=Outfit:wght@500;600;700;800&display=swap" rel="stylesheet">
   <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/katex@0.16.9/dist/katex.min.css">
   <script defer src="https://cdn.jsdelivr.net/npm/katex@0.16.9/dist/katex.min.js"></script>
-  <script src="https://cdn.jsdelivr.net/npm/marked@11.1.1/marked.min.js"></script>
+  <script defer src="https://cdn.jsdelivr.net/npm/katex@0.16.9/dist/contrib/auto-render.min.js"></script>
   <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/prism/1.29.0/themes/prism-tomorrow.min.css">
   <script src="https://cdnjs.cloudflare.com/ajax/libs/prism/1.29.0/prism.min.js"></script>
   <script src="https://cdnjs.cloudflare.com/ajax/libs/prism/1.29.0/components/prism-python.min.js"></script>
@@ -35,37 +35,383 @@
 </head>
 <body>
   <div class="container">
-    <a href="../index.html" class="nav-back">← Back to Master Knowledge Hub</a>
-    <div id="content"></div>
+    <a href="../index.html#04_TRANSFORMERS_AND_LLMS" class="nav-back">← Back to Master Knowledge Hub</a>
+    <div id="content"><h1>04_TRANSFORMERS_AND_LLMS — Mathematical &amp; Architectural Reference</h1>
+<blockquote>
+<p><strong>Audience</strong>: ML Engineers, LLM Systems Engineers, and AI Researchers preparing for senior/principal technical interviews.<br />
+<strong>Core Objective</strong>: Provide an exhaustive, mathematically rigorous masterclass on Transformer mechanics — covering Scaled Dot-Product Attention, Multi-Head Latent Attention (MLA), RoPE/YaRN mathematical proofs, SwiGLU gating, Mixture of Experts (MoE) load balancing, and long-context scaling.</p>
+</blockquote>
+<hr />
+<h2>1. The Core Attention Machinery</h2>
+<h3>1.1 Scaled Dot-Product Attention: Variance Preservation Derivation</h3>
+<p>Let <span class="katex-inline">$Q \in \mathbb{R}^{B \times S_q \times d_k}$</span>, <span class="katex-inline">$K \in \mathbb{R}^{B \times S_{kv} \times d_k}$</span>, and <span class="katex-inline">$V \in \mathbb{R}^{B \times S_{kv} \times d_v}$</span> denote Query, Key, and Value tensors.</p>
+<div class="katex-display">$$\text{Attention}(Q, K, V) = \text{Softmax}\left( \frac{Q K^T}{\sqrt{d_k}} + M \right) V$$</div>
+
+<p>Where <span class="katex-inline">$M \in \mathbb{R}^{S_q \times S_{kv}}$</span> is the causal attention mask:</p>
+<div class="katex-display">$$M_{ij} = \begin{cases} 0 &amp; \text{if } i \geq j \\ -\infty &amp; \text{if } i &lt; j \end{cases}$$</div>
+
+<h4>Mathematical Proof: Why the <span class="katex-inline">$\frac{1}{\sqrt{d_k}}$</span> Scaling Factor is Mandatory</h4>
+<p>Consider a single query vector <span class="katex-inline">$q \in \mathbb{R}^{d_k}$</span> and key vector <span class="katex-inline">$k \in \mathbb{R}^{d_k}$</span>. Assume components <span class="katex-inline">$q_i, k_i$</span> are independent random variables with zero mean and unit variance:</p>
+<div class="katex-display">$$\mathbb{E}[q_i] = \mathbb{E}[k_i] = 0, \quad \text{Var}(q_i) = \text{Var}(k_i) = 1$$</div>
+
+<p>The dot product is <span class="katex-inline">$S = q^T k = \sum_{i=1}^{d_k} q_i k_i$</span>.<br />
+1. <strong>Expected Value</strong>:<br />
+   <div class="katex-display">$$\mathbb{E}[S] = \mathbb{E}\left[\sum_{i=1}^{d_k} q_i k_i\right] = \sum_{i=1}^{d_k} \mathbb{E}[q_i] \mathbb{E}[k_i] = 0$$</div></p>
+<ol start="2">
+<li><strong>Variance</strong>:<br />
+   <div class="katex-display">$$\text{Var}(S) = \text{Var}\left(\sum_{i=1}^{d_k} q_i k_i\right) = \sum_{i=1}^{d_k} \text{Var}(q_i k_i)$$</div></li>
+</ol>
+<p>Since <span class="katex-inline">$q_i, k_i$</span> are independent:<br />
+   <div class="katex-display">$$\text{Var}(q_i k_i) = \mathbb{E}[(q_i k_i)^2] - (\mathbb{E}[q_i k_i])^2 = \mathbb{E}[q_i^2]\mathbb{E}[k_i^2] - 0 = \text{Var}(q_i)\text{Var}(k_i) = 1 \cdot 1 = 1$$</div></p>
+<p>Therefore:<br />
+   <div class="katex-display">$$\mathbf{\text{Var}(S) = \sum_{i=1}^{d_k} 1 = d_k \implies \text{Std}(S) = \sqrt{d_k}}$$</div>
+</p>
+<h4>The Failure Mode without Scaling:</h4>
+<p>For modern head dimensions <span class="katex-inline">$d_k = 128$</span>, <span class="katex-inline">$\text{Std}(S) = \sqrt{128} \approx 11.31$</span>.<br />
+When logits have standard deviation <span class="katex-inline">$\sim 11.3$</span>, the Softmax function pushes outputs to extreme values (<span class="katex-inline">$p_{\max} \approx 1, p_i \approx 0$</span>).<br />
+Recall the Softmax Jacobian: <span class="katex-inline">$\frac{\partial p_i}{\partial z_j} = p_i(\delta_{ij} - p_j)$</span>.<br />
+When <span class="katex-inline">$p_i \in \{0, 1\}$</span>, <span class="katex-inline">$p_i(1 - p_i) \to 0$</span>, causing <strong>vanishing gradients</strong> across the entire attention layer during backpropagation.<br />
+Scaling by <span class="katex-inline">$\frac{1}{\sqrt{d_k}}$</span> normalizes <span class="katex-inline">$\text{Var}\left(\frac{q^T k}{\sqrt{d_k}}\right) = 1$</span>, keeping gradients within the optimal non-saturating zone.</p>
+<hr />
+<h3>1.2 Attention Taxonomy: MHA, MQA, GQA, and MLA</h3>
+<pre><code>┌────────────────────────┐  ┌────────────────────────┐  ┌────────────────────────┐  ┌────────────────────────┐
+│ MHA (Vaswani et al.)   │  │ MQA (Shazeer 2019)     │  │ GQA (Ainslie et al.)   │  │ MLA (DeepSeek-V2/V3)   │
+│ N_q = 64, N_kv = 64    │  │ N_q = 64, N_kv = 1     │  │ N_q = 64, N_kv = 8     │  │ Low-Rank Latent Vector │
+│ KV Cache: 100% (High)  │  │ KV Cache: 1.56% (Lossy)│  │ KV Cache: 12.5% (Ideal)│  │ KV Cache: ~10% (Exact) │
+└────────────────────────┘  └────────────────────────┘  └────────────────────────┘  └────────────────────────┘
+</code></pre>
+<h4>Mathematical Comparison Table:</h4>
+<table>
+<thead>
+<tr>
+<th style="text-align: left;">Architecture</th>
+<th style="text-align: left;">Query Heads (<span class="katex-inline">$N_q$</span>)</th>
+<th style="text-align: left;">Key/Value Heads (<span class="katex-inline">$N_{kv}$</span>)</th>
+<th style="text-align: left;">KV Cache Memory per Token/Layer</th>
+<th style="text-align: left;">Quality / Accuracy Retention</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td style="text-align: left;"><strong>Multi-Head Attention (MHA)</strong></td>
+<td style="text-align: left;"><span class="katex-inline">$H$</span></td>
+<td style="text-align: left;"><span class="katex-inline">$H$</span></td>
+<td style="text-align: left;"><span class="katex-inline">$2 \cdot H \cdot d_k \cdot 2 \text{ bytes}$</span></td>
+<td style="text-align: left;">100% (Baseline)</td>
+</tr>
+<tr>
+<td style="text-align: left;"><strong>Multi-Query Attention (MQA)</strong></td>
+<td style="text-align: left;"><span class="katex-inline">$H$</span></td>
+<td style="text-align: left;"><span class="katex-inline">$1$</span></td>
+<td style="text-align: left;"><span class="katex-inline">$2 \cdot 1 \cdot d_k \cdot 2 \text{ bytes}$</span></td>
+<td style="text-align: left;">Noticeable quality degradation on complex retrieval</td>
+</tr>
+<tr>
+<td style="text-align: left;"><strong>Grouped-Query Attention (GQA)</strong></td>
+<td style="text-align: left;"><span class="katex-inline">$H$</span></td>
+<td style="text-align: left;"><span class="katex-inline">$G = \frac{H}{\text{group\_size}}$</span></td>
+<td style="text-align: left;"><span class="katex-inline">$2 \cdot G \cdot d_k \cdot 2 \text{ bytes}$</span></td>
+<td style="text-align: left;"><span class="katex-inline">$\sim 99\%$</span> of MHA quality with <span class="katex-inline">$\frac{H}{G}\times$</span> memory savings</td>
+</tr>
+<tr>
+<td style="text-align: left;"><strong>Multi-Head Latent Attention (MLA)</strong></td>
+<td style="text-align: left;"><span class="katex-inline">$H$</span></td>
+<td style="text-align: left;">Compressed Latent <span class="katex-inline">$d_c$</span></td>
+<td style="text-align: left;"><span class="katex-inline">$(d_c + d_R) \cdot 2 \text{ bytes}$</span></td>
+<td style="text-align: left;">Matches or exceeds MHA quality with lower footprint</td>
+</tr>
+</tbody>
+</table>
+<hr />
+<h2>2. Multi-Head Latent Attention (MLA) — DeepSeek Architecture</h2>
+<h3>2.1 Theoretical Motivation</h3>
+<p>In standard GQA (e.g. LLaMA-3 70B with <span class="katex-inline">$N_{kv}=8, d_k=128$</span>), the KV cache at 128k context still occupies hundreds of gigabytes across the cluster, severely bounding inference throughput. DeepSeek introduced <strong>Multi-Head Latent Attention (MLA)</strong> to compress Key and Value representations into a low-rank latent space while preserving full expressive power.</p>
+<h3>2.2 Mathematical Formulation of MLA</h3>
+<p>Let <span class="katex-inline">$h_t \in \mathbb{R}^{d_{\text{model}}}$</span> be the hidden state at token <span class="katex-inline">$t$</span>.</p>
+<pre><code>Hidden State h_t (dim d_model)
+   │
+   ├───► Down-Projection: c_t^{KV} = W^{DKV} · h_t   [Compressed KV Latent: dim d_c &lt;&lt; H · d_h]
+   │        │
+   │        ├──► Up-Projection Keys:   k_{t, i}^C = W_i^{UK} · c_t^{KV}
+   │        └──► Up-Projection Values: v_{t, i}^C = W_i^{UV} · c_t^{KV}
+   │
+   └───► Decoupled RoPE Key:           k_t^R = RoPE(W^{KR} · h_t)  [dim d_R]
+</code></pre>
+<h4>Step 1: Low-Rank KV Compression (For Cache Storage)</h4>
+<p>Instead of caching full high-dimensional <span class="katex-inline">$K$</span> and <span class="katex-inline">$V$</span> tensors, MLA projects <span class="katex-inline">$h_t$</span> into a compressed latent vector <span class="katex-inline">$c_t^{KV} \in \mathbb{R}^{d_c}$</span> (<span class="katex-inline">$d_c \ll N_h \cdot d_h$</span>):</p>
+<div class="katex-display">$$c_t^{KV} = W^{DKV} h_t \quad \text{where } W^{DKV} \in \mathbb{R}^{d_c \times d_{\text{model}}}$$</div>
+
+<h4>Step 2: Decoupled Key Generation</h4>
+<p>Because Rotary Positional Embeddings (RoPE) are position-dependent and cannot be directly multiplied into static low-rank matrices, MLA decouples Keys into <strong>content</strong> and <strong>rotary position</strong> components:</p>
+<div class="katex-display">$$k_{t, i}^C = W_i^{UK} c_t^{KV} \in \mathbb{R}^{d_h} \quad \text{(Content Key for head } i \text{)}$$</div>
+<div class="katex-display">$$k_t^R = \text{RoPE}(W^{KR} h_t, t) \in \mathbb{R}^{d_R} \quad \text{(Decoupled Shared RoPE Key, } d_R \ll d_h \text{)}$$</div>
+<div class="katex-display">$$k_{t, i} = \begin{bmatrix} k_{t, i}^C \\ k_t^R \end{bmatrix} \in \mathbb{R}^{d_h + d_R}$$</div>
+
+<h4>Step 3: Low-Rank Query Projection &amp; Decoupled RoPE Query</h4>
+<p>Queries are similarly compressed and decoupled:</p>
+<div class="katex-display">$$c_t^Q = W^{DQ} h_t \in \mathbb{R}^{d_c&#x27;} \quad (d_c&#x27; \text{ is query compression dimension})$$</div>
+<div class="katex-display">$$q_{t, i}^C = W_i^{UQ} c_t^Q \in \mathbb{R}^{d_h}, \quad q_{t, i}^R = \text{RoPE}(W_i^{QR} c_t^Q, t) \in \mathbb{R}^{d_R}$$</div>
+<div class="katex-display">$$q_{t, i} = \begin{bmatrix} q_{t, i}^C \\ q_{t, i}^R \end{bmatrix} \in \mathbb{R}^{d_h + d_R}$$</div>
+
+<h4>Step 4: Value Generation &amp; Attention Computation</h4>
+<div class="katex-display">$$v_{t, i}^C = W_i^{UV} c_t^{KV} \in \mathbb{R}^{d_v}$$</div>
+<div class="katex-display">$$A_{ij} = \text{Softmax}\left( \frac{q_i^T k_j}{\sqrt{d_h + d_R}} \right) = \text{Softmax}\left( \frac{(q_i^C)^T k_j^C + (q_i^R)^T k_j^R}{\sqrt{d_h + d_R}} \right)$$</div>
+<div class="katex-display">$$u_{t, i} = \sum_j A_{ij} v_{j, i}^C$$</div>
+<div class="katex-display">$$o_t = W^O \begin{bmatrix} u_{t, 1} \\ \vdots \\ u_{t, N_h} \end{bmatrix}$$</div>
+
+<h3>2.3 Concrete KV Cache Memory Savings in Production</h3>
+<p>In DeepSeek-V3 (<span class="katex-inline">$d_c = 512, d_R = 64, N_h = 128, d_h = 128$</span>):<br />
+- <strong>Standard MHA Cache per Token/Layer</strong>: <span class="katex-inline">$2 \times N_h \times d_h \times 2 \text{ bytes} = 2 \times 128 \times 128 \times 2 = \mathbf{65,536 \text{ bytes}}$</span><br />
+- <strong>Standard GQA (<span class="katex-inline">$N_{kv}=8$</span>)</strong>: <span class="katex-inline">$2 \times 8 \times 128 \times 2 = \mathbf{4,096 \text{ bytes}}$</span><br />
+- <strong>MLA Cache per Token/Layer</strong>: <span class="katex-inline">$(d_c + d_R) \times 2 \text{ bytes} = (512 + 64) \times 2 = \mathbf{1,152 \text{ bytes}}$</span></p>
+<div class="katex-display">$$\text{Memory Compression vs MHA} = \frac{65536}{1152} \approx \mathbf{56.9\times}, \quad \text{vs GQA} = \frac{4096}{1152} \approx \mathbf{3.55\times}$$</div>
+
+<hr />
+<h2>3. Rotary Position Embedding (RoPE) &amp; YaRN Scaling</h2>
+<h3>3.1 Mathematical Derivation of RoPE (Su et al., 2021)</h3>
+<p>Given vector <span class="katex-inline">$x \in \mathbb{R}^d$</span> at sequence position <span class="katex-inline">$m$</span>, RoPE partitions <span class="katex-inline">$x$</span> into <span class="katex-inline">$\frac{d}{2}$</span> two-dimensional pairs <span class="katex-inline">$[x_{2i-1}, x_{2i}]$</span> and applies a 2D Givens rotation matrix:</p>
+<div class="katex-display">$$R_{\Theta, m}^{(i)} = \begin{bmatrix} \cos(m \theta_i) &amp; -\sin(m \theta_i) \\ \sin(m \theta_i) &amp; \cos(m \theta_i) \end{bmatrix} \quad \text{where } \theta_i = \Theta^{-2(i-1)/d}, \quad \Theta = 10000 \text{ (or } 500000 \text{)}$$</div>
+
+<p>In complex notation, let <span class="katex-inline">$z_i = x_{2i-1} + i x_{2i} \in \mathbb{C}$</span>:</p>
+<div class="katex-display">$$R_{\Theta, m}(z_i) = z_i \cdot e^{i m \theta_i}$$</div>
+
+<h4>Inner Product Relative Position Preservation Proof:</h4>
+<p>Let <span class="katex-inline">$q$</span> be at position <span class="katex-inline">$m$</span> and <span class="katex-inline">$k$</span> be at position <span class="katex-inline">$n$</span>:</p>
+<div class="katex-display">$$\tilde{q}_m = q e^{i m \theta}, \quad \tilde{k}_n = k e^{i n \theta}$$</div>
+<p>The inner product in the complex plane is given by <span class="katex-inline">$\langle \tilde{q}_m, \tilde{k}_n \rangle = \text{Re}(\tilde{q}_m \tilde{k}_n^*)$</span> (where <span class="katex-inline">$*$</span> denotes the complex conjugate):</p>
+<div class="katex-display">$$\langle \tilde{q}_m, \tilde{k}_n \rangle = \text{Re}\left( (q e^{i m \theta}) (k e^{i n \theta})^* \right) = \text{Re}\left( q k^* e^{i m \theta} e^{-i n \theta} \right) = \text{Re}\left( q k^* e^{i (m - n) \theta} \right)$$</div>
+
+<div class="katex-display">$$\mathbf{\langle R_{\Theta, m} q, R_{\Theta, n} k \rangle = g(q, k, m - n)}$$</div>
+
+<p><strong>Conclusion</strong>: The attention score between <span class="katex-inline">$q$</span> and <span class="katex-inline">$k$</span> depends <strong>strictly on their relative distance <span class="katex-inline">$(m - n)$</span></strong>, preserving translation invariance across arbitrary sequence lengths.</p>
+<hr />
+<h3>3.2 Long-Context RoPE Scaling: YaRN (Yet another RoPE extensioN)</h3>
+<p>When extending context from <span class="katex-inline">$L_{\text{train}} = 4\text{k}$</span> to <span class="katex-inline">$L_{\text{test}} = 128\text{k}$</span>, naive linear interpolation divides frequencies by <span class="katex-inline">$s = \frac{L_{\text{test}}}{L_{\text{train}}} = 32$</span>: <span class="katex-inline">$\theta_i&#x27; = \frac{\theta_i}{s}$</span>.<br />
+<em>The Flaw</em>: High-frequency components (small <span class="katex-inline">$i$</span>, capturing local grammar) lose resolution, destroying the model's short-context capabilities.</p>
+<h4>The YaRN Solution (Peng et al., 2023):</h4>
+<p>Partitions frequency spectrum into three distinct regimes based on wavelength <span class="katex-inline">$\lambda_i = \frac{2\pi}{\theta_i}$</span>:<br />
+1. <strong>High Frequencies (<span class="katex-inline">$\lambda_i &lt; r_{\text{low}}$</span>)</strong>: No interpolation (<span class="katex-inline">$\theta_i&#x27; = \theta_i$</span>). Preserves local token relationships.<br />
+2. <strong>Low Frequencies (<span class="katex-inline">$\lambda_i &gt; r_{\text{high}}$</span>)</strong>: Full linear interpolation (<span class="katex-inline">$\theta_i&#x27; = \frac{\theta_i}{s}$</span>). Extrapolates long distances.<br />
+3. <strong>Mid Frequencies (<span class="katex-inline">$r_{\text{low}} \leq \lambda_i \leq r_{\text{high}}$</span>)</strong>: Smooth ramp interpolation via blending factor <span class="katex-inline">$\gamma_i = \frac{\lambda_i - r_{\text{low}}}{r_{\text{high}} - r_{\text{low}}}$</span>:<br />
+   <div class="katex-display">$$\theta_i&#x27; = (1 - \gamma_i) \theta_i + \gamma_i \frac{\theta_i}{s}$$</div>
+</p>
+<ul>
+<li><strong>Temperature / Entropy Correction Factor (<span class="katex-inline">$\sqrt{t}$</span>)</strong>:<br />
+  Because longer contexts increase attention entropy (<span class="katex-inline">$H(A) \propto \log L$</span>), YaRN scales the query-key dot product by temperature factor <span class="katex-inline">$t = 0.1 \ln(s) + 1$</span>:<br />
+  <div class="katex-display">$$\text{Attention} = \text{Softmax}\left( \frac{Q K^T}{\sqrt{t} \sqrt{d_k}} \right) V$$</div>
+</li>
+</ul>
+<hr />
+<h2>4. Feed-Forward Networks (FFN): SwiGLU Mechanics</h2>
+<p>Standard Transformer FFN (ReLU):</p>
+<div class="katex-display">$$\text{FFN}_{\text{ReLU}}(x) = \max(0, x W_1 + b_1) W_2 + b_2$$</div>
+
+<p>Modern LLMs (LLaMA-3, Mistral, Gemma) replace ReLU with <strong>SwiGLU (Swish Gated Linear Unit)</strong> (Shazeer, 2020):</p>
+<div class="katex-display">$$\text{Swish}_\beta(z) = z \cdot \sigma(\beta z) = \frac{z}{1 + e^{-\beta z}} \quad (\text{with } \beta = 1 \implies \text{SiLU})$$</div>
+<div class="katex-display">$$\text{SwiGLU}(x) = \left( \text{SiLU}(x W_{\text{gate}}) \odot x W_{\text{up}} \right) W_{\text{down}}$$</div>
+
+<pre><code>                       ┌──────────────────────┐
+                       │   Hidden Vector x    │
+                       └──────────┬───────────┘
+                                  │
+                  ┌───────────────┴───────────────┐
+                  ▼                               ▼
+     ┌─────────────────────────┐     ┌─────────────────────────┐
+     │  Linear (W_gate) + SiLU │     │     Linear (W_up)       │
+     └────────────┬────────────┘     └────────────┬────────────┘
+                  │                               │
+                  └───────────────┬───────────────┘
+                                  ▼
+                        Element-wise Multiply ⊙
+                                  │
+                                  ▼
+                     ┌─────────────────────────┐
+                     │    Linear (W_down)      │
+                     └─────────────────────────┘
+</code></pre>
+<h4>Parameter Dimension Matching:</h4>
+<ul>
+<li>In standard FFN: <span class="katex-inline">$W_1 \in \mathbb{R}^{d \times 4d}, W_2 \in \mathbb{R}^{4d \times d} \implies 8 d^2 \text{ parameters}$</span>.</li>
+<li>In SwiGLU: Three matrices (<span class="katex-inline">$W_{\text{gate}}, W_{\text{up}} \in \mathbb{R}^{d \times d_{ff}}, W_{\text{down}} \in \mathbb{R}^{d_{ff} \times d}$</span>).</li>
+<li>To maintain exact parameter equivalence with standard <span class="katex-inline">$4d$</span> FFN:<br />
+  <div class="katex-display">$$3 \cdot d \cdot d_{ff} = 8 d^2 \implies d_{ff} = \frac{8}{3} d \approx 2.667 d$$</div></li>
+</ul>
+<p><em>Example</em>: In LLaMA-3 8B (<span class="katex-inline">$d_{\text{model}} = 4096$</span>), <span class="katex-inline">$d_{ff} = 14336 = 3.5 d_{\text{model}}$</span> (rounded to nearest multiple of 256 for GPU alignment).</p>
+<hr />
+<h2>5. Mixture of Experts (MoE) &amp; DeepSeek-V3 Load Balancing</h2>
+<h3>5.1 MoE Routing Formulation</h3>
+<p>An MoE layer replaces the standard dense FFN with <span class="katex-inline">$N$</span> independent expert networks <span class="katex-inline">$\{E_1, E_2, \dots, E_N\}$</span>, routing each token to the Top-<span class="katex-inline">$K$</span> experts via a gating network <span class="katex-inline">$G(x)$</span>:</p>
+<div class="katex-display">$$y = \sum_{i \in \text{Top}K} g_i(x) E_i(x)$$</div>
+
+<ul>
+<li><strong>Standard Top-<span class="katex-inline">$K$</span> Softmax Gating</strong>:<br />
+  <div class="katex-display">$$H(x) = x W_g \in \mathbb{R}^N$$</div></li>
+</ul>
+<div class="katex-display">$$\text{Top}K(H(x)) = \text{Indices of } K \text{ largest values in } H(x)$$</div>
+<div class="katex-display">$$g_i(x) = \begin{cases} \frac{\exp(H(x)_i)}{\sum_{j \in \text{Top}K} \exp(H(x)_j)} &amp; \text{if } i \in \text{Top}K(H(x)) \\ 0 &amp; \text{otherwise} \end{cases}$$</div>
+
+<hr />
+<h3>5.2 The Routing Collapse Problem &amp; Auxiliary Losses</h3>
+<p>Without constraints, the gating network quickly suffers from <strong>Expert Routing Collapse</strong> — routing all tokens to 2 or 3 favorite experts while the remaining <span class="katex-inline">$N-K$</span> experts starve and receive zero gradient updates.</p>
+<h4>Classical Solution: Auxiliary Load Balancing Loss (Switch Transformer / Mixtral):</h4>
+<div class="katex-display">$$\mathcal{L}_{\text{aux}} = \alpha \cdot N \sum_{i=1}^N f_i P_i$$</div>
+<p>Where:<br />
+- <span class="katex-inline">$f_i = \frac{1}{T} \sum_{t=1}^T \mathbb{I}(\text{token } t \text{ routed to expert } i)$</span> (fraction of tokens dispatched)<br />
+- <span class="katex-inline">$P_i = \frac{1}{T} \sum_{t=1}^T g_i(x_t)$</span> (average routing probability)<br />
+- <span class="katex-inline">$\alpha \approx 0.01$</span> (hyperparameter).</p>
+<p><em>The Problem</em>: <span class="katex-inline">$\mathcal{L}_{\text{aux}}$</span> acts as a regularizer that penalizes routing specialization, degrading the overall model capability.</p>
+<hr />
+<h3>5.3 DeepSeek-V3 Auxiliary-Loss-Free Load Balancing</h3>
+<p>DeepSeek-V3 introduces <strong>bias-driven load balancing</strong> without adding an auxiliary loss term to the objective:</p>
+<div class="katex-display">$$\text{Gating Score: } s_{i, t} = \text{Softmax}(x_t W_g)_i + b_i$$</div>
+<p>Where <span class="katex-inline">$b_i \in \mathbb{R}$</span> is a dynamic expert bias updated online during training:</p>
+<div class="katex-display">$$b_i \leftarrow b_i + \gamma \cdot \left( \frac{1}{N} - \frac{\text{Tokens Dispatched to Expert } i}{\text{Total Tokens in Batch}} \right)$$</div>
+
+<ul>
+<li>If Expert <span class="katex-inline">$i$</span> is overloaded (<span class="katex-inline">$f_i &gt; \frac{1}{N}$</span>), <span class="katex-inline">$b_i$</span> is decreased, shifting future tokens away.</li>
+<li>If Expert <span class="katex-inline">$i$</span> is starved (<span class="katex-inline">$f_i &lt; \frac{1}{N}$</span>), <span class="katex-inline">$b_i$</span> is increased, naturally pulling tokens in.</li>
+<li><strong>Advantage</strong>: Gradients directly optimize primary language modeling loss with zero interference from artificial auxiliary balance penalties.</li>
+</ul>
+<hr />
+<h2>6. PyTorch Implementation: Multi-Head Latent Attention (MLA)</h2>
+<pre><code class="language-python">import torch
+import torch.nn as nn
+import torch.nn.functional as F
+import math
+
+class MultiHeadLatentAttention(nn.Module):
+    &quot;&quot;&quot;
+    Multi-Head Latent Attention (MLA) as introduced in DeepSeek-V2 / DeepSeek-V3.
+    Features:
+    - Low-rank KV compression into latent vector c_t^{KV}
+    - Decoupled Rotary Positional Embeddings (RoPE)
+    - Low-rank Query compression
+    &quot;&quot;&quot;
+    def __init__(
+        self,
+        d_model: int = 2048,
+        num_heads: int = 16,
+        d_head: int = 128,
+        d_c_kv: int = 512,    # KV compression dimension
+        d_c_q: int = 512,     # Query compression dimension
+        d_rope: int = 64      # Decoupled RoPE dimension
+    ):
+        super().__init__()
+        self.d_model = d_model
+        self.num_heads = num_heads
+        self.d_head = d_head
+        self.d_c_kv = d_c_kv
+        self.d_c_q = d_c_q
+        self.d_rope = d_rope
+        self.scale = 1.0 / math.sqrt(d_head + d_rope)
+
+        # 1. Query Compression &amp; Projections
+        self.w_dq = nn.Linear(d_model, d_c_q, bias=False)
+        self.w_uq = nn.Linear(d_c_q, num_heads * d_head, bias=False)
+        self.w_qr = nn.Linear(d_c_q, num_heads * d_rope, bias=False)
+
+        # 2. Key-Value Compression &amp; Projections
+        self.w_dkv = nn.Linear(d_model, d_c_kv, bias=False)
+        self.w_uk = nn.Linear(d_c_kv, num_heads * d_head, bias=False)
+        self.w_uv = nn.Linear(d_c_kv, num_heads * d_head, bias=False)
+        self.w_kr = nn.Linear(d_model, d_rope, bias=False) # Shared RoPE key
+
+        # 3. Output Projection
+        self.w_out = nn.Linear(num_heads * d_head, d_model, bias=False)
+
+    def apply_rope(self, x: torch.Tensor, pos: torch.Tensor) -&gt; torch.Tensor:
+        # Simple 2D rotary embedding for illustration
+        B, S, H, D = x.shape
+        half_d = D // 2
+        freqs = torch.exp(
+            -math.log(10000.0) * torch.arange(0, half_d, dtype=torch.float32, device=x.device) / half_d
+        )
+        angles = pos.unsqueeze(-1) * freqs.unsqueeze(0) # [S, half_d]
+        cos = torch.cos(angles).unsqueeze(0).unsqueeze(2) # [1, S, 1, half_d]
+        sin = torch.sin(angles).unsqueeze(0).unsqueeze(2) # [1, S, 1, half_d]
+
+        x1, x2 = x[..., :half_d], x[..., half_d:]
+        rotated = torch.cat([x1 * cos - x2 * sin, x1 * sin + x2 * cos], dim=-1)
+        return rotated
+
+    def forward(self, x: torch.Tensor, kv_cache_latent=None, kv_cache_rope=None):
+        B, S, _ = x.shape
+        pos = torch.arange(S, device=x.device)
+
+        # --- Query Processing ---
+        c_q = self.w_dq(x) # [B, S, d_c_q]
+        q_c = self.w_uq(c_q).view(B, S, self.num_heads, self.d_head)
+        q_r = self.w_qr(c_q).view(B, S, self.num_heads, self.d_rope)
+        q_r = self.apply_rope(q_r, pos)
+        q = torch.cat([q_c, q_r], dim=-1) # [B, S, H, d_head + d_rope]
+
+        # --- KV Compression &amp; Latent Generation ---
+        c_kv = self.w_dkv(x) # [B, S, d_c_kv] (This is what gets stored in the KV cache!)
+        k_r = self.w_kr(x).unsqueeze(2) # [B, S, 1, d_rope]
+        k_r = self.apply_rope(k_r, pos).expand(B, S, self.num_heads, self.d_rope)
+
+        # Uncompress K and V on-the-fly
+        k_c = self.w_uk(c_kv).view(B, S, self.num_heads, self.d_head)
+        v = self.w_uv(c_kv).view(B, S, self.num_heads, self.d_head)
+        k = torch.cat([k_c, k_r], dim=-1) # [B, S, H, d_head + d_rope]
+
+        # --- Attention Computation ---
+        # Permute for batch matrix multiply: [B, H, S_q, S_k]
+        q = q.transpose(1, 2)
+        k = k.transpose(1, 2)
+        v = v.transpose(1, 2)
+
+        scores = torch.matmul(q, k.transpose(-2, -1)) * self.scale
+
+        # Apply Causal Mask
+        mask = torch.triu(torch.full((S, S), float('-inf'), device=x.device), diagonal=1)
+        scores = scores + mask.unsqueeze(0).unsqueeze(1)
+
+        attn_weights = F.softmax(scores, dim=-1)
+        out = torch.matmul(attn_weights, v) # [B, H, S, d_head]
+
+        # Concatenate heads and project output
+        out = out.transpose(1, 2).contiguous().view(B, S, self.num_heads * self.d_head)
+        return self.w_out(out), c_kv, k_r
+
+if __name__ == &quot;__main__&quot;:
+    B, S, D = 2, 64, 2048
+    x = torch.randn(B, S, D)
+    mla = MultiHeadLatentAttention(d_model=D, num_heads=16, d_head=128, d_c_kv=512, d_rope=64)
+    out, latent_kv, rope_k = mla(x)
+    assert out.shape == (B, S, D), &quot;MLA output shape mismatch!&quot;
+    assert latent_kv.shape == (B, S, 512), &quot;Latent KV shape mismatch!&quot;
+    print(&quot;Multi-Head Latent Attention (MLA) test passed successfully.&quot;)
+</code></pre>
+<hr />
+<h2>7. Deep Interview Interrogation Ladder</h2>
+<ul>
+<li><strong>Level 1 (Concept)</strong>: What is the primary operational difference between MHA, GQA, and MLA?</li>
+<li><strong>Level 3 (Proof)</strong>: Prove mathematically why the variance of Query-Key dot products equals <span class="katex-inline">$d_k$</span>, and why Softmax temperature scaling <span class="katex-inline">$\frac{1}{\sqrt{d_k}}$</span> prevents vanishing gradients.</li>
+<li><strong>Level 5 (Mechanics)</strong>: Why does Rotary Position Embedding (RoPE) preserve translation invariance in the inner product? (Show the complex exponential proof).</li>
+<li><strong>Level 7 (Architectural Sizing)</strong>: Calculate the exact KV cache memory reduction when switching a 70B parameter model from GQA (<span class="katex-inline">$N_{kv}=8$</span>) to MLA (<span class="katex-inline">$d_c=512, d_R=64$</span>).</li>
+<li><strong>Level 9 (MoE Dynamics)</strong>: Explain why standard auxiliary load balancing losses degrade model capability in MoE training, and how DeepSeek-V3's dynamic expert bias term solves this without auxiliary losses.</li>
+<li><strong>Level 10 (Principal Engineering)</strong>: Walk through how you would optimize the kernel execution of Multi-Head Latent Attention (MLA) during decode. How does matrix associativity allow absorbing the up-projection matrix <span class="katex-inline">$W^{UK}$</span> into the Query vector before attending to the cached latent <span class="katex-inline">$c_t^{KV}$</span>?</li>
+</ul></div>
   </div>
   <script>
-    const rawMarkdown = "# 04_TRANSFORMERS_AND_LLMS \u2014 Mathematical & Architectural Reference\n\n> **Audience**: ML Engineers, LLM Systems Engineers, and AI Researchers preparing for senior/principal technical interviews.  \n> **Core Objective**: Provide an exhaustive, mathematically rigorous masterclass on Transformer mechanics \u2014 covering Scaled Dot-Product Attention, Multi-Head Latent Attention (MLA), RoPE/YaRN mathematical proofs, SwiGLU gating, Mixture of Experts (MoE) load balancing, and long-context scaling.\n\n---\n\n## 1. The Core Attention Machinery\n\n### 1.1 Scaled Dot-Product Attention: Variance Preservation Derivation\n\nLet $Q \\in \\mathbb{R}^{B \\times S_q \\times d_k}$, $K \\in \\mathbb{R}^{B \\times S_{kv} \\times d_k}$, and $V \\in \\mathbb{R}^{B \\times S_{kv} \\times d_v}$ denote Query, Key, and Value tensors.\n\n$$ \\text{Attention}(Q, K, V) = \\text{Softmax}\\left( \\frac{Q K^T}{\\sqrt{d_k}} + M \\right) V $$\n\nWhere $M \\in \\mathbb{R}^{S_q \\times S_{kv}}$ is the causal attention mask:\n$$ M_{ij} = \\begin{cases} 0 & \\text{if } i \\geq j \\\\ -\\infty & \\text{if } i < j \\end{cases} $$\n\n#### Mathematical Proof: Why the $\\frac{1}{\\sqrt{d_k}}$ Scaling Factor is Mandatory\nConsider a single query vector $q \\in \\mathbb{R}^{d_k}$ and key vector $k \\in \\mathbb{R}^{d_k}$. Assume components $q_i, k_i$ are independent random variables with zero mean and unit variance:\n$$ \\mathbb{E}[q_i] = \\mathbb{E}[k_i] = 0, \\quad \\text{Var}(q_i) = \\text{Var}(k_i) = 1 $$\n\nThe dot product is $S = q^T k = \\sum_{i=1}^{d_k} q_i k_i$.\n1. **Expected Value**:\n   $$ \\mathbb{E}[S] = \\mathbb{E}\\left[\\sum_{i=1}^{d_k} q_i k_i\\right] = \\sum_{i=1}^{d_k} \\mathbb{E}[q_i] \\mathbb{E}[k_i] = 0 $$\n2. **Variance**:\n   $$ \\text{Var}(S) = \\text{Var}\\left(\\sum_{i=1}^{d_k} q_i k_i\\right) = \\sum_{i=1}^{d_k} \\text{Var}(q_i k_i) $$\n   Since $q_i, k_i$ are independent:\n   $$ \\text{Var}(q_i k_i) = \\mathbb{E}[(q_i k_i)^2] - (\\mathbb{E}[q_i k_i])^2 = \\mathbb{E}[q_i^2]\\mathbb{E}[k_i^2] - 0 = \\text{Var}(q_i)\\text{Var}(k_i) = 1 \\cdot 1 = 1 $$\n   Therefore:\n   $$ \\mathbf{\\text{Var}(S) = \\sum_{i=1}^{d_k} 1 = d_k \\implies \\text{Std}(S) = \\sqrt{d_k}} $$\n\n#### The Failure Mode without Scaling:\nFor modern head dimensions $d_k = 128$, $\\text{Std}(S) = \\sqrt{128} \\approx 11.31$.  \nWhen logits have standard deviation $\\sim 11.3$, the Softmax function pushes outputs to extreme values ($p_{\\max} \\approx 1, p_i \\approx 0$).  \nRecall the Softmax Jacobian: $\\frac{\\partial p_i}{\\partial z_j} = p_i(\\delta_{ij} - p_j)$.  \nWhen $p_i \\in \\{0, 1\\}$, $p_i(1 - p_i) \\to 0$, causing **vanishing gradients** across the entire attention layer during backpropagation.  \nScaling by $\\frac{1}{\\sqrt{d_k}}$ normalizes $\\text{Var}\\left(\\frac{q^T k}{\\sqrt{d_k}}\\right) = 1$, keeping gradients within the optimal non-saturating zone.\n\n---\n\n### 1.2 Attention Taxonomy: MHA, MQA, GQA, and MLA\n\n```\n\u250c\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2510  \u250c\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2510  \u250c\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2510  \u250c\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2510\n\u2502 MHA (Vaswani et al.)   \u2502  \u2502 MQA (Shazeer 2019)     \u2502  \u2502 GQA (Ainslie et al.)   \u2502  \u2502 MLA (DeepSeek-V2/V3)   \u2502\n\u2502 N_q = 64, N_kv = 64    \u2502  \u2502 N_q = 64, N_kv = 1     \u2502  \u2502 N_q = 64, N_kv = 8     \u2502  \u2502 Low-Rank Latent Vector \u2502\n\u2502 KV Cache: 100% (High)  \u2502  \u2502 KV Cache: 1.56% (Lossy)\u2502  \u2502 KV Cache: 12.5% (Ideal)\u2502  \u2502 KV Cache: ~10% (Exact) \u2502\n\u2514\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2518  \u2514\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2518  \u2514\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2518  \u2514\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2518\n```\n\n#### Mathematical Comparison Table:\n\n| Architecture | Query Heads ($N_q$) | Key/Value Heads ($N_{kv}$) | KV Cache Memory per Token/Layer | Quality / Accuracy Retention |\n| :--- | :--- | :--- | :--- | :--- |\n| **Multi-Head Attention (MHA)** | $H$ | $H$ | $2 \\cdot H \\cdot d_k \\cdot 2 \\text{ bytes}$ | 100% (Baseline) |\n| **Multi-Query Attention (MQA)** | $H$ | $1$ | $2 \\cdot 1 \\cdot d_k \\cdot 2 \\text{ bytes}$ | Noticeable quality degradation on complex retrieval |\n| **Grouped-Query Attention (GQA)** | $H$ | $G = \\frac{H}{\\text{group\\_size}}$ | $2 \\cdot G \\cdot d_k \\cdot 2 \\text{ bytes}$ | $\\sim 99\\%$ of MHA quality with $\\frac{H}{G}\\times$ memory savings |\n| **Multi-Head Latent Attention (MLA)** | $H$ | Compressed Latent $d_c$ | $(d_c + d_R) \\cdot 2 \\text{ bytes}$ | Matches or exceeds MHA quality with lower footprint |\n\n---\n\n## 2. Multi-Head Latent Attention (MLA) \u2014 DeepSeek Architecture\n\n### 2.1 Theoretical Motivation\nIn standard GQA (e.g. LLaMA-3 70B with $N_{kv}=8, d_k=128$), the KV cache at 128k context still occupies hundreds of gigabytes across the cluster, severely bounding inference throughput. DeepSeek introduced **Multi-Head Latent Attention (MLA)** to compress Key and Value representations into a low-rank latent space while preserving full expressive power.\n\n### 2.2 Mathematical Formulation of MLA\n\nLet $h_t \\in \\mathbb{R}^{d_{\\text{model}}}$ be the hidden state at token $t$.\n\n```\nHidden State h_t (dim d_model)\n   \u2502\n   \u251c\u2500\u2500\u2500\u25ba Down-Projection: c_t^{KV} = W^{DKV} \u00b7 h_t   [Compressed KV Latent: dim d_c << H \u00b7 d_h]\n   \u2502        \u2502\n   \u2502        \u251c\u2500\u2500\u25ba Up-Projection Keys:   k_{t, i}^C = W_i^{UK} \u00b7 c_t^{KV}\n   \u2502        \u2514\u2500\u2500\u25ba Up-Projection Values: v_{t, i}^C = W_i^{UV} \u00b7 c_t^{KV}\n   \u2502\n   \u2514\u2500\u2500\u2500\u25ba Decoupled RoPE Key:           k_t^R = RoPE(W^{KR} \u00b7 h_t)  [dim d_R]\n```\n\n#### Step 1: Low-Rank KV Compression (For Cache Storage)\nInstead of caching full high-dimensional $K$ and $V$ tensors, MLA projects $h_t$ into a compressed latent vector $c_t^{KV} \\in \\mathbb{R}^{d_c}$ ($d_c \\ll N_h \\cdot d_h$):\n$$ c_t^{KV} = W^{DKV} h_t \\quad \\text{where } W^{DKV} \\in \\mathbb{R}^{d_c \\times d_{\\text{model}}} $$\n\n#### Step 2: Decoupled Key Generation\nBecause Rotary Positional Embeddings (RoPE) are position-dependent and cannot be directly multiplied into static low-rank matrices, MLA decouples Keys into **content** and **rotary position** components:\n$$ k_{t, i}^C = W_i^{UK} c_t^{KV} \\in \\mathbb{R}^{d_h} \\quad \\text{(Content Key for head } i \\text{)} $$\n$$ k_t^R = \\text{RoPE}(W^{KR} h_t, t) \\in \\mathbb{R}^{d_R} \\quad \\text{(Decoupled Shared RoPE Key, } d_R \\ll d_h \\text{)} $$\n$$ k_{t, i} = \\begin{bmatrix} k_{t, i}^C \\\\ k_t^R \\end{bmatrix} \\in \\mathbb{R}^{d_h + d_R} $$\n\n#### Step 3: Low-Rank Query Projection & Decoupled RoPE Query\nQueries are similarly compressed and decoupled:\n$$ c_t^Q = W^{DQ} h_t \\in \\mathbb{R}^{d_c'} \\quad (d_c' \\text{ is query compression dimension}) $$\n$$ q_{t, i}^C = W_i^{UQ} c_t^Q \\in \\mathbb{R}^{d_h}, \\quad q_{t, i}^R = \\text{RoPE}(W_i^{QR} c_t^Q, t) \\in \\mathbb{R}^{d_R} $$\n$$ q_{t, i} = \\begin{bmatrix} q_{t, i}^C \\\\ q_{t, i}^R \\end{bmatrix} \\in \\mathbb{R}^{d_h + d_R} $$\n\n#### Step 4: Value Generation & Attention Computation\n$$ v_{t, i}^C = W_i^{UV} c_t^{KV} \\in \\mathbb{R}^{d_v} $$\n$$ A_{ij} = \\text{Softmax}\\left( \\frac{q_i^T k_j}{\\sqrt{d_h + d_R}} \\right) = \\text{Softmax}\\left( \\frac{(q_i^C)^T k_j^C + (q_i^R)^T k_j^R}{\\sqrt{d_h + d_R}} \\right) $$\n$$ u_{t, i} = \\sum_j A_{ij} v_{j, i}^C $$\n$$ o_t = W^O \\begin{bmatrix} u_{t, 1} \\\\ \\vdots \\\\ u_{t, N_h} \\end{bmatrix} $$\n\n### 2.3 Concrete KV Cache Memory Savings in Production\nIn DeepSeek-V3 ($d_c = 512, d_R = 64, N_h = 128, d_h = 128$):\n- **Standard MHA Cache per Token/Layer**: $2 \\times N_h \\times d_h \\times 2 \\text{ bytes} = 2 \\times 128 \\times 128 \\times 2 = \\mathbf{65,536 \\text{ bytes}}$\n- **Standard GQA ($N_{kv}=8$)**: $2 \\times 8 \\times 128 \\times 2 = \\mathbf{4,096 \\text{ bytes}}$\n- **MLA Cache per Token/Layer**: $(d_c + d_R) \\times 2 \\text{ bytes} = (512 + 64) \\times 2 = \\mathbf{1,152 \\text{ bytes}}$\n\n$$\\text{Memory Compression vs MHA} = \\frac{65536}{1152} \\approx \\mathbf{56.9\\times}, \\quad \\text{vs GQA} = \\frac{4096}{1152} \\approx \\mathbf{3.55\\times}$$\n\n---\n\n## 3. Rotary Position Embedding (RoPE) & YaRN Scaling\n\n### 3.1 Mathematical Derivation of RoPE (Su et al., 2021)\n\nGiven vector $x \\in \\mathbb{R}^d$ at sequence position $m$, RoPE partitions $x$ into $\\frac{d}{2}$ two-dimensional pairs $[x_{2i-1}, x_{2i}]$ and applies a 2D Givens rotation matrix:\n\n$$ R_{\\Theta, m}^{(i)} = \\begin{bmatrix} \\cos(m \\theta_i) & -\\sin(m \\theta_i) \\\\ \\sin(m \\theta_i) & \\cos(m \\theta_i) \\end{bmatrix} \\quad \\text{where } \\theta_i = \\Theta^{-2(i-1)/d}, \\quad \\Theta = 10000 \\text{ (or } 500000 \\text{)} $$\n\nIn complex notation, let $z_i = x_{2i-1} + i x_{2i} \\in \\mathbb{C}$:\n$$ R_{\\Theta, m}(z_i) = z_i \\cdot e^{i m \\theta_i} $$\n\n#### Inner Product Relative Position Preservation Proof:\nLet $q$ be at position $m$ and $k$ be at position $n$:\n$$ \\tilde{q}_m = q e^{i m \\theta}, \\quad \\tilde{k}_n = k e^{i n \\theta} $$\nThe inner product in the complex plane is given by $\\langle \\tilde{q}_m, \\tilde{k}_n \\rangle = \\text{Re}(\\tilde{q}_m \\tilde{k}_n^*)$ (where $*$ denotes the complex conjugate):\n$$ \\langle \\tilde{q}_m, \\tilde{k}_n \\rangle = \\text{Re}\\left( (q e^{i m \\theta}) (k e^{i n \\theta})^* \\right) = \\text{Re}\\left( q k^* e^{i m \\theta} e^{-i n \\theta} \\right) = \\text{Re}\\left( q k^* e^{i (m - n) \\theta} \\right) $$\n\n$$\\mathbf{\\langle R_{\\Theta, m} q, R_{\\Theta, n} k \\rangle = g(q, k, m - n)}$$\n\n**Conclusion**: The attention score between $q$ and $k$ depends **strictly on their relative distance $(m - n)$**, preserving translation invariance across arbitrary sequence lengths.\n\n---\n\n### 3.2 Long-Context RoPE Scaling: YaRN (Yet another RoPE extensioN)\n\nWhen extending context from $L_{\\text{train}} = 4\\text{k}$ to $L_{\\text{test}} = 128\\text{k}$, naive linear interpolation divides frequencies by $s = \\frac{L_{\\text{test}}}{L_{\\text{train}}} = 32$: $\\theta_i' = \\frac{\\theta_i}{s}$.  \n*The Flaw*: High-frequency components (small $i$, capturing local grammar) lose resolution, destroying the model's short-context capabilities.\n\n#### The YaRN Solution (Peng et al., 2023):\nPartitions frequency spectrum into three distinct regimes based on wavelength $\\lambda_i = \\frac{2\\pi}{\\theta_i}$:\n1. **High Frequencies ($\\lambda_i < r_{\\text{low}}$)**: No interpolation ($\\theta_i' = \\theta_i$). Preserves local token relationships.\n2. **Low Frequencies ($\\lambda_i > r_{\\text{high}}$)**: Full linear interpolation ($\\theta_i' = \\frac{\\theta_i}{s}$). Extrapolates long distances.\n3. **Mid Frequencies ($r_{\\text{low}} \\leq \\lambda_i \\leq r_{\\text{high}}$)**: Smooth ramp interpolation via blending factor $\\gamma_i = \\frac{\\lambda_i - r_{\\text{low}}}{r_{\\text{high}} - r_{\\text{low}}}$:\n   $$ \\theta_i' = (1 - \\gamma_i) \\theta_i + \\gamma_i \\frac{\\theta_i}{s} $$\n\n- **Temperature / Entropy Correction Factor ($\\sqrt{t}$)**:\n  Because longer contexts increase attention entropy ($H(A) \\propto \\log L$), YaRN scales the query-key dot product by temperature factor $t = 0.1 \\ln(s) + 1$:\n  $$ \\text{Attention} = \\text{Softmax}\\left( \\frac{Q K^T}{\\sqrt{t} \\sqrt{d_k}} \\right) V $$\n\n---\n\n## 4. Feed-Forward Networks (FFN): SwiGLU Mechanics\n\nStandard Transformer FFN (ReLU):\n$$ \\text{FFN}_{\\text{ReLU}}(x) = \\max(0, x W_1 + b_1) W_2 + b_2 $$\n\nModern LLMs (LLaMA-3, Mistral, Gemma) replace ReLU with **SwiGLU (Swish Gated Linear Unit)** (Shazeer, 2020):\n$$ \\text{Swish}_\\beta(z) = z \\cdot \\sigma(\\beta z) = \\frac{z}{1 + e^{-\\beta z}} \\quad (\\text{with } \\beta = 1 \\implies \\text{SiLU}) $$\n$$ \\text{SwiGLU}(x) = \\left( \\text{SiLU}(x W_{\\text{gate}}) \\odot x W_{\\text{up}} \\right) W_{\\text{down}} $$\n\n```\n                       \u250c\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2510\n                       \u2502   Hidden Vector x    \u2502\n                       \u2514\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u252c\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2518\n                                  \u2502\n                  \u250c\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2534\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2510\n                  \u25bc                               \u25bc\n     \u250c\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2510     \u250c\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2510\n     \u2502  Linear (W_gate) + SiLU \u2502     \u2502     Linear (W_up)       \u2502\n     \u2514\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u252c\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2518     \u2514\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u252c\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2518\n                  \u2502                               \u2502\n                  \u2514\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u252c\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2518\n                                  \u25bc\n                        Element-wise Multiply \u2299\n                                  \u2502\n                                  \u25bc\n                     \u250c\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2510\n                     \u2502    Linear (W_down)      \u2502\n                     \u2514\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2518\n```\n\n#### Parameter Dimension Matching:\n- In standard FFN: $W_1 \\in \\mathbb{R}^{d \\times 4d}, W_2 \\in \\mathbb{R}^{4d \\times d} \\implies 8 d^2 \\text{ parameters}$.\n- In SwiGLU: Three matrices ($W_{\\text{gate}}, W_{\\text{up}} \\in \\mathbb{R}^{d \\times d_{ff}}, W_{\\text{down}} \\in \\mathbb{R}^{d_{ff} \\times d}$).\n- To maintain exact parameter equivalence with standard $4d$ FFN:\n  $$ 3 \\cdot d \\cdot d_{ff} = 8 d^2 \\implies d_{ff} = \\frac{8}{3} d \\approx 2.667 d $$\n  *Example*: In LLaMA-3 8B ($d_{\\text{model}} = 4096$), $d_{ff} = 14336 = 3.5 d_{\\text{model}}$ (rounded to nearest multiple of 256 for GPU alignment).\n\n---\n\n## 5. Mixture of Experts (MoE) & DeepSeek-V3 Load Balancing\n\n### 5.1 MoE Routing Formulation\n\nAn MoE layer replaces the standard dense FFN with $N$ independent expert networks $\\{E_1, E_2, \\dots, E_N\\}$, routing each token to the Top-$K$ experts via a gating network $G(x)$:\n\n$$ y = \\sum_{i \\in \\text{Top}K} g_i(x) E_i(x) $$\n\n- **Standard Top-$K$ Softmax Gating**:\n  $$ H(x) = x W_g \\in \\mathbb{R}^N $$\n  $$ \\text{Top}K(H(x)) = \\text{Indices of } K \\text{ largest values in } H(x) $$\n  $$ g_i(x) = \\begin{cases} \\frac{\\exp(H(x)_i)}{\\sum_{j \\in \\text{Top}K} \\exp(H(x)_j)} & \\text{if } i \\in \\text{Top}K(H(x)) \\\\ 0 & \\text{otherwise} \\end{cases} $$\n\n---\n\n### 5.2 The Routing Collapse Problem & Auxiliary Losses\n\nWithout constraints, the gating network quickly suffers from **Expert Routing Collapse** \u2014 routing all tokens to 2 or 3 favorite experts while the remaining $N-K$ experts starve and receive zero gradient updates.\n\n#### Classical Solution: Auxiliary Load Balancing Loss (Switch Transformer / Mixtral):\n$$ \\mathcal{L}_{\\text{aux}} = \\alpha \\cdot N \\sum_{i=1}^N f_i P_i $$\nWhere:\n- $f_i = \\frac{1}{T} \\sum_{t=1}^T \\mathbb{I}(\\text{token } t \\text{ routed to expert } i)$ (fraction of tokens dispatched)\n- $P_i = \\frac{1}{T} \\sum_{t=1}^T g_i(x_t)$ (average routing probability)\n- $\\alpha \\approx 0.01$ (hyperparameter).\n\n*The Problem*: $\\mathcal{L}_{\\text{aux}}$ acts as a regularizer that penalizes routing specialization, degrading the overall model capability.\n\n---\n\n### 5.3 DeepSeek-V3 Auxiliary-Loss-Free Load Balancing\n\nDeepSeek-V3 introduces **bias-driven load balancing** without adding an auxiliary loss term to the objective:\n\n$$ \\text{Gating Score: } s_{i, t} = \\text{Softmax}(x_t W_g)_i + b_i $$\nWhere $b_i \\in \\mathbb{R}$ is a dynamic expert bias updated online during training:\n$$ b_i \\leftarrow b_i + \\gamma \\cdot \\left( \\frac{1}{N} - \\frac{\\text{Tokens Dispatched to Expert } i}{\\text{Total Tokens in Batch}} \\right) $$\n\n- If Expert $i$ is overloaded ($f_i > \\frac{1}{N}$), $b_i$ is decreased, shifting future tokens away.\n- If Expert $i$ is starved ($f_i < \\frac{1}{N}$), $b_i$ is increased, naturally pulling tokens in.\n- **Advantage**: Gradients directly optimize primary language modeling loss with zero interference from artificial auxiliary balance penalties.\n\n---\n\n## 6. PyTorch Implementation: Multi-Head Latent Attention (MLA)\n\n```python\nimport torch\nimport torch.nn as nn\nimport torch.nn.functional as F\nimport math\n\nclass MultiHeadLatentAttention(nn.Module):\n    \"\"\"\n    Multi-Head Latent Attention (MLA) as introduced in DeepSeek-V2 / DeepSeek-V3.\n    Features:\n    - Low-rank KV compression into latent vector c_t^{KV}\n    - Decoupled Rotary Positional Embeddings (RoPE)\n    - Low-rank Query compression\n    \"\"\"\n    def __init__(\n        self,\n        d_model: int = 2048,\n        num_heads: int = 16,\n        d_head: int = 128,\n        d_c_kv: int = 512,    # KV compression dimension\n        d_c_q: int = 512,     # Query compression dimension\n        d_rope: int = 64      # Decoupled RoPE dimension\n    ):\n        super().__init__()\n        self.d_model = d_model\n        self.num_heads = num_heads\n        self.d_head = d_head\n        self.d_c_kv = d_c_kv\n        self.d_c_q = d_c_q\n        self.d_rope = d_rope\n        self.scale = 1.0 / math.sqrt(d_head + d_rope)\n\n        # 1. Query Compression & Projections\n        self.w_dq = nn.Linear(d_model, d_c_q, bias=False)\n        self.w_uq = nn.Linear(d_c_q, num_heads * d_head, bias=False)\n        self.w_qr = nn.Linear(d_c_q, num_heads * d_rope, bias=False)\n\n        # 2. Key-Value Compression & Projections\n        self.w_dkv = nn.Linear(d_model, d_c_kv, bias=False)\n        self.w_uk = nn.Linear(d_c_kv, num_heads * d_head, bias=False)\n        self.w_uv = nn.Linear(d_c_kv, num_heads * d_head, bias=False)\n        self.w_kr = nn.Linear(d_model, d_rope, bias=False) # Shared RoPE key\n\n        # 3. Output Projection\n        self.w_out = nn.Linear(num_heads * d_head, d_model, bias=False)\n\n    def apply_rope(self, x: torch.Tensor, pos: torch.Tensor) -> torch.Tensor:\n        # Simple 2D rotary embedding for illustration\n        B, S, H, D = x.shape\n        half_d = D // 2\n        freqs = torch.exp(\n            -math.log(10000.0) * torch.arange(0, half_d, dtype=torch.float32, device=x.device) / half_d\n        )\n        angles = pos.unsqueeze(-1) * freqs.unsqueeze(0) # [S, half_d]\n        cos = torch.cos(angles).unsqueeze(0).unsqueeze(2) # [1, S, 1, half_d]\n        sin = torch.sin(angles).unsqueeze(0).unsqueeze(2) # [1, S, 1, half_d]\n        \n        x1, x2 = x[..., :half_d], x[..., half_d:]\n        rotated = torch.cat([x1 * cos - x2 * sin, x1 * sin + x2 * cos], dim=-1)\n        return rotated\n\n    def forward(self, x: torch.Tensor, kv_cache_latent=None, kv_cache_rope=None):\n        B, S, _ = x.shape\n        pos = torch.arange(S, device=x.device)\n\n        # --- Query Processing ---\n        c_q = self.w_dq(x) # [B, S, d_c_q]\n        q_c = self.w_uq(c_q).view(B, S, self.num_heads, self.d_head)\n        q_r = self.w_qr(c_q).view(B, S, self.num_heads, self.d_rope)\n        q_r = self.apply_rope(q_r, pos)\n        q = torch.cat([q_c, q_r], dim=-1) # [B, S, H, d_head + d_rope]\n\n        # --- KV Compression & Latent Generation ---\n        c_kv = self.w_dkv(x) # [B, S, d_c_kv] (This is what gets stored in the KV cache!)\n        k_r = self.w_kr(x).unsqueeze(2) # [B, S, 1, d_rope]\n        k_r = self.apply_rope(k_r, pos).expand(B, S, self.num_heads, self.d_rope)\n\n        # Uncompress K and V on-the-fly\n        k_c = self.w_uk(c_kv).view(B, S, self.num_heads, self.d_head)\n        v = self.w_uv(c_kv).view(B, S, self.num_heads, self.d_head)\n        k = torch.cat([k_c, k_r], dim=-1) # [B, S, H, d_head + d_rope]\n\n        # --- Attention Computation ---\n        # Permute for batch matrix multiply: [B, H, S_q, S_k]\n        q = q.transpose(1, 2)\n        k = k.transpose(1, 2)\n        v = v.transpose(1, 2)\n\n        scores = torch.matmul(q, k.transpose(-2, -1)) * self.scale\n\n        # Apply Causal Mask\n        mask = torch.triu(torch.full((S, S), float('-inf'), device=x.device), diagonal=1)\n        scores = scores + mask.unsqueeze(0).unsqueeze(1)\n\n        attn_weights = F.softmax(scores, dim=-1)\n        out = torch.matmul(attn_weights, v) # [B, H, S, d_head]\n\n        # Concatenate heads and project output\n        out = out.transpose(1, 2).contiguous().view(B, S, self.num_heads * self.d_head)\n        return self.w_out(out), c_kv, k_r\n\nif __name__ == \"__main__\":\n    B, S, D = 2, 64, 2048\n    x = torch.randn(B, S, D)\n    mla = MultiHeadLatentAttention(d_model=D, num_heads=16, d_head=128, d_c_kv=512, d_rope=64)\n    out, latent_kv, rope_k = mla(x)\n    assert out.shape == (B, S, D), \"MLA output shape mismatch!\"\n    assert latent_kv.shape == (B, S, 512), \"Latent KV shape mismatch!\"\n    print(\"Multi-Head Latent Attention (MLA) test passed successfully.\")\n```\n\n---\n\n## 7. Deep Interview Interrogation Ladder\n\n- **Level 1 (Concept)**: What is the primary operational difference between MHA, GQA, and MLA?\n- **Level 3 (Proof)**: Prove mathematically why the variance of Query-Key dot products equals $d_k$, and why Softmax temperature scaling $\\frac{1}{\\sqrt{d_k}}$ prevents vanishing gradients.\n- **Level 5 (Mechanics)**: Why does Rotary Position Embedding (RoPE) preserve translation invariance in the inner product? (Show the complex exponential proof).\n- **Level 7 (Architectural Sizing)**: Calculate the exact KV cache memory reduction when switching a 70B parameter model from GQA ($N_{kv}=8$) to MLA ($d_c=512, d_R=64$).\n- **Level 9 (MoE Dynamics)**: Explain why standard auxiliary load balancing losses degrade model capability in MoE training, and how DeepSeek-V3's dynamic expert bias term solves this without auxiliary losses.\n- **Level 10 (Principal Engineering)**: Walk through how you would optimize the kernel execution of Multi-Head Latent Attention (MLA) during decode. How does matrix associativity allow absorbing the up-projection matrix $W^{UK}$ into the Query vector before attending to the cached latent $c_t^{KV}$?\n";
-    function renderMarkdown(rawText) {
-      const blockMath = [];
-      let text = rawText.replace(/\$\$([\s\S]*?)\$\$/g, (m, math) => { blockMath.push(math.trim()); return `%%%BM_${blockMath.length-1}%%%`; });
-      const inlineMath = [];
-      text = text.replace(/\$([^\$\n]+?)\$/g, (m, math) => { inlineMath.push(math.trim()); return `%%%IM_${inlineMath.length-1}%%%`; });
-      let html = marked.parse(text);
-      html = html.replace(/%%%BM_(\d+)%%%/g, (m, id) => {
-        try { return katex.renderToString(blockMath[parseInt(id)], { displayMode: true, throwOnError: false }); } catch(e) { return `<pre>${blockMath[parseInt(id)]}</pre>`; }
-      });
-      html = html.replace(/%%%IM_(\d+)%%%/g, (m, id) => {
-        try { return katex.renderToString(inlineMath[parseInt(id)], { displayMode: false, throwOnError: false }); } catch(e) { return `<code>${inlineMath[parseInt(id)]}</code>`; }
-      });
-      return html;
-    }
-    document.getElementById('content').innerHTML = renderMarkdown(rawMarkdown);
-    Prism.highlightAll();
-    mermaid.initialize({ startOnLoad: false, theme: 'dark' });
-    document.querySelectorAll('.language-mermaid').forEach(el => {
-      const parent = el.parentElement;
-      const code = el.textContent;
-      const div = document.createElement('div');
-      div.className = 'mermaid';
-      div.textContent = code;
-      parent.replaceWith(div);
+    document.addEventListener('DOMContentLoaded', () => {
+      try {
+        if (typeof renderMathInElement !== 'undefined') {
+          renderMathInElement(document.getElementById('content'), {
+            delimiters: [
+              { left: '$$', right: '$$', display: true },
+              { left: '$', right: '$', display: false }
+            ],
+            throwOnError: false
+          });
+        }
+      } catch(e){}
+      try { Prism.highlightAll(); } catch(e){}
+      try {
+        mermaid.initialize({ startOnLoad: true, theme: 'dark' });
+      } catch(e){}
     });
-    mermaid.run();
   </script>
 </body>
 </html>

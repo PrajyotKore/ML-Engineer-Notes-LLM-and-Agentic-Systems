@@ -8,7 +8,7 @@
   <link href="https://fonts.googleapis.com/css2?family=Fira+Code:wght@400;500;600&family=Inter:wght@300;400;500;600;700;800&family=Outfit:wght@500;600;700;800&display=swap" rel="stylesheet">
   <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/katex@0.16.9/dist/katex.min.css">
   <script defer src="https://cdn.jsdelivr.net/npm/katex@0.16.9/dist/katex.min.js"></script>
-  <script src="https://cdn.jsdelivr.net/npm/marked@11.1.1/marked.min.js"></script>
+  <script defer src="https://cdn.jsdelivr.net/npm/katex@0.16.9/dist/contrib/auto-render.min.js"></script>
   <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/prism/1.29.0/themes/prism-tomorrow.min.css">
   <script src="https://cdnjs.cloudflare.com/ajax/libs/prism/1.29.0/prism.min.js"></script>
   <script src="https://cdnjs.cloudflare.com/ajax/libs/prism/1.29.0/components/prism-python.min.js"></script>
@@ -35,37 +35,180 @@
 </head>
 <body>
   <div class="container">
-    <a href="../index.html" class="nav-back">← Back to Master Knowledge Hub</a>
-    <div id="content"></div>
+    <a href="../index.html#12_EVALUATION" class="nav-back">← Back to Master Knowledge Hub</a>
+    <div id="content"><h1>12_EVALUATION — Mathematical &amp; Statistical Reference</h1>
+<blockquote>
+<p><strong>Audience</strong>: ML Engineers, LLM Systems Engineers, and AI Researchers preparing for senior/principal technical interviews.<br />
+<strong>Core Objective</strong>: Provide an exhaustive mathematical and statistical reference on evaluating LLMs and Agentic systems — covering Two-Proportion Z-Tests, Sample Size calculations, Bradley-Terry ELO rating derivations, LLM-as-a-Judge debiasing, and benchmark harnesses (SWE-bench / GAIA).</p>
+</blockquote>
+<hr />
+<h2>1. The Three Tiers of ML Evaluation</h2>
+<pre><code>┌─────────────────────────────────────────────────────────────────────────────┐
+│                 1. Model Evaluation (Offline Static Weights)                │
+│  Perplexity, MMLU-Pro, HumanEval, GSM8K, MATH                               │
+└──────────────────────────────────────┬──────────────────────────────────────┘
+                                       │
+┌──────────────────────────────────────┴──────────────────────────────────────┐
+│                 2. System / Agent Evaluation (Offline Dynamics)              │
+│  SWE-bench, GAIA, Tool-Calling Precision/Recall, Context Retrieval Precision│
+└──────────────────────────────────────┬──────────────────────────────────────┘
+                                       │
+┌──────────────────────────────────────┴──────────────────────────────────────┐
+│                 3. Product Evaluation (Online Live Traffic)                 │
+│  Task Completion Rate, User Retention, Inter-Token Latency, Cost per Task   │
+└─────────────────────────────────────────────────────────────────────────────┘
+</code></pre>
+<hr />
+<h2>2. Statistical Significance in A/B Testing: Mathematics &amp; Sample Sizing</h2>
+<p>When testing if Model <span class="katex-inline">$B$</span> improves agent success rate over Model <span class="katex-inline">$A$</span> (<span class="katex-inline">$p_B &gt; p_A$</span>):</p>
+<h3>2.1 The Two-Proportion <span class="katex-inline">$Z$</span>-Test Formulation</h3>
+<p>Let:<br />
+- <span class="katex-inline">$n_A, n_B$</span>: Sample size of evaluated trajectories for Model <span class="katex-inline">$A$</span> and Model <span class="katex-inline">$B$</span>.<br />
+- <span class="katex-inline">$X_A, X_B$</span>: Number of successfully completed tasks.<br />
+- <span class="katex-inline">$\hat{p}_A = \frac{X_A}{n_A}$</span>, <span class="katex-inline">$\hat{p}_B = \frac{X_B}{n_B}$</span>: Sample proportions.<br />
+- <span class="katex-inline">$\hat{p} = \frac{X_A + X_B}{n_A + n_B}$</span>: Pooled proportion under the null hypothesis <span class="katex-inline">$H_0: p_A = p_B$</span>.</p>
+<p>The standard error of the difference is:</p>
+<div class="katex-display">$$\text{SE} = \sqrt{\hat{p}(1 - \hat{p}) \left( \frac{1}{n_A} + \frac{1}{n_B} \right)}$$</div>
+
+<p>The test statistic <span class="katex-inline">$Z$</span> is:</p>
+<div class="katex-display">$$\mathbf{Z = \frac{\hat{p}_B - \hat{p}_A}{\text{SE}} = \frac{\hat{p}_B - \hat{p}_A}{\sqrt{\hat{p}(1 - \hat{p}) \left( \frac{1}{n_A} + \frac{1}{n_B} \right)}}}$$</div>
+
+<ul>
+<li>For significance level <span class="katex-inline">$\alpha = 0.05$</span> (two-tailed), reject <span class="katex-inline">$H_0$</span> if <span class="katex-inline">$|Z| \geq 1.96$</span> (<span class="katex-inline">$p\text{-value} \leq 0.05$</span>).</li>
+</ul>
+<hr />
+<h3>2.2 Sample Size Estimation for Minimum Detectable Effect (MDE)</h3>
+<p>To detect an absolute improvement <span class="katex-inline">$\delta = p_B - p_A$</span> with statistical power <span class="katex-inline">$1 - \beta = 0.80$</span> and significance <span class="katex-inline">$\alpha = 0.05$</span>:</p>
+<div class="katex-display">$$\mathbf{N = \frac{\left( Z_{\alpha/2} \sqrt{2 \bar{p}(1 - \bar{p})} + Z_\beta \sqrt{p_A(1 - p_A) + p_B(1 - p_B)} \right)^2}{\delta^2}}$$</div>
+
+<p>Where <span class="katex-inline">$Z_{\alpha/2} = 1.96$</span> and <span class="katex-inline">$Z_\beta = 0.8416$</span>.</p>
+<h4>Concrete Production Sizing Example:</h4>
+<ul>
+<li>Baseline agent success rate: <span class="katex-inline">$p_A = 0.80$</span>.</li>
+<li>We want to detect a <span class="katex-inline">$+2\%$</span> improvement (<span class="katex-inline">$p_B = 0.82 \implies \delta = 0.02$</span>).</li>
+</ul>
+<div class="katex-display">$$N \approx \frac{(1.96 + 0.84)^2 \cdot 2 \cdot (0.80 \cdot 0.20)}{(0.02)^2} = \frac{7.84 \cdot 0.32}{0.0004} \approx \mathbf{6,272 \text{ trajectories per model}}$$</div>
+
+<p><em>Insight</em>: You <strong>cannot</strong> declare model victory by testing on 50 or 100 prompts. You mathematically need over <span class="katex-inline">$6,000$</span> trials to distinguish a true <span class="katex-inline">$2\%$</span> gain from random noise.</p>
+<hr />
+<h2>3. Bradley-Terry ELO Rating Mechanics (LMSYS Chatbot Arena)</h2>
+<p>In pairwise blind evaluation, model strength is represented on an ELO scale <span class="katex-inline">$R \in \mathbb{R}$</span>.</p>
+<h3>3.1 Expected Win Probability</h3>
+<p>The expected probability that Model <span class="katex-inline">$A$</span> defeats Model <span class="katex-inline">$B$</span> is governed by the logistic curve:</p>
+<div class="katex-display">$$\mathbf{E_A = \mathbb{P}(A \succ B) = \frac{1}{1 + 10^{(R_B - R_A)/400}} = \frac{1}{1 + e^{(R_B - R_A) / \xi}}} \quad \left(\xi = \frac{400}{\ln 10} \approx 173.7\right)$$</div>
+
+<pre><code>  Expected Win Probability E_A
+  1.0 ┼                                        ┌─────────────
+      │                                       /
+  0.5 ┼───────────────────┼───────────────────
+      │                  / (Equal Rating: E_A = 0.5)
+  0.0 ┼─────────────────┘
+      └───────────────────┼───────────────────► Rating Difference (R_A - R_B)
+                        R_A = R_B
+</code></pre>
+<h3>3.2 Online ELO Update Rule</h3>
+<p>After observing the actual match outcome <span class="katex-inline">$S_A \in \{1.0 \text{ (Win)}, 0.5 \text{ (Tie)}, 0.0 \text{ (Loss)}\}$</span>:</p>
+<div class="katex-display">$$\mathbf{R_A \leftarrow R_A + K \cdot (S_A - E_A)}$$</div>
+<div class="katex-display">$$\mathbf{R_B \leftarrow R_B + K \cdot (S_B - E_B)}$$</div>
+
+<p>Where <span class="katex-inline">$K$</span> is the update step size factor (typically <span class="katex-inline">$K = 32$</span>).</p>
+<hr />
+<h2>4. LLM-as-a-Judge: Systematic Biases &amp; Debiasing Mathematics</h2>
+<p>Using an LLM (e.g. GPT-4) to grade model responses is fast and scalable, but prone to systematic biases.</p>
+<h3>4.1 Taxonomy of Judge Biases</h3>
+<ol>
+<li><strong>Position Bias (First-Order Favoritism)</strong>: The judge strongly prefers whichever candidate response appears first in the prompt.</li>
+<li><strong>Verbosity Bias</strong>: The judge consistently awards higher scores to verbose, lengthy responses, even when concise answers are requested.</li>
+<li><strong>Self-Preference Bias</strong>: Models evaluate responses generated by their own family higher than competitors.</li>
+</ol>
+<h3>4.2 Position Debiasing: Permuted Pairwise Scoring</h3>
+<p>For every evaluation pair <span class="katex-inline">$(y_A, y_B)$</span>, evaluate the judge under <strong>both orderings</strong>:</p>
+<div class="katex-display">$$\text{Trial 1}: \text{Judge}(x, y_A, y_B) \to S_1 \in \{A, B, \text{Tie}\}$$</div>
+<div class="katex-display">$$\text{Trial 2}: \text{Judge}(x, y_B, y_A) \to S_2 \in \{B, A, \text{Tie}\}$$</div>
+
+<h4>Symmetrized Score Matrix:</h4>
+<div class="katex-display">$$S(A, B) = \begin{cases} 1.0 &amp; \text{if } S_1 = A \text{ and } S_2 = A \text{ (True Win)} \\ 0.0 &amp; \text{if } S_1 = B \text{ and } S_2 = B \text{ (True Loss)} \\ 0.5 &amp; \text{if } S_1 \neq S_2 \text{ (Position Inconsistency / Tie)} \end{cases}$$</div>
+
+<hr />
+<h2>5. Python Implementation: Statistical A/B Significance &amp; ELO Calculator</h2>
+<pre><code class="language-python">import numpy as np
+from scipy import stats
+
+def two_proportion_z_test(success_a: int, n_a: int, success_b: int, n_b: int) -&gt; dict:
+    &quot;&quot;&quot;
+    Computes Two-Proportion Z-Test for A/B testing evaluation.
+    &quot;&quot;&quot;
+    p_a = success_a / n_a
+    p_b = success_b / n_b
+    p_pooled = (success_a + success_b) / (n_a + n_b)
+
+    se = np.sqrt(p_pooled * (1 - p_pooled) * (1/n_a + 1/n_b))
+    z_stat = (p_b - p_a) / se
+    p_val = 2 * (1 - stats.norm.cdf(abs(z_stat)))
+
+    return {
+        &quot;p_A&quot;: p_a,
+        &quot;p_B&quot;: p_b,
+        &quot;absolute_delta&quot;: p_b - p_a,
+        &quot;z_statistic&quot;: z_stat,
+        &quot;p_value&quot;: p_val,
+        &quot;is_significant_95&quot;: p_val &lt; 0.05
+    }
+
+def update_elo(rating_a: float, rating_b: float, outcome_a: float, k: float = 32.0) -&gt; tuple:
+    &quot;&quot;&quot;
+    Computes Bradley-Terry ELO rating updates.
+    outcome_a: 1.0 for A win, 0.5 for tie, 0.0 for B win.
+    &quot;&quot;&quot;
+    e_a = 1.0 / (1.0 + 10.0 ** ((rating_b - rating_a) / 400.0))
+    e_b = 1.0 - e_a
+
+    new_rating_a = rating_a + k * (outcome_a - e_a)
+    new_rating_b = rating_b + k * ((1.0 - outcome_a) - e_b)
+    return new_rating_a, new_rating_b
+
+if __name__ == &quot;__main__&quot;:
+    # A/B Test Validation: 820/1000 vs 860/1000
+    res = two_proportion_z_test(success_a=820, n_a=1000, success_b=860, n_b=1000)
+    print(f&quot;A/B Test Results: Delta = +{res['absolute_delta']*100:.1f}%, Z = {res['z_statistic']:.3f}, p = {res['p_value']:.4f}&quot;)
+    assert res['is_significant_95'], &quot;Expected statistically significant result!&quot;
+
+    # ELO Validation
+    r_a, r_b = 1500.0, 1500.0
+    r_a, r_b = update_elo(r_a, r_b, outcome_a=1.0)
+    print(f&quot;Post-Match ELO: Model A = {r_a:.1f}, Model B = {r_b:.1f}&quot;)
+    assert r_a &gt; 1500.0 and r_b &lt; 1500.0
+    print(&quot;Statistical Evaluation Modules Verified Successfully.&quot;)
+</code></pre>
+<hr />
+<h2>6. Deep Interview Interrogation Ladder</h2>
+<ul>
+<li><strong>Level 1 (Concept)</strong>: What is the difference between an offline benchmark and an online A/B test?</li>
+<li><strong>Level 3 (Math)</strong>: Write the formula for the Two-Proportion Z-Test and explain how to calculate the minimum sample size needed to detect a <span class="katex-inline">$1\%$</span> improvement.</li>
+<li><strong>Level 5 (Mechanics)</strong>: How does the Bradley-Terry ELO model update ratings after a blind pairwise evaluation match?</li>
+<li><strong>Level 7 (Debiasing)</strong>: Why do LLM judges suffer from position bias, and how does order permutation mathematically eliminate it?</li>
+<li><strong>Level 9 (Harness Design)</strong>: Design an end-to-end evaluation harness for SWE-bench (code editing in real GitHub repos). How do you isolate execution environments and prevent metric contamination?</li>
+<li><strong>Level 10 (Principal Engineering)</strong>: Your offline LLM-as-a-judge reports a <span class="katex-inline">$15\%$</span> improvement in agent task completion, but the online canary deployment shows a <span class="katex-inline">$3\%$</span> drop in user satisfaction. Walk through your statistical and systems investigation step-by-step.</li>
+</ul></div>
   </div>
   <script>
-    const rawMarkdown = "# 12_EVALUATION \u2014 Mathematical & Statistical Reference\n\n> **Audience**: ML Engineers, LLM Systems Engineers, and AI Researchers preparing for senior/principal technical interviews.  \n> **Core Objective**: Provide an exhaustive mathematical and statistical reference on evaluating LLMs and Agentic systems \u2014 covering Two-Proportion Z-Tests, Sample Size calculations, Bradley-Terry ELO rating derivations, LLM-as-a-Judge debiasing, and benchmark harnesses (SWE-bench / GAIA).\n\n---\n\n## 1. The Three Tiers of ML Evaluation\n\n```\n\u250c\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2510\n\u2502                 1. Model Evaluation (Offline Static Weights)                \u2502\n\u2502  Perplexity, MMLU-Pro, HumanEval, GSM8K, MATH                               \u2502\n\u2514\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u252c\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2518\n                                       \u2502\n\u250c\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2534\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2510\n\u2502                 2. System / Agent Evaluation (Offline Dynamics)              \u2502\n\u2502  SWE-bench, GAIA, Tool-Calling Precision/Recall, Context Retrieval Precision\u2502\n\u2514\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u252c\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2518\n                                       \u2502\n\u250c\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2534\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2510\n\u2502                 3. Product Evaluation (Online Live Traffic)                 \u2502\n\u2502  Task Completion Rate, User Retention, Inter-Token Latency, Cost per Task   \u2502\n\u2514\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2518\n```\n\n---\n\n## 2. Statistical Significance in A/B Testing: Mathematics & Sample Sizing\n\nWhen testing if Model $B$ improves agent success rate over Model $A$ ($p_B > p_A$):\n\n### 2.1 The Two-Proportion $Z$-Test Formulation\n\nLet:\n- $n_A, n_B$: Sample size of evaluated trajectories for Model $A$ and Model $B$.\n- $X_A, X_B$: Number of successfully completed tasks.\n- $\\hat{p}_A = \\frac{X_A}{n_A}$, $\\hat{p}_B = \\frac{X_B}{n_B}$: Sample proportions.\n- $\\hat{p} = \\frac{X_A + X_B}{n_A + n_B}$: Pooled proportion under the null hypothesis $H_0: p_A = p_B$.\n\nThe standard error of the difference is:\n$$ \\text{SE} = \\sqrt{\\hat{p}(1 - \\hat{p}) \\left( \\frac{1}{n_A} + \\frac{1}{n_B} \\right)} $$\n\nThe test statistic $Z$ is:\n$$ \\mathbf{Z = \\frac{\\hat{p}_B - \\hat{p}_A}{\\text{SE}} = \\frac{\\hat{p}_B - \\hat{p}_A}{\\sqrt{\\hat{p}(1 - \\hat{p}) \\left( \\frac{1}{n_A} + \\frac{1}{n_B} \\right)}}} $$\n\n- For significance level $\\alpha = 0.05$ (two-tailed), reject $H_0$ if $|Z| \\geq 1.96$ ($p\\text{-value} \\leq 0.05$).\n\n---\n\n### 2.2 Sample Size Estimation for Minimum Detectable Effect (MDE)\n\nTo detect an absolute improvement $\\delta = p_B - p_A$ with statistical power $1 - \\beta = 0.80$ and significance $\\alpha = 0.05$:\n\n$$ \\mathbf{N = \\frac{\\left( Z_{\\alpha/2} \\sqrt{2 \\bar{p}(1 - \\bar{p})} + Z_\\beta \\sqrt{p_A(1 - p_A) + p_B(1 - p_B)} \\right)^2}{\\delta^2}} $$\n\nWhere $Z_{\\alpha/2} = 1.96$ and $Z_\\beta = 0.8416$.\n\n#### Concrete Production Sizing Example:\n- Baseline agent success rate: $p_A = 0.80$.\n- We want to detect a $+2\\%$ improvement ($p_B = 0.82 \\implies \\delta = 0.02$).\n$$ N \\approx \\frac{(1.96 + 0.84)^2 \\cdot 2 \\cdot (0.80 \\cdot 0.20)}{(0.02)^2} = \\frac{7.84 \\cdot 0.32}{0.0004} \\approx \\mathbf{6,272 \\text{ trajectories per model}} $$\n\n*Insight*: You **cannot** declare model victory by testing on 50 or 100 prompts. You mathematically need over $6,000$ trials to distinguish a true $2\\%$ gain from random noise.\n\n---\n\n## 3. Bradley-Terry ELO Rating Mechanics (LMSYS Chatbot Arena)\n\nIn pairwise blind evaluation, model strength is represented on an ELO scale $R \\in \\mathbb{R}$.\n\n### 3.1 Expected Win Probability\nThe expected probability that Model $A$ defeats Model $B$ is governed by the logistic curve:\n\n$$ \\mathbf{E_A = \\mathbb{P}(A \\succ B) = \\frac{1}{1 + 10^{(R_B - R_A)/400}} = \\frac{1}{1 + e^{(R_B - R_A) / \\xi}}} \\quad \\left(\\xi = \\frac{400}{\\ln 10} \\approx 173.7\\right) $$\n\n```\n  Expected Win Probability E_A\n  1.0 \u253c                                        \u250c\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\n      \u2502                                       /\n  0.5 \u253c\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u253c\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\n      \u2502                  / (Equal Rating: E_A = 0.5)\n  0.0 \u253c\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2518\n      \u2514\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u253c\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u25ba Rating Difference (R_A - R_B)\n                        R_A = R_B\n```\n\n### 3.2 Online ELO Update Rule\nAfter observing the actual match outcome $S_A \\in \\{1.0 \\text{ (Win)}, 0.5 \\text{ (Tie)}, 0.0 \\text{ (Loss)}\\}$:\n\n$$ \\mathbf{R_A \\leftarrow R_A + K \\cdot (S_A - E_A)} $$\n$$ \\mathbf{R_B \\leftarrow R_B + K \\cdot (S_B - E_B)} $$\n\nWhere $K$ is the update step size factor (typically $K = 32$).\n\n---\n\n## 4. LLM-as-a-Judge: Systematic Biases & Debiasing Mathematics\n\nUsing an LLM (e.g. GPT-4) to grade model responses is fast and scalable, but prone to systematic biases.\n\n### 4.1 Taxonomy of Judge Biases\n1. **Position Bias (First-Order Favoritism)**: The judge strongly prefers whichever candidate response appears first in the prompt.\n2. **Verbosity Bias**: The judge consistently awards higher scores to verbose, lengthy responses, even when concise answers are requested.\n3. **Self-Preference Bias**: Models evaluate responses generated by their own family higher than competitors.\n\n### 4.2 Position Debiasing: Permuted Pairwise Scoring\nFor every evaluation pair $(y_A, y_B)$, evaluate the judge under **both orderings**:\n\n$$ \\text{Trial 1}: \\text{Judge}(x, y_A, y_B) \\to S_1 \\in \\{A, B, \\text{Tie}\\} $$\n$$ \\text{Trial 2}: \\text{Judge}(x, y_B, y_A) \\to S_2 \\in \\{B, A, \\text{Tie}\\} $$\n\n#### Symmetrized Score Matrix:\n$$ S(A, B) = \\begin{cases} 1.0 & \\text{if } S_1 = A \\text{ and } S_2 = A \\text{ (True Win)} \\\\ 0.0 & \\text{if } S_1 = B \\text{ and } S_2 = B \\text{ (True Loss)} \\\\ 0.5 & \\text{if } S_1 \\neq S_2 \\text{ (Position Inconsistency / Tie)} \\end{cases} $$\n\n---\n\n## 5. Python Implementation: Statistical A/B Significance & ELO Calculator\n\n```python\nimport numpy as np\nfrom scipy import stats\n\ndef two_proportion_z_test(success_a: int, n_a: int, success_b: int, n_b: int) -> dict:\n    \"\"\"\n    Computes Two-Proportion Z-Test for A/B testing evaluation.\n    \"\"\"\n    p_a = success_a / n_a\n    p_b = success_b / n_b\n    p_pooled = (success_a + success_b) / (n_a + n_b)\n    \n    se = np.sqrt(p_pooled * (1 - p_pooled) * (1/n_a + 1/n_b))\n    z_stat = (p_b - p_a) / se\n    p_val = 2 * (1 - stats.norm.cdf(abs(z_stat)))\n    \n    return {\n        \"p_A\": p_a,\n        \"p_B\": p_b,\n        \"absolute_delta\": p_b - p_a,\n        \"z_statistic\": z_stat,\n        \"p_value\": p_val,\n        \"is_significant_95\": p_val < 0.05\n    }\n\ndef update_elo(rating_a: float, rating_b: float, outcome_a: float, k: float = 32.0) -> tuple:\n    \"\"\"\n    Computes Bradley-Terry ELO rating updates.\n    outcome_a: 1.0 for A win, 0.5 for tie, 0.0 for B win.\n    \"\"\"\n    e_a = 1.0 / (1.0 + 10.0 ** ((rating_b - rating_a) / 400.0))\n    e_b = 1.0 - e_a\n    \n    new_rating_a = rating_a + k * (outcome_a - e_a)\n    new_rating_b = rating_b + k * ((1.0 - outcome_a) - e_b)\n    return new_rating_a, new_rating_b\n\nif __name__ == \"__main__\":\n    # A/B Test Validation: 820/1000 vs 860/1000\n    res = two_proportion_z_test(success_a=820, n_a=1000, success_b=860, n_b=1000)\n    print(f\"A/B Test Results: Delta = +{res['absolute_delta']*100:.1f}%, Z = {res['z_statistic']:.3f}, p = {res['p_value']:.4f}\")\n    assert res['is_significant_95'], \"Expected statistically significant result!\"\n    \n    # ELO Validation\n    r_a, r_b = 1500.0, 1500.0\n    r_a, r_b = update_elo(r_a, r_b, outcome_a=1.0)\n    print(f\"Post-Match ELO: Model A = {r_a:.1f}, Model B = {r_b:.1f}\")\n    assert r_a > 1500.0 and r_b < 1500.0\n    print(\"Statistical Evaluation Modules Verified Successfully.\")\n```\n\n---\n\n## 6. Deep Interview Interrogation Ladder\n\n- **Level 1 (Concept)**: What is the difference between an offline benchmark and an online A/B test?\n- **Level 3 (Math)**: Write the formula for the Two-Proportion Z-Test and explain how to calculate the minimum sample size needed to detect a $1\\%$ improvement.\n- **Level 5 (Mechanics)**: How does the Bradley-Terry ELO model update ratings after a blind pairwise evaluation match?\n- **Level 7 (Debiasing)**: Why do LLM judges suffer from position bias, and how does order permutation mathematically eliminate it?\n- **Level 9 (Harness Design)**: Design an end-to-end evaluation harness for SWE-bench (code editing in real GitHub repos). How do you isolate execution environments and prevent metric contamination?\n- **Level 10 (Principal Engineering)**: Your offline LLM-as-a-judge reports a $15\\%$ improvement in agent task completion, but the online canary deployment shows a $3\\%$ drop in user satisfaction. Walk through your statistical and systems investigation step-by-step.\n";
-    function renderMarkdown(rawText) {
-      const blockMath = [];
-      let text = rawText.replace(/\$\$([\s\S]*?)\$\$/g, (m, math) => { blockMath.push(math.trim()); return `%%%BM_${blockMath.length-1}%%%`; });
-      const inlineMath = [];
-      text = text.replace(/\$([^\$\n]+?)\$/g, (m, math) => { inlineMath.push(math.trim()); return `%%%IM_${inlineMath.length-1}%%%`; });
-      let html = marked.parse(text);
-      html = html.replace(/%%%BM_(\d+)%%%/g, (m, id) => {
-        try { return katex.renderToString(blockMath[parseInt(id)], { displayMode: true, throwOnError: false }); } catch(e) { return `<pre>${blockMath[parseInt(id)]}</pre>`; }
-      });
-      html = html.replace(/%%%IM_(\d+)%%%/g, (m, id) => {
-        try { return katex.renderToString(inlineMath[parseInt(id)], { displayMode: false, throwOnError: false }); } catch(e) { return `<code>${inlineMath[parseInt(id)]}</code>`; }
-      });
-      return html;
-    }
-    document.getElementById('content').innerHTML = renderMarkdown(rawMarkdown);
-    Prism.highlightAll();
-    mermaid.initialize({ startOnLoad: false, theme: 'dark' });
-    document.querySelectorAll('.language-mermaid').forEach(el => {
-      const parent = el.parentElement;
-      const code = el.textContent;
-      const div = document.createElement('div');
-      div.className = 'mermaid';
-      div.textContent = code;
-      parent.replaceWith(div);
+    document.addEventListener('DOMContentLoaded', () => {
+      try {
+        if (typeof renderMathInElement !== 'undefined') {
+          renderMathInElement(document.getElementById('content'), {
+            delimiters: [
+              { left: '$$', right: '$$', display: true },
+              { left: '$', right: '$', display: false }
+            ],
+            throwOnError: false
+          });
+        }
+      } catch(e){}
+      try { Prism.highlightAll(); } catch(e){}
+      try {
+        mermaid.initialize({ startOnLoad: true, theme: 'dark' });
+      } catch(e){}
     });
-    mermaid.run();
   </script>
 </body>
 </html>

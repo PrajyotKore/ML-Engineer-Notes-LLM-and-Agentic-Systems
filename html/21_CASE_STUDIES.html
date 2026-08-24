@@ -8,7 +8,7 @@
   <link href="https://fonts.googleapis.com/css2?family=Fira+Code:wght@400;500;600&family=Inter:wght@300;400;500;600;700;800&family=Outfit:wght@500;600;700;800&display=swap" rel="stylesheet">
   <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/katex@0.16.9/dist/katex.min.css">
   <script defer src="https://cdn.jsdelivr.net/npm/katex@0.16.9/dist/katex.min.js"></script>
-  <script src="https://cdn.jsdelivr.net/npm/marked@11.1.1/marked.min.js"></script>
+  <script defer src="https://cdn.jsdelivr.net/npm/katex@0.16.9/dist/contrib/auto-render.min.js"></script>
   <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/prism/1.29.0/themes/prism-tomorrow.min.css">
   <script src="https://cdnjs.cloudflare.com/ajax/libs/prism/1.29.0/prism.min.js"></script>
   <script src="https://cdnjs.cloudflare.com/ajax/libs/prism/1.29.0/components/prism-python.min.js"></script>
@@ -35,37 +35,93 @@
 </head>
 <body>
   <div class="container">
-    <a href="../index.html" class="nav-back">← Back to Master Knowledge Hub</a>
-    <div id="content"></div>
+    <a href="../index.html#21_CASE_STUDIES" class="nav-back">← Back to Master Knowledge Hub</a>
+    <div id="content"><h1>21_CASE_STUDIES — Production Incident Root Cause Analyses (RCAs)</h1>
+<blockquote>
+<p><strong>Audience</strong>: ML Engineers, LLM Systems Engineers, and AI Researchers preparing for senior/principal technical interviews.<br />
+<strong>Core Objective</strong>: Provide structured, battle-tested Root Cause Analyses (RCAs) for five high-stakes production incidents — detailing the symptom, diagnostic hypotheses, telemetry isolation, root cause, and permanent architectural remediation.</p>
+</blockquote>
+<hr />
+<h2>Case Study 1: The Step 4,500 Training Loss Spike &amp; NaN Divergence</h2>
+<pre><code>Step 0 ────────► Step 4,499 (Loss = 1.25) ──► Step 4,500 (Loss = 8.92 -&gt; NaN!)
+                                                       │
+                 ┌─────────────────────────────────────┴─────────────────────────────────────┐
+                 ▼                                     ▼                                     ▼
+        [ Hypothesis 1 ]                      [ Hypothesis 2 ]                      [ Hypothesis 3 ]
+        Data batch corruption /               LR Scheduler ended warmup             FP16 Gradient Overflow /
+        unmasked padding tokens               &amp; hit maximum peak                    Unbounded Attention Scores
+</code></pre>
+<h3>1. Diagnosis Protocol:</h3>
+<ol>
+<li><strong>Gradient Norm Telemetry</strong>: Isolate the gradient norm before clipping. The metric spiked from <span class="katex-inline">$0.8$</span> to <span class="katex-inline">$142.0$</span> at step 4,500.</li>
+<li><strong>Layer-Wise Gradient Inspection</strong>: Isolate which layer generated the explosion. Layer 78 (final FFN down-projection) showed exploding gradients while early layers were normal.</li>
+<li><strong>Data Inspection</strong>: The batch at step 4,500 contained a corrupted UTF-8 string that was tokenized into an extreme sequence of 4,096 identical tokens, causing attention logits to saturate.</li>
+<li><strong>Root Cause</strong>: Unclipped gradients combined with FP16 underflow/overflow in the final layer.</li>
+</ol>
+<h3>2. Permanent Architectural Remediation:</h3>
+<ul>
+<li><strong>Immediate</strong>: Revert training to checkpoint at step 4,000. Switch training precision from FP16 to <strong>BF16</strong> (8-bit exponent matches FP32 dynamic range).</li>
+<li><strong>Long-Term</strong>: Implement strict data pipeline validation filtering out repetitive sequence anomalies, and enforce global gradient norm clipping (<code>clip_grad_norm_ = 1.0</code>).</li>
+</ul>
+<hr />
+<h2>Case Study 2: The Agent Infinite Tool-Calling Loop</h2>
+<ul>
+<li><strong>Symptom</strong>: Production alerts fire. An autonomous agent has been executing for 52 minutes on a single request, issuing 600 consecutive API calls and burning $1,200 in API tokens.</li>
+<li><strong>Trace Isolation</strong>: OpenTelemetry trace shows the agent called <code>get_calendar_events</code>, received an HTTP 401 Unauthorized error, apologized in its <code>&lt;think&gt;</code> scratchpad, and called <code>get_calendar_events</code> again 600 times.</li>
+<li><strong>Root Cause</strong>: The system relied on the non-deterministic LLM to decide when to stop retrying after an authorization failure, lacking a deterministic circuit breaker at the execution boundary.</li>
+<li><strong>Permanent Architectural Remediation</strong>:</li>
+<li>Implement a <strong>Deterministic Circuit Breaker</strong> at the tool gateway: cap identical consecutive tool errors to <span class="katex-inline">$3$</span>.</li>
+<li>Upon 3 consecutive failures, inject a hard system interruption token into context and trigger a <strong>Compensation Transaction</strong> via the Durable Workflow Engine.</li>
+</ul>
+<hr />
+<h2>Case Study 3: The P99 TTFT Starvation Crisis</h2>
+<ul>
+<li><strong>Symptom</strong>: System-wide throughput (tokens/sec) is hitting targets, but P99 Time To First Token (TTFT) degrades to 18 seconds (users experience a frozen UI before generation begins).</li>
+<li><strong>Diagnosis</strong>: Telemetry shows average prompt length is 800 tokens, but P99 prompt length is 45,000 tokens (users uploading entire legal PDFs). In continuous batching, a 45k prefill monopolizes GPU Tensor Cores for several seconds, blocking the prefill queue of all concurrent requests.</li>
+<li><strong>Permanent Architectural Remediation</strong>:</li>
+<li>Implement <strong>Chunked Prefill</strong> (cap prefill execution chunks to 512 tokens per iteration, interleaving with decode steps).</li>
+<li>Deploy <strong>Disaggregated Prefill and Decode (PD Split)</strong> on dedicated nodes so prompt processing compute never starves decode workers.</li>
+</ul>
+<hr />
+<h2>Case Study 4: The 15% Offline Eval Gain vs. 5% Online Retention Drop</h2>
+<ul>
+<li><strong>Symptom</strong>: A newly aligned model scored <span class="katex-inline">$15\%$</span> higher on the offline LLM-as-a-Judge benchmark. After a 10% Canary deployment, user retention dropped by <span class="katex-inline">$5\%$</span>.</li>
+<li><strong>Diagnosis</strong>: </li>
+<li>The offline LLM judge suffered from <strong>Verbosity Bias</strong>: the new model generated <span class="katex-inline">$3.2\times$</span> longer answers. The judge rewarded the length, but real-world users found the responses bloated, slow, and unhelpful.</li>
+<li>Slower generations (<span class="katex-inline">$3.2\times$</span> tokens) increased user-perceived latency by <span class="katex-inline">$250\%$</span>.</li>
+<li><strong>Permanent Architectural Remediation</strong>:</li>
+<li>Re-align the model using <strong>Length-Penalized DPO</strong> (penalizing response length in the preference loss).</li>
+<li>Update the LLM-as-a-Judge benchmark to strictly penalize verbosity and evaluate pairwise rankings under length-normalized metrics.</li>
+</ul>
+<hr />
+<h2>Case Study 5: Mixture-of-Experts All-to-All Straggler Stalls</h2>
+<ul>
+<li><strong>Symptom</strong>: During 512-GPU pre-training of an MoE model, Model FLOPs Utilization (MFU) drops from 58% to 22%.</li>
+<li><strong>Diagnosis</strong>: <code>nsys</code> profiling reveals that GPUs are spending 45% of execution time blocked on <code>ncclAllToAll</code> collective barriers during expert token dispatch.</li>
+<li><strong>Root Cause</strong>: Gating network routing collapse — 3 popular experts received <span class="katex-inline">$80\%$</span> of all tokens across the cluster, while other expert GPUs sat idle waiting for the overloaded GPUs to finish computation.</li>
+<li><strong>Permanent Architectural Remediation</strong>:</li>
+<li>Implement <strong>DeepSeek-V3 Auxiliary-Loss-Free Expert Biases</strong> (<span class="katex-inline">$b_i \leftarrow b_i + \gamma(1/N - f_i)$</span>) to dynamically redirect token flow away from overloaded nodes.</li>
+<li>Enforce an <strong>Expert Capacity Factor (ECF = 1.2)</strong> to drop or route overflow tokens to default shared experts.</li>
+</ul></div>
   </div>
   <script>
-    const rawMarkdown = "# 21_CASE_STUDIES \u2014 Production Incident Root Cause Analyses (RCAs)\n\n> **Audience**: ML Engineers, LLM Systems Engineers, and AI Researchers preparing for senior/principal technical interviews.  \n> **Core Objective**: Provide structured, battle-tested Root Cause Analyses (RCAs) for five high-stakes production incidents \u2014 detailing the symptom, diagnostic hypotheses, telemetry isolation, root cause, and permanent architectural remediation.\n\n---\n\n## Case Study 1: The Step 4,500 Training Loss Spike & NaN Divergence\n\n```\nStep 0 \u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u25ba Step 4,499 (Loss = 1.25) \u2500\u2500\u25ba Step 4,500 (Loss = 8.92 -> NaN!)\n                                                       \u2502\n                 \u250c\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2534\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2510\n                 \u25bc                                     \u25bc                                     \u25bc\n        [ Hypothesis 1 ]                      [ Hypothesis 2 ]                      [ Hypothesis 3 ]\n        Data batch corruption /               LR Scheduler ended warmup             FP16 Gradient Overflow /\n        unmasked padding tokens               & hit maximum peak                    Unbounded Attention Scores\n```\n\n### 1. Diagnosis Protocol:\n1. **Gradient Norm Telemetry**: Isolate the gradient norm before clipping. The metric spiked from $0.8$ to $142.0$ at step 4,500.\n2. **Layer-Wise Gradient Inspection**: Isolate which layer generated the explosion. Layer 78 (final FFN down-projection) showed exploding gradients while early layers were normal.\n3. **Data Inspection**: The batch at step 4,500 contained a corrupted UTF-8 string that was tokenized into an extreme sequence of 4,096 identical tokens, causing attention logits to saturate.\n4. **Root Cause**: Unclipped gradients combined with FP16 underflow/overflow in the final layer.\n\n### 2. Permanent Architectural Remediation:\n- **Immediate**: Revert training to checkpoint at step 4,000. Switch training precision from FP16 to **BF16** (8-bit exponent matches FP32 dynamic range).\n- **Long-Term**: Implement strict data pipeline validation filtering out repetitive sequence anomalies, and enforce global gradient norm clipping (`clip_grad_norm_ = 1.0`).\n\n---\n\n## Case Study 2: The Agent Infinite Tool-Calling Loop\n\n- **Symptom**: Production alerts fire. An autonomous agent has been executing for 52 minutes on a single request, issuing 600 consecutive API calls and burning $1,200 in API tokens.\n- **Trace Isolation**: OpenTelemetry trace shows the agent called `get_calendar_events`, received an HTTP 401 Unauthorized error, apologized in its `<think>` scratchpad, and called `get_calendar_events` again 600 times.\n- **Root Cause**: The system relied on the non-deterministic LLM to decide when to stop retrying after an authorization failure, lacking a deterministic circuit breaker at the execution boundary.\n- **Permanent Architectural Remediation**:\n  - Implement a **Deterministic Circuit Breaker** at the tool gateway: cap identical consecutive tool errors to $3$.\n  - Upon 3 consecutive failures, inject a hard system interruption token into context and trigger a **Compensation Transaction** via the Durable Workflow Engine.\n\n---\n\n## Case Study 3: The P99 TTFT Starvation Crisis\n\n- **Symptom**: System-wide throughput (tokens/sec) is hitting targets, but P99 Time To First Token (TTFT) degrades to 18 seconds (users experience a frozen UI before generation begins).\n- **Diagnosis**: Telemetry shows average prompt length is 800 tokens, but P99 prompt length is 45,000 tokens (users uploading entire legal PDFs). In continuous batching, a 45k prefill monopolizes GPU Tensor Cores for several seconds, blocking the prefill queue of all concurrent requests.\n- **Permanent Architectural Remediation**:\n  - Implement **Chunked Prefill** (cap prefill execution chunks to 512 tokens per iteration, interleaving with decode steps).\n  - Deploy **Disaggregated Prefill and Decode (PD Split)** on dedicated nodes so prompt processing compute never starves decode workers.\n\n---\n\n## Case Study 4: The 15% Offline Eval Gain vs. 5% Online Retention Drop\n\n- **Symptom**: A newly aligned model scored $15\\%$ higher on the offline LLM-as-a-Judge benchmark. After a 10% Canary deployment, user retention dropped by $5\\%$.\n- **Diagnosis**: \n  - The offline LLM judge suffered from **Verbosity Bias**: the new model generated $3.2\\times$ longer answers. The judge rewarded the length, but real-world users found the responses bloated, slow, and unhelpful.\n  - Slower generations ($3.2\\times$ tokens) increased user-perceived latency by $250\\%$.\n- **Permanent Architectural Remediation**:\n  - Re-align the model using **Length-Penalized DPO** (penalizing response length in the preference loss).\n  - Update the LLM-as-a-Judge benchmark to strictly penalize verbosity and evaluate pairwise rankings under length-normalized metrics.\n\n---\n\n## Case Study 5: Mixture-of-Experts All-to-All Straggler Stalls\n\n- **Symptom**: During 512-GPU pre-training of an MoE model, Model FLOPs Utilization (MFU) drops from 58% to 22%.\n- **Diagnosis**: `nsys` profiling reveals that GPUs are spending 45% of execution time blocked on `ncclAllToAll` collective barriers during expert token dispatch.\n- **Root Cause**: Gating network routing collapse \u2014 3 popular experts received $80\\%$ of all tokens across the cluster, while other expert GPUs sat idle waiting for the overloaded GPUs to finish computation.\n- **Permanent Architectural Remediation**:\n  - Implement **DeepSeek-V3 Auxiliary-Loss-Free Expert Biases** ($b_i \\leftarrow b_i + \\gamma(1/N - f_i)$) to dynamically redirect token flow away from overloaded nodes.\n  - Enforce an **Expert Capacity Factor (ECF = 1.2)** to drop or route overflow tokens to default shared experts.\n";
-    function renderMarkdown(rawText) {
-      const blockMath = [];
-      let text = rawText.replace(/\$\$([\s\S]*?)\$\$/g, (m, math) => { blockMath.push(math.trim()); return `%%%BM_${blockMath.length-1}%%%`; });
-      const inlineMath = [];
-      text = text.replace(/\$([^\$\n]+?)\$/g, (m, math) => { inlineMath.push(math.trim()); return `%%%IM_${inlineMath.length-1}%%%`; });
-      let html = marked.parse(text);
-      html = html.replace(/%%%BM_(\d+)%%%/g, (m, id) => {
-        try { return katex.renderToString(blockMath[parseInt(id)], { displayMode: true, throwOnError: false }); } catch(e) { return `<pre>${blockMath[parseInt(id)]}</pre>`; }
-      });
-      html = html.replace(/%%%IM_(\d+)%%%/g, (m, id) => {
-        try { return katex.renderToString(inlineMath[parseInt(id)], { displayMode: false, throwOnError: false }); } catch(e) { return `<code>${inlineMath[parseInt(id)]}</code>`; }
-      });
-      return html;
-    }
-    document.getElementById('content').innerHTML = renderMarkdown(rawMarkdown);
-    Prism.highlightAll();
-    mermaid.initialize({ startOnLoad: false, theme: 'dark' });
-    document.querySelectorAll('.language-mermaid').forEach(el => {
-      const parent = el.parentElement;
-      const code = el.textContent;
-      const div = document.createElement('div');
-      div.className = 'mermaid';
-      div.textContent = code;
-      parent.replaceWith(div);
+    document.addEventListener('DOMContentLoaded', () => {
+      try {
+        if (typeof renderMathInElement !== 'undefined') {
+          renderMathInElement(document.getElementById('content'), {
+            delimiters: [
+              { left: '$$', right: '$$', display: true },
+              { left: '$', right: '$', display: false }
+            ],
+            throwOnError: false
+          });
+        }
+      } catch(e){}
+      try { Prism.highlightAll(); } catch(e){}
+      try {
+        mermaid.initialize({ startOnLoad: true, theme: 'dark' });
+      } catch(e){}
     });
-    mermaid.run();
   </script>
 </body>
 </html>

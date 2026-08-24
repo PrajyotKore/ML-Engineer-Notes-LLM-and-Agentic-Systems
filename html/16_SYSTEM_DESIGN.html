@@ -8,7 +8,7 @@
   <link href="https://fonts.googleapis.com/css2?family=Fira+Code:wght@400;500;600&family=Inter:wght@300;400;500;600;700;800&family=Outfit:wght@500;600;700;800&display=swap" rel="stylesheet">
   <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/katex@0.16.9/dist/katex.min.css">
   <script defer src="https://cdn.jsdelivr.net/npm/katex@0.16.9/dist/katex.min.js"></script>
-  <script src="https://cdn.jsdelivr.net/npm/marked@11.1.1/marked.min.js"></script>
+  <script defer src="https://cdn.jsdelivr.net/npm/katex@0.16.9/dist/contrib/auto-render.min.js"></script>
   <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/prism/1.29.0/themes/prism-tomorrow.min.css">
   <script src="https://cdnjs.cloudflare.com/ajax/libs/prism/1.29.0/prism.min.js"></script>
   <script src="https://cdnjs.cloudflare.com/ajax/libs/prism/1.29.0/components/prism-python.min.js"></script>
@@ -35,37 +35,135 @@
 </head>
 <body>
   <div class="container">
-    <a href="../index.html" class="nav-back">← Back to Master Knowledge Hub</a>
-    <div id="content"></div>
+    <a href="../index.html#16_SYSTEM_DESIGN" class="nav-back">← Back to Master Knowledge Hub</a>
+    <div id="content"><h1>16_SYSTEM_DESIGN — Whiteboard Architecture &amp; Calculations</h1>
+<blockquote>
+<p><strong>Audience</strong>: ML Engineers, LLM Systems Engineers, and AI Researchers preparing for senior/principal technical interviews.<br />
+<strong>Core Objective</strong>: Provide three end-to-end, production-grade system designs with quantitative dimensioning, back-of-the-envelope math, component diagrams, and failure isolation boundaries.</p>
+</blockquote>
+<hr />
+<h2>1. The 6-Step Principal ML System Design Framework</h2>
+<p>When presented with an open-ended system design prompt in a technical interview:</p>
+<ol>
+<li><strong>Clarify Requirements &amp; Constraints</strong> (Functional vs. Non-Functional, Latency targets, QPS, Token budgets).</li>
+<li><strong>Back-of-the-Envelope Dimensioning</strong> (VRAM, FLOPs, Bandwidth, Storage, Cluster Size).</li>
+<li><strong>High-Level API Design</strong> (gRPC / REST / Server-Sent Events).</li>
+<li><strong>Data Schemas &amp; Storage Architecture</strong> (Relational, Vector, Key-Value, Blob).</li>
+<li><strong>Detailed Component Architecture &amp; Control Flow</strong> (Drawing boxes and data pipelines).</li>
+<li><strong>Deep Dives &amp; Failure Modes</strong> (OOM prevention, tail latency mitigation, failover).</li>
+</ol>
+<hr />
+<h2>2. Case Study 1: Ultra-High-Throughput Distributed LLM Serving Platform (100k QPS)</h2>
+<p><strong>Prompt</strong>: <em>"Design a distributed inference system to serve a 70B parameter model at 100,000 requests per minute with P99 TTFT <span class="katex-inline">$&lt; 200\text{ ms}$</span> and TPOT <span class="katex-inline">$&lt; 25\text{ ms/token}$</span>."</em></p>
+<pre><code>                                    ┌────────────────────────────────────────────────────────┐
+                                    │                Anycast DNS &amp; Cloudflare                │
+                                    └───────────────────────────┬────────────────────────────┘
+                                                                │
+                                                                ▼
+                                    ┌────────────────────────────────────────────────────────┐
+                                    │         API Gateway &amp; Envoy Load Balancers             │
+                                    │  (TLS Termination, Rate Limiting, User Authentication) │
+                                    └───────────────────────────┬────────────────────────────┘
+                                                                │
+                                                                ▼
+                                    ┌────────────────────────────────────────────────────────┐
+                                    │            Global Radix Router Fleet                   │
+                                    │  - Evaluates Prefix Matches (RadixAttention Cache)     │
+                                    │  - Dispatches Prefill vs Decode Jobs via gRPC          │
+                                    └─────────────┬────────────────────────────┬─────────────┘
+                                                  │                            │
+                   ┌──────────────────────────────┘                            └──────────────────────────────┐
+                   ▼                                                                                          ▼
+┌────────────────────────────────────────────────────────┐                                 ┌────────────────────────────────────────────────────────┐
+│           Prefill GPU Fleet (H100 SXM5)                │                                 │            Decode GPU Fleet (H100 SXM5)                │
+│  - Compute-Bound Dense GEMMs (FlashAttention-3)        │                                 │  - Memory-Bandwidth-Bound Iteration Batching           │
+│  - Chunked Prefill (512 token blocks)                  │                                 │  - Continuous Batching (vLLM / SGLang)                 │
+│  - Generates initial KV Cache                          │                                 │  - FP8 Quantized Weights &amp; KV Cache                    │
+└──────────────────────────┬─────────────────────────────┘                                 └──────────────────────────▲─────────────────────────────┘
+                           │                                                                                          │
+                           └────────────────────────────── RDMA KV Transfer ──────────────────────────────────────────┘
+                                                          (100 GB/s InfiniBand NDR)
+</code></pre>
+<h3>2.1 Back-of-the-Envelope Dimensioning Math</h3>
+<ul>
+<li><strong>Throughput</strong>: <span class="katex-inline">$100,000 \text{ RPM} \approx 1,667 \text{ QPS}$</span>.</li>
+<li><strong>Average Workload</strong>: <span class="katex-inline">$S_p = 2,048$</span> prompt tokens, <span class="katex-inline">$S_o = 256$</span> generated tokens.</li>
+<li><strong>Total Prompt Tokens/sec</strong>: <span class="katex-inline">$1,667 \times 2,048 \approx 3.41 \times 10^6 \text{ tokens/s}$</span>.</li>
+<li><strong>Total Generation Tokens/sec</strong>: <span class="katex-inline">$1,667 \times 256 \approx 4.27 \times 10^5 \text{ tokens/s}$</span>.</li>
+<li><strong>Model Weight Footprint (70B in FP8)</strong>: <span class="katex-inline">$70\text{ GB}$</span>.</li>
+<li><strong>Prefill Compute Needs</strong>:<br />
+  <div class="katex-display">$$\text{FLOPs/s} = 3.41 \times 10^6 \times 2 \times (70 \times 10^9) = 4.77 \times 10^{17} \text{ FLOPs/s} = 477 \text{ PFLOPs/s}$$</div></li>
+</ul>
+<p>Assuming an H100 achieves <span class="katex-inline">$600\text{ TFLOPs}$</span> effective prefill compute:<br />
+  <div class="katex-display">$$\text{Prefill GPUs Needed} = \frac{477 \times 10^{15}}{600 \times 10^{12}} \approx \mathbf{795 \text{ H100 GPUs}}$$</div></p>
+<ul>
+<li><strong>Decode Memory Bandwidth Needs</strong>:<br />
+  Each decode GPU with TP=4 has <span class="katex-inline">$4 \times 3.35 \text{ TB/s} = 13.4 \text{ TB/s}$</span> bandwidth.<br />
+  Loading 70B model (<span class="katex-inline">$70\text{ GB}$</span>) takes <span class="katex-inline">$\frac{70}{13.4 \times 10^3} \approx 5.22\text{ ms/step}$</span>.<br />
+  With continuous batch size <span class="katex-inline">$B=128$</span>, tokens/sec per 4-GPU replica <span class="katex-inline">$= \frac{128}{0.00522} \approx 24,500 \text{ tokens/s}$</span>.<br />
+  <div class="katex-display">$$\text{Decode 4-GPU Replicas Needed} = \frac{427,000}{24,500} \approx 18 \text{ Replicas} = \mathbf{72 \text{ GPUs}}$$</div>
+</li>
+</ul>
+<hr />
+<h2>3. Case Study 2: Proactive Autonomous Agent Runtime with Durable Execution</h2>
+<p><strong>Prompt</strong>: <em>"Architect the backend platform for an AI assistant that executes multi-step web scraping, code execution, and financial transactions lasting up to 48 hours."</em></p>
+<pre><code>Webhooks / Cron ──► [ Kafka Event Bus ] ──► [ Temporal Workflow Worker Pool ]
+                                                    │
+                 ┌──────────────────────────────────┼──────────────────────────────────┐
+                 ▼                                  ▼                                  ▼
+      [ Step 1: LLM Planner ]             [ Step 2: Tool Worker ]             [ Step 3: HITL Gating ]
+      - Structured JSON via FSM           - Idempotency-Key Gateway           - Async SMS/App Push
+      - Outlines / Pydantic               - gVisor / Firecracker Sandboxes    - Suspends Workflow
+</code></pre>
+<hr />
+<h2>4. Case Study 3: Enterprise Continuous Self-Improving RAG Pipeline</h2>
+<pre><code>Knowledge Corpus (PDFs, Notion, Confluence, GitHub)
+        │
+        ▼
+[ Document Parser &amp; Chunker ] (Semantic Chunking, 512 tokens + 10% overlap)
+        │
+        ├───► Dense Embedding (OpenAI text-embed-3) ──► [ Qdrant / Milvus Vector DB ]
+        └───► Sparse Shingles Tokenizer ─────────────► [ Elasticsearch / BM25 ]
+                                                              │
+User Query ──► [ Query Expansion ] ───────────────────────────┤
+                                                              ▼
+                                               [ Reciprocal Rank Fusion ]
+                                                              │ (Top-30 Candidates)
+                                                              ▼
+                                               [ Cross-Encoder Neural Reranker ]
+                                                              │ (Top-5 High-Signal Passages)
+                                                              ▼
+                                               [ Context Compactor ] ──► LLM Generation
+</code></pre>
+<hr />
+<h2>5. Deep Interview Interrogation Ladder</h2>
+<ul>
+<li><strong>Level 1 (Concept)</strong>: What is the purpose of load-balancing via affinity routing in LLM serving?</li>
+<li><strong>Level 3 (Math)</strong>: Walk through the exact back-of-the-envelope calculation to size the number of GPUs needed for 1,000 QPS on a 70B model.</li>
+<li><strong>Level 5 (Serving Architecture)</strong>: Why does Disaggregated Prefill/Decode achieve higher hardware efficiency than unified continuous batching?</li>
+<li><strong>Level 7 (RAG)</strong>: Explain why Cross-Encoder neural rerankers are placed downstream of Hybrid Dense/Sparse retrieval rather than being used for initial search.</li>
+<li><strong>Level 9 (Reliability)</strong>: In an enterprise RAG system serving 50,000 employees, document permissions change dynamically. How do you design real-time access-control filtering into vector search without rebuilding indexes?</li>
+<li><strong>Level 10 (Principal Engineering)</strong>: Architect a globally distributed, multi-region agentic platform with active-active failover, KV cache synchronization across regions, and zero data loss under a full datacenter outage.</li>
+</ul></div>
   </div>
   <script>
-    const rawMarkdown = "# 16_SYSTEM_DESIGN \u2014 Whiteboard Architecture & Calculations\n\n> **Audience**: ML Engineers, LLM Systems Engineers, and AI Researchers preparing for senior/principal technical interviews.  \n> **Core Objective**: Provide three end-to-end, production-grade system designs with quantitative dimensioning, back-of-the-envelope math, component diagrams, and failure isolation boundaries.\n\n---\n\n## 1. The 6-Step Principal ML System Design Framework\n\nWhen presented with an open-ended system design prompt in a technical interview:\n\n1. **Clarify Requirements & Constraints** (Functional vs. Non-Functional, Latency targets, QPS, Token budgets).\n2. **Back-of-the-Envelope Dimensioning** (VRAM, FLOPs, Bandwidth, Storage, Cluster Size).\n3. **High-Level API Design** (gRPC / REST / Server-Sent Events).\n4. **Data Schemas & Storage Architecture** (Relational, Vector, Key-Value, Blob).\n5. **Detailed Component Architecture & Control Flow** (Drawing boxes and data pipelines).\n6. **Deep Dives & Failure Modes** (OOM prevention, tail latency mitigation, failover).\n\n---\n\n## 2. Case Study 1: Ultra-High-Throughput Distributed LLM Serving Platform (100k QPS)\n\n**Prompt**: *\"Design a distributed inference system to serve a 70B parameter model at 100,000 requests per minute with P99 TTFT $< 200\\text{ ms}$ and TPOT $< 25\\text{ ms/token}$.\"*\n\n```\n                                    \u250c\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2510\n                                    \u2502                Anycast DNS & Cloudflare                \u2502\n                                    \u2514\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u252c\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2518\n                                                                \u2502\n                                                                \u25bc\n                                    \u250c\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2510\n                                    \u2502         API Gateway & Envoy Load Balancers             \u2502\n                                    \u2502  (TLS Termination, Rate Limiting, User Authentication) \u2502\n                                    \u2514\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u252c\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2518\n                                                                \u2502\n                                                                \u25bc\n                                    \u250c\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2510\n                                    \u2502            Global Radix Router Fleet                   \u2502\n                                    \u2502  - Evaluates Prefix Matches (RadixAttention Cache)     \u2502\n                                    \u2502  - Dispatches Prefill vs Decode Jobs via gRPC          \u2502\n                                    \u2514\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u252c\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u252c\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2518\n                                                  \u2502                            \u2502\n                   \u250c\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2518                            \u2514\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2510\n                   \u25bc                                                                                          \u25bc\n\u250c\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2510                                 \u250c\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2510\n\u2502           Prefill GPU Fleet (H100 SXM5)                \u2502                                 \u2502            Decode GPU Fleet (H100 SXM5)                \u2502\n\u2502  - Compute-Bound Dense GEMMs (FlashAttention-3)        \u2502                                 \u2502  - Memory-Bandwidth-Bound Iteration Batching           \u2502\n\u2502  - Chunked Prefill (512 token blocks)                  \u2502                                 \u2502  - Continuous Batching (vLLM / SGLang)                 \u2502\n\u2502  - Generates initial KV Cache                          \u2502                                 \u2502  - FP8 Quantized Weights & KV Cache                    \u2502\n\u2514\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u252c\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2518                                 \u2514\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u25b2\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2518\n                           \u2502                                                                                          \u2502\n                           \u2514\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500 RDMA KV Transfer \u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2518\n                                                          (100 GB/s InfiniBand NDR)\n```\n\n### 2.1 Back-of-the-Envelope Dimensioning Math\n- **Throughput**: $100,000 \\text{ RPM} \\approx 1,667 \\text{ QPS}$.\n- **Average Workload**: $S_p = 2,048$ prompt tokens, $S_o = 256$ generated tokens.\n- **Total Prompt Tokens/sec**: $1,667 \\times 2,048 \\approx 3.41 \\times 10^6 \\text{ tokens/s}$.\n- **Total Generation Tokens/sec**: $1,667 \\times 256 \\approx 4.27 \\times 10^5 \\text{ tokens/s}$.\n- **Model Weight Footprint (70B in FP8)**: $70\\text{ GB}$.\n- **Prefill Compute Needs**:\n  $$ \\text{FLOPs/s} = 3.41 \\times 10^6 \\times 2 \\times (70 \\times 10^9) = 4.77 \\times 10^{17} \\text{ FLOPs/s} = 477 \\text{ PFLOPs/s} $$\n  Assuming an H100 achieves $600\\text{ TFLOPs}$ effective prefill compute:\n  $$ \\text{Prefill GPUs Needed} = \\frac{477 \\times 10^{15}}{600 \\times 10^{12}} \\approx \\mathbf{795 \\text{ H100 GPUs}} $$\n- **Decode Memory Bandwidth Needs**:\n  Each decode GPU with TP=4 has $4 \\times 3.35 \\text{ TB/s} = 13.4 \\text{ TB/s}$ bandwidth.\n  Loading 70B model ($70\\text{ GB}$) takes $\\frac{70}{13.4 \\times 10^3} \\approx 5.22\\text{ ms/step}$.\n  With continuous batch size $B=128$, tokens/sec per 4-GPU replica $= \\frac{128}{0.00522} \\approx 24,500 \\text{ tokens/s}$.\n  $$ \\text{Decode 4-GPU Replicas Needed} = \\frac{427,000}{24,500} \\approx 18 \\text{ Replicas} = \\mathbf{72 \\text{ GPUs}} $$\n\n---\n\n## 3. Case Study 2: Proactive Autonomous Agent Runtime with Durable Execution\n\n**Prompt**: *\"Architect the backend platform for an AI assistant that executes multi-step web scraping, code execution, and financial transactions lasting up to 48 hours.\"*\n\n```\nWebhooks / Cron \u2500\u2500\u25ba [ Kafka Event Bus ] \u2500\u2500\u25ba [ Temporal Workflow Worker Pool ]\n                                                    \u2502\n                 \u250c\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u253c\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2510\n                 \u25bc                                  \u25bc                                  \u25bc\n      [ Step 1: LLM Planner ]             [ Step 2: Tool Worker ]             [ Step 3: HITL Gating ]\n      - Structured JSON via FSM           - Idempotency-Key Gateway           - Async SMS/App Push\n      - Outlines / Pydantic               - gVisor / Firecracker Sandboxes    - Suspends Workflow\n```\n\n---\n\n## 4. Case Study 3: Enterprise Continuous Self-Improving RAG Pipeline\n\n```\nKnowledge Corpus (PDFs, Notion, Confluence, GitHub)\n        \u2502\n        \u25bc\n[ Document Parser & Chunker ] (Semantic Chunking, 512 tokens + 10% overlap)\n        \u2502\n        \u251c\u2500\u2500\u2500\u25ba Dense Embedding (OpenAI text-embed-3) \u2500\u2500\u25ba [ Qdrant / Milvus Vector DB ]\n        \u2514\u2500\u2500\u2500\u25ba Sparse Shingles Tokenizer \u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u25ba [ Elasticsearch / BM25 ]\n                                                              \u2502\nUser Query \u2500\u2500\u25ba [ Query Expansion ] \u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2524\n                                                              \u25bc\n                                               [ Reciprocal Rank Fusion ]\n                                                              \u2502 (Top-30 Candidates)\n                                                              \u25bc\n                                               [ Cross-Encoder Neural Reranker ]\n                                                              \u2502 (Top-5 High-Signal Passages)\n                                                              \u25bc\n                                               [ Context Compactor ] \u2500\u2500\u25ba LLM Generation\n```\n\n---\n\n## 5. Deep Interview Interrogation Ladder\n\n- **Level 1 (Concept)**: What is the purpose of load-balancing via affinity routing in LLM serving?\n- **Level 3 (Math)**: Walk through the exact back-of-the-envelope calculation to size the number of GPUs needed for 1,000 QPS on a 70B model.\n- **Level 5 (Serving Architecture)**: Why does Disaggregated Prefill/Decode achieve higher hardware efficiency than unified continuous batching?\n- **Level 7 (RAG)**: Explain why Cross-Encoder neural rerankers are placed downstream of Hybrid Dense/Sparse retrieval rather than being used for initial search.\n- **Level 9 (Reliability)**: In an enterprise RAG system serving 50,000 employees, document permissions change dynamically. How do you design real-time access-control filtering into vector search without rebuilding indexes?\n- **Level 10 (Principal Engineering)**: Architect a globally distributed, multi-region agentic platform with active-active failover, KV cache synchronization across regions, and zero data loss under a full datacenter outage.\n";
-    function renderMarkdown(rawText) {
-      const blockMath = [];
-      let text = rawText.replace(/\$\$([\s\S]*?)\$\$/g, (m, math) => { blockMath.push(math.trim()); return `%%%BM_${blockMath.length-1}%%%`; });
-      const inlineMath = [];
-      text = text.replace(/\$([^\$\n]+?)\$/g, (m, math) => { inlineMath.push(math.trim()); return `%%%IM_${inlineMath.length-1}%%%`; });
-      let html = marked.parse(text);
-      html = html.replace(/%%%BM_(\d+)%%%/g, (m, id) => {
-        try { return katex.renderToString(blockMath[parseInt(id)], { displayMode: true, throwOnError: false }); } catch(e) { return `<pre>${blockMath[parseInt(id)]}</pre>`; }
-      });
-      html = html.replace(/%%%IM_(\d+)%%%/g, (m, id) => {
-        try { return katex.renderToString(inlineMath[parseInt(id)], { displayMode: false, throwOnError: false }); } catch(e) { return `<code>${inlineMath[parseInt(id)]}</code>`; }
-      });
-      return html;
-    }
-    document.getElementById('content').innerHTML = renderMarkdown(rawMarkdown);
-    Prism.highlightAll();
-    mermaid.initialize({ startOnLoad: false, theme: 'dark' });
-    document.querySelectorAll('.language-mermaid').forEach(el => {
-      const parent = el.parentElement;
-      const code = el.textContent;
-      const div = document.createElement('div');
-      div.className = 'mermaid';
-      div.textContent = code;
-      parent.replaceWith(div);
+    document.addEventListener('DOMContentLoaded', () => {
+      try {
+        if (typeof renderMathInElement !== 'undefined') {
+          renderMathInElement(document.getElementById('content'), {
+            delimiters: [
+              { left: '$$', right: '$$', display: true },
+              { left: '$', right: '$', display: false }
+            ],
+            throwOnError: false
+          });
+        }
+      } catch(e){}
+      try { Prism.highlightAll(); } catch(e){}
+      try {
+        mermaid.initialize({ startOnLoad: true, theme: 'dark' });
+      } catch(e){}
     });
-    mermaid.run();
   </script>
 </body>
 </html>

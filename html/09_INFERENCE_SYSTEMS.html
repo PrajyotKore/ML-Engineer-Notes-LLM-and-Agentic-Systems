@@ -8,7 +8,7 @@
   <link href="https://fonts.googleapis.com/css2?family=Fira+Code:wght@400;500;600&family=Inter:wght@300;400;500;600;700;800&family=Outfit:wght@500;600;700;800&display=swap" rel="stylesheet">
   <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/katex@0.16.9/dist/katex.min.css">
   <script defer src="https://cdn.jsdelivr.net/npm/katex@0.16.9/dist/katex.min.js"></script>
-  <script src="https://cdn.jsdelivr.net/npm/marked@11.1.1/marked.min.js"></script>
+  <script defer src="https://cdn.jsdelivr.net/npm/katex@0.16.9/dist/contrib/auto-render.min.js"></script>
   <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/prism/1.29.0/themes/prism-tomorrow.min.css">
   <script src="https://cdnjs.cloudflare.com/ajax/libs/prism/1.29.0/prism.min.js"></script>
   <script src="https://cdnjs.cloudflare.com/ajax/libs/prism/1.29.0/components/prism-python.min.js"></script>
@@ -35,37 +35,273 @@
 </head>
 <body>
   <div class="container">
-    <a href="../index.html" class="nav-back">← Back to Master Knowledge Hub</a>
-    <div id="content"></div>
+    <a href="../index.html#09_INFERENCE_SYSTEMS" class="nav-back">← Back to Master Knowledge Hub</a>
+    <div id="content"><h1>09_INFERENCE_SYSTEMS — Mathematical &amp; Systems Engineering Reference</h1>
+<blockquote>
+<p><strong>Audience</strong>: ML Engineers, LLM Systems Engineers, and AI Researchers preparing for senior/principal technical interviews.<br />
+<strong>Core Objective</strong>: Provide an exhaustive mathematical, algorithmic, and systems reference on LLM Inference — covering PagedAttention, SGLang's RadixAttention, Disaggregated Prefill/Decode (PD split), Chunked Prefill scheduling, Speculative Decoding acceptance proofs, and FP8/INT4 quantization.</p>
+</blockquote>
+<hr />
+<h2>1. The Two-Phase Inference Lifecycle &amp; Latency Modeling</h2>
+<p>Autoregressive LLM generation operates in two radically distinct phases:</p>
+<pre><code>[Request Arrives]
+      │
+      ▼
+┌────────────────────────────────────────────────────────┐
+│  Phase 1: Prefill (Prompt Processing)                  │
+│  - Input: Entire Prompt of S_p tokens in parallel       │
+│  - Nature: Compute-Bound (Dense GEMM on Tensor Cores)  │
+│  - Metric: Time To First Token (TTFT)                  │
+└───────────────────────┬────────────────────────────────┘
+                        │ Initial KV Cache Generated &amp; Cached
+                        ▼
+┌────────────────────────────────────────────────────────┐
+│  Phase 2: Decode (Autoregressive Token Generation)     │
+│  - Input: 1 new token per step, reads past S_t KV cache │
+│  - Nature: Memory-Bound (Loading weights &amp; KV from HBM)│
+│  - Metric: Time Per Output Token (TPOT) / Inter-Token  │
+└────────────────────────────────────────────────────────┘
+</code></pre>
+<h3>1.1 First-Principles Latency &amp; Throughput Formulations</h3>
+<p>Let:<br />
+- <span class="katex-inline">$P$</span>: Model parameter count (e.g. <span class="katex-inline">$70 \times 10^9$</span>).<br />
+- <span class="katex-inline">$S_p$</span>: Prompt sequence length.<br />
+- <span class="katex-inline">$S_o$</span>: Generated output sequence length.<br />
+- <span class="katex-inline">$B$</span>: Concurrent batch size.<br />
+- <span class="katex-inline">$C_{\text{peak}}$</span>: Peak GPU compute throughput (FLOPs/s, e.g. <span class="katex-inline">$989 \times 10^{12}$</span> for H100 FP16).<br />
+- <span class="katex-inline">$B_{\text{mem}}$</span>: Peak GPU memory bandwidth (Bytes/s, e.g. <span class="katex-inline">$3.35 \times 10^{12}$</span> for H100 HBM3).<br />
+- <span class="katex-inline">$b_{\text{model}}$</span>: Bytes per model parameter (2 for FP16, 1 for FP8).<br />
+- <span class="katex-inline">$b_{\text{kv}}$</span>: Bytes per KV cache element (2 for FP16, 1 for FP8).</p>
+<h4>1. Time To First Token (TTFT):</h4>
+<p>During prefill, the model computes <span class="katex-inline">$2 P$</span> FLOPs per prompt token across batch <span class="katex-inline">$B$</span>:</p>
+<div class="katex-display">$$\text{FLOPs}_{\text{prefill}} = 2 \cdot P \cdot B \cdot S_p + 2 \cdot L \cdot N_h \cdot d_k \cdot B \cdot S_p^2$$</div>
+<p>Assuming compute dominates (<span class="katex-inline">$S_p \gg 1$</span>):</p>
+<div class="katex-display">$$\mathbf{\text{TTFT} \approx \frac{2 \cdot P \cdot S_p}{\text{MFU} \cdot C_{\text{peak}}}}$$</div>
+<p><em>Example</em>: Processing <span class="katex-inline">$S_p = 4096$</span> prompt tokens on a 70B model using an 8xH100 node (<span class="katex-inline">$\text{MFU} \approx 0.60$</span>, <span class="katex-inline">$C_{\text{peak}} = 8 \times 989\text{ TFLOPs}$</span>):</p>
+<div class="katex-display">$$\text{TTFT} = \frac{2 \times (70 \times 10^9) \times 4096}{0.60 \times (8 \times 989 \times 10^{12})} \approx \mathbf{0.121 \text{ seconds (121 ms)}}$$</div>
+
+<h4>2. Time Per Output Token (TPOT / Decode Step Latency):</h4>
+<p>At each decode step, the model loads all <span class="katex-inline">$P$</span> weights and the cumulative KV cache for all <span class="katex-inline">$B$</span> requests:</p>
+<div class="katex-display">$$\text{Bytes Transferred per Step} = (P \cdot b_{\text{model}}) + B \cdot \text{KVCache}_{\text{size}}(S_t)$$</div>
+<div class="katex-display">$$\mathbf{\text{TPOT}(t) = \frac{P \cdot b_{\text{model}} + B \cdot (2 \cdot L \cdot N_{kv} \cdot d_h \cdot b_{\text{kv}} \cdot S_t)}{B_{\text{mem}}}}$$</div>
+
+<hr />
+<h3>1.2 The KV Cache Memory Equation</h3>
+<p>For a Transformer with <span class="katex-inline">$L$</span> layers, <span class="katex-inline">$N_{kv}$</span> Key/Value heads, head dimension <span class="katex-inline">$d_h$</span>, sequence length <span class="katex-inline">$S$</span>, and batch size <span class="katex-inline">$B$</span>:</p>
+<div class="katex-display">$$\mathbf{\text{Memory}_{\text{KV}} = 2 \times B \times S \times L \times N_{kv} \times d_h \times b_{\text{kv}} \quad [\text{Bytes}]}$$</div>
+
+<h4>Concrete Production Sizing Example:</h4>
+<ul>
+<li>Model: LLaMA-3 70B (<span class="katex-inline">$L = 80, N_q = 64, N_{kv} = 8, d_h = 128$</span>).</li>
+<li>Precision: FP16 (<span class="katex-inline">$b_{\text{kv}} = 2\text{ bytes}$</span>).</li>
+<li>Context Length: <span class="katex-inline">$S = 8192$</span>, Batch Size: <span class="katex-inline">$B = 32$</span>.</li>
+</ul>
+<div class="katex-display">$$\text{Memory}_{\text{KV}} = 2 \times 32 \times 8192 \times 80 \times 8 \times 128 \times 2 = 85,899,345,920 \text{ Bytes} \approx \mathbf{80.0 \text{ GB}}$$</div>
+
+<p><em>Insight</em>: The KV cache alone occupies an entire 80GB H100 GPU's VRAM. Without memory management, KV cache fragmentation causes premature Out-Of-Memory (OOM) failures.</p>
+<hr />
+<h2>2. Memory &amp; Scheduling Engines: PagedAttention vs. RadixAttention</h2>
+<h3>2.1 PagedAttention (vLLM Architecture)</h3>
+<p>In traditional serving, KV caches are allocated contiguously for maximum sequence length (<span class="katex-inline">$S_{\max}$</span>), causing <strong><span class="katex-inline">$60\%-80\%$</span> VRAM waste</strong> due to internal fragmentation, external fragmentation, and reservation waste.</p>
+<h4>OS Virtual Memory Analogy:</h4>
+<p>PagedAttention partitions the KV cache into fixed-size <strong>Physical Blocks (Pages)</strong> (e.g. 16 or 32 tokens).<br />
+- <strong>Logical KV Blocks</strong>: Continuous token indices <span class="katex-inline">$0 \dots S-1$</span>.<br />
+- <strong>Physical Block Table</strong>: Maps logical blocks to non-contiguous physical pages in GPU VRAM.<br />
+- <strong>Copy-on-Write (CoW)</strong>: When an agent branches or forks multiple parallel generation trajectories (e.g. Tree-of-Thought, Beam Search), child processes share parent physical pages until a new token is appended.</p>
+<pre><code>Logical Blocks (Request A):   [ Block 0 ] ──► Physical Page #14 (VRAM)
+                              [ Block 1 ] ──► Physical Page #3  (VRAM)
+                              [ Block 2 ] ──► Physical Page #89 (VRAM)
+</code></pre>
+<div class="katex-display">$$\text{Memory Waste in PagedAttention} \leq \frac{\text{Block Size} - 1}{\text{Average Sequence Length}} \approx \frac{15}{2048} &lt; \mathbf{0.73\%}$$</div>
+
+<hr />
+<h3>2.2 RadixAttention (SGLang Architecture)</h3>
+<p>While PagedAttention manages memory per request, multi-turn AI agents and tool-calling loops frequently reuse long shared system prompts, tool schemas, and multi-turn dialogue histories.</p>
+<h4>Radix Tree Structure:</h4>
+<p>SGLang maintains a global <strong>Radix Tree (Prefix Trie)</strong> over all past and present KV cache pages in GPU VRAM:<br />
+- Nodes in the tree represent token sequences with associated KV cache pointers.<br />
+- When a new request arrives, SGLang traverses the Radix Tree to find the <strong>longest common prefix match</strong>.<br />
+- If matched, the engine <strong>skips prefill entirely</strong> for the matched prefix, reducing TTFT from seconds to milliseconds.<br />
+- <strong>Cache Eviction Policy (LRU)</strong>: When VRAM is full, least recently used leaf nodes are recursively evicted.</p>
+<pre><code>                  [ Root (Empty) ]
+                         │
+        ┌────────────────┴────────────────┐
+        ▼                                 ▼
+[ System Prompt &amp; Tool Schemas (1.5k tok) ] [ Math Agent Prompt (800 tok) ]
+        │
+   ┌────┴────────────────────────┐
+   ▼                             ▼
+[ Turn 1: User Query A ]   [ Turn 1: User Query B ]
+   │
+[ Turn 2: Tool Execution Result ]
+</code></pre>
+<hr />
+<h2>3. Advanced Serving Architectures</h2>
+<h3>3.1 Disaggregated Prefill and Decode (PD Split / Mooncake / Splitwise)</h3>
+<p>In unified serving nodes, heavy prefills and continuous decodes run on the same GPUs, causing:<br />
+1. <strong>Preemption Stalls</strong>: A massive prefill monopolizes Tensor Cores, stalling active decode streams and creating massive P99 TPOT latency spikes.<br />
+2. <strong>Hardware Inefficiency</strong>: Prefill requires massive compute (FLOPs-bound), while decode requires massive memory bandwidth.</p>
+<h4>The Disaggregated Architecture:</h4>
+<ul>
+<li><strong>Prefill Fleet</strong>: Compute-optimized GPUs (e.g. NVIDIA H100 with high TFLOPs) dedicated exclusively to processing prompt tokens.</li>
+<li><strong>KV Transfer Network</strong>: High-speed RDMA / PCIe / NVLink transfers the generated KV cache directly to the Decode Fleet.</li>
+<li><strong>Decode Fleet</strong>: Memory-bandwidth-optimized GPUs (or large clustered pools) dedicated exclusively to autoregressive token generation.</li>
+</ul>
+<pre><code>Incoming Request ──► [ Prefill Node (Compute Heavy) ] 
+                            │ 
+                            ▼ (RDMA KV Cache Transfer: ~100 GB/s)
+                     [ Decode Node (Bandwidth Heavy) ] ──► Token Stream
+</code></pre>
+<hr />
+<h3>3.2 Chunked Prefill &amp; Iteration-Level Continuous Batching (Sarathi-Serve)</h3>
+<p>To prevent prefill requests from starving decode steps in a unified engine:<br />
+- Chunk long prefills into smaller segments (e.g., <span class="katex-inline">$C = 512$</span> tokens).<br />
+- Interleave chunked prefill GEMMs with ongoing decode steps within the same continuous batch iteration:<br />
+  <div class="katex-display">$$\text{Batch Budget} = \text{Chunked Prefill}(512 \text{ tokens}) + \sum_{i=1}^{B_{\text{decode}}} \text{Decode}(1 \text{ token})$$</div></p>
+<ul>
+<li>Keeps GPU compute utilization near 100% while strictly bounding P99 Inter-Token Latency (ITL).</li>
+</ul>
+<hr />
+<h2>4. Speculative Decoding Mathematics</h2>
+<h3>4.1 Target Model Verification &amp; Expected Acceptance Length</h3>
+<p>Let <span class="katex-inline">$M_p$</span> be a small, fast <strong>Draft Model</strong> (e.g. 1B params), and <span class="katex-inline">$M_q$</span> be the large <strong>Target Model</strong> (e.g. 70B params).<br />
+1. Draft model autoregressively generates <span class="katex-inline">$K$</span> draft tokens: <span class="katex-inline">$(\tilde{x}_1, \dots, \tilde{x}_K)$</span>.<br />
+2. Target model evaluates all <span class="katex-inline">$K$</span> tokens in a <strong>single parallel forward pass</strong> (as a prefill).<br />
+3. The acceptance criterion for token <span class="katex-inline">$\tilde{x}_{n}$</span> (Leviathan et al., 2023) is:<br />
+   <div class="katex-display">$$P(\text{Accept } \tilde{x}_n) = \min\left( 1, \; \frac{q(\tilde{x}_n \mid x_{&lt;n})}{p(\tilde{x}_n \mid x_{&lt;n})} \right)$$</div></p>
+<p>If rejected, sample replacement token from the residual distribution:<br />
+   <div class="katex-display">$$P_{\text{res}}(x) = \frac{\max(0, q(x) - p(x))}{1 - \sum_y \min(p(y), q(y))}$$</div>
+</p>
+<h4>Mathematical Proof: Expected Tokens per Step (<span class="katex-inline">$\mathbb{E}[N]$</span>)</h4>
+<p>Let <span class="katex-inline">$\alpha \in [0, 1]$</span> be the average acceptance probability per token:</p>
+<div class="katex-display">$$\mathbb{E}[N] = 1 + \sum_{k=1}^K \alpha^k = 1 + \frac{\alpha(1 - \alpha^K)}{1 - \alpha} = \mathbf{\frac{1 - \alpha^{K+1}}{1 - \alpha}}$$</div>
+
+<ul>
+<li>
+<p>If <span class="katex-inline">$\alpha = 0.8$</span> and <span class="katex-inline">$K = 5$</span>:<br />
+  <div class="katex-display">$$\mathbb{E}[N] = \frac{1 - 0.8^6}{1 - 0.8} = \frac{1 - 0.262}{0.2} = \mathbf{3.69 \text{ tokens/step}}$$</div>
+</p>
+</li>
+<li>
+<p><strong>Theoretical Latency Speedup</strong>:<br />
+  Let <span class="katex-inline">$t_p$</span> be the draft step time, and <span class="katex-inline">$t_q$</span> be the target step time (<span class="katex-inline">$t_p \ll t_q$</span>).<br />
+  <div class="katex-display">$$\text{Speedup} = \frac{\mathbb{E}[N] \cdot t_q}{K \cdot t_p + t_q} = \frac{\frac{1 - \alpha^{K+1}}{1 - \alpha}}{1 + K \frac{t_p}{t_q}}$$</div>
+</p>
+</li>
+</ul>
+<hr />
+<h2>5. Quantization Mathematics: FP8, INT8, and INT4</h2>
+<pre><code>FP16:  1 Sign | 5 Exponent | 10 Mantissa  (Dynamic Range: 10^-5 to 6.5x10^4)
+FP8 E4M3: 1 Sign | 4 Exponent | 3 Mantissa  (Higher Precision: Best for Weights &amp; Activations)
+FP8 E5M2: 1 Sign | 5 Exponent | 2 Mantissa  (Wider Dynamic Range: Best for Gradients &amp; KV Cache)
+</code></pre>
+<h3>5.1 Symmetric Block Quantization</h3>
+<p>Given continuous weight vector <span class="katex-inline">$W \in \mathbb{R}^N$</span>:</p>
+<div class="katex-display">$$s = \frac{\max(|W|)}{2^{b-1} - 1} \quad \text{(Quantization Scale Factor)}$$</div>
+<div class="katex-display">$$W_{\text{quant}} = \text{clamp}\left( \left\lfloor \frac{W}{s} \right\rceil, \; -2^{b-1}, \; 2^{b-1} - 1 \right)$$</div>
+<div class="katex-display">$$W_{\text{dequant}} = W_{\text{quant}} \times s$$</div>
+
+<h3>5.2 SmoothQuant: Outlier Migration (Xiao et al., 2023)</h3>
+<p>In LLMs, activations have extreme systematic outlier channels (<span class="katex-inline">$&gt; 100\times$</span> normal values), making activation quantization difficult.<br />
+SmoothQuant mathematically migrates the quantization difficulty from activations <span class="katex-inline">$X$</span> to weights <span class="katex-inline">$W$</span> by scaling channels with diagonal matrix <span class="katex-inline">$S = \text{diag}(s)$</span>:</p>
+<div class="katex-display">$$Y = X W = (X S^{-1}) (S W) = \hat{X} \hat{W}$$</div>
+<p>Where the per-channel scale <span class="katex-inline">$s_j$</span> is:</p>
+<div class="katex-display">$$s_j = \frac{\max(|X_j|)^\alpha}{\max(|W_j|)^{1 - \alpha}} \quad (\alpha = 0.5 \text{ splits difficulty equally})$$</div>
+
+<hr />
+<h2>6. PyTorch Simulation: Paged KV-Cache Allocator</h2>
+<pre><code class="language-python">import torch
+from typing import List, Dict
+
+class PagedKVCacheManager:
+    &quot;&quot;&quot;
+    Physical Block Memory Allocator for PagedAttention.
+    &quot;&quot;&quot;
+    def __init__(self, num_blocks: int, block_size: int, num_layers: int, num_heads: int, head_dim: int):
+        self.block_size = block_size
+        self.num_layers = num_layers
+        self.num_heads = num_heads
+        self.head_dim = head_dim
+
+        # Allocate physical memory pool: [Num_Blocks, Num_Layers, 2 (K/V), Block_Size, Num_Heads, Head_Dim]
+        self.gpu_memory_pool = torch.zeros(
+            (num_blocks, num_layers, 2, block_size, num_heads, head_dim),
+            dtype=torch.float16,
+            device=&quot;cuda&quot; if torch.cuda.is_available() else &quot;cpu&quot;
+        )
+
+        # Free list tracking available physical block IDs
+        self.free_blocks = list(range(num_blocks))
+        self.block_tables: Dict[int, List[int]] = {} # Request ID -&gt; [Physical Block IDs]
+
+    def allocate_request(self, request_id: int, prompt_len: int) -&gt; List[int]:
+        num_blocks_needed = (prompt_len + self.block_size - 1) // self.block_size
+        assert len(self.free_blocks) &gt;= num_blocks_needed, &quot;Out of Memory (OOM): No free physical blocks!&quot;
+
+        allocated = [self.free_blocks.pop(0) for _ in range(num_blocks_needed)]
+        self.block_tables[request_id] = allocated
+        return allocated
+
+    def append_token(self, request_id: int, current_len: int) -&gt; int:
+        &quot;&quot;&quot;
+        Allocates a new block if the current sequence length crosses block boundary.
+        &quot;&quot;&quot;
+        if current_len % self.block_size == 0:
+            assert len(self.free_blocks) &gt; 0, &quot;OOM during token decode!&quot;
+            new_block = self.free_blocks.pop(0)
+            self.block_tables[request_id].append(new_block)
+            return new_block
+        return self.block_tables[request_id][-1]
+
+    def free_request(self, request_id: int):
+        if request_id in self.block_tables:
+            self.free_blocks.extend(self.block_tables[request_id])
+            del self.block_tables[request_id]
+
+if __name__ == &quot;__main__&quot;:
+    manager = PagedKVCacheManager(num_blocks=100, block_size=16, num_layers=4, num_heads=8, head_dim=64)
+    req1_blocks = manager.allocate_request(request_id=1, prompt_len=35) # Requires 3 blocks
+    assert len(req1_blocks) == 3
+    print(f&quot;Request 1 assigned physical blocks: {req1_blocks}&quot;)
+
+    # Simulate generating tokens until new page is triggered
+    manager.append_token(request_id=1, current_len=48) # 48 % 16 == 0 -&gt; Allocates 4th block
+    assert len(manager.block_tables[1]) == 4
+    print(f&quot;Request 1 expanded to physical blocks: {manager.block_tables[1]}&quot;)
+
+    manager.free_request(request_id=1)
+    assert len(manager.free_blocks) == 100
+    print(&quot;Paged KV Cache Allocation and Free Lifecycle Verified.&quot;)
+</code></pre>
+<hr />
+<h2>7. Deep Interview Interrogation Ladder</h2>
+<ul>
+<li><strong>Level 1 (Concept)</strong>: What is the primary hardware difference between the prefill phase and the decode phase in LLM serving?</li>
+<li><strong>Level 3 (Derivation)</strong>: Calculate the exact KV cache memory footprint for a 70B parameter model (<span class="katex-inline">$L=80, N_{kv}=8, d_h=128$</span>) at batch size 64 with 8k context in FP16.</li>
+<li><strong>Level 5 (Mechanics)</strong>: How does PagedAttention eliminate external and internal memory fragmentation?</li>
+<li><strong>Level 7 (Speculative Decoding Proof)</strong>: Prove mathematically why the expected number of tokens accepted per step in Speculative Decoding is <span class="katex-inline">$\frac{1 - \alpha^{K+1}}{1 - \alpha}$</span>.</li>
+<li><strong>Level 9 (Serving Architecture)</strong>: Why does unified serving suffer from P99 latency spikes during long prefills, and how does Disaggregated Prefill/Decode (PD Disaggregation) resolve it?</li>
+<li><strong>Level 10 (Principal Engineering)</strong>: Design an inference cluster architecture serving a high-volume agentic workflow with shared system prompts and dynamic multi-step branching. Detail the cache eviction policy, KV transfer protocol across nodes, and speculative draft validation strategy.</li>
+</ul></div>
   </div>
   <script>
-    const rawMarkdown = "# 09_INFERENCE_SYSTEMS \u2014 Mathematical & Systems Engineering Reference\n\n> **Audience**: ML Engineers, LLM Systems Engineers, and AI Researchers preparing for senior/principal technical interviews.  \n> **Core Objective**: Provide an exhaustive mathematical, algorithmic, and systems reference on LLM Inference \u2014 covering PagedAttention, SGLang's RadixAttention, Disaggregated Prefill/Decode (PD split), Chunked Prefill scheduling, Speculative Decoding acceptance proofs, and FP8/INT4 quantization.\n\n---\n\n## 1. The Two-Phase Inference Lifecycle & Latency Modeling\n\nAutoregressive LLM generation operates in two radically distinct phases:\n\n```\n[Request Arrives]\n      \u2502\n      \u25bc\n\u250c\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2510\n\u2502  Phase 1: Prefill (Prompt Processing)                  \u2502\n\u2502  - Input: Entire Prompt of S_p tokens in parallel       \u2502\n\u2502  - Nature: Compute-Bound (Dense GEMM on Tensor Cores)  \u2502\n\u2502  - Metric: Time To First Token (TTFT)                  \u2502\n\u2514\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u252c\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2518\n                        \u2502 Initial KV Cache Generated & Cached\n                        \u25bc\n\u250c\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2510\n\u2502  Phase 2: Decode (Autoregressive Token Generation)     \u2502\n\u2502  - Input: 1 new token per step, reads past S_t KV cache \u2502\n\u2502  - Nature: Memory-Bound (Loading weights & KV from HBM)\u2502\n\u2502  - Metric: Time Per Output Token (TPOT) / Inter-Token  \u2502\n\u2514\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2518\n```\n\n### 1.1 First-Principles Latency & Throughput Formulations\n\nLet:\n- $P$: Model parameter count (e.g. $70 \\times 10^9$).\n- $S_p$: Prompt sequence length.\n- $S_o$: Generated output sequence length.\n- $B$: Concurrent batch size.\n- $C_{\\text{peak}}$: Peak GPU compute throughput (FLOPs/s, e.g. $989 \\times 10^{12}$ for H100 FP16).\n- $B_{\\text{mem}}$: Peak GPU memory bandwidth (Bytes/s, e.g. $3.35 \\times 10^{12}$ for H100 HBM3).\n- $b_{\\text{model}}$: Bytes per model parameter (2 for FP16, 1 for FP8).\n- $b_{\\text{kv}}$: Bytes per KV cache element (2 for FP16, 1 for FP8).\n\n#### 1. Time To First Token (TTFT):\nDuring prefill, the model computes $2 P$ FLOPs per prompt token across batch $B$:\n$$ \\text{FLOPs}_{\\text{prefill}} = 2 \\cdot P \\cdot B \\cdot S_p + 2 \\cdot L \\cdot N_h \\cdot d_k \\cdot B \\cdot S_p^2 $$\nAssuming compute dominates ($S_p \\gg 1$):\n$$ \\mathbf{\\text{TTFT} \\approx \\frac{2 \\cdot P \\cdot S_p}{\\text{MFU} \\cdot C_{\\text{peak}}}} $$\n*Example*: Processing $S_p = 4096$ prompt tokens on a 70B model using an 8xH100 node ($\\text{MFU} \\approx 0.60$, $C_{\\text{peak}} = 8 \\times 989\\text{ TFLOPs}$):\n$$ \\text{TTFT} = \\frac{2 \\times (70 \\times 10^9) \\times 4096}{0.60 \\times (8 \\times 989 \\times 10^{12})} \\approx \\mathbf{0.121 \\text{ seconds (121 ms)}} $$\n\n#### 2. Time Per Output Token (TPOT / Decode Step Latency):\nAt each decode step, the model loads all $P$ weights and the cumulative KV cache for all $B$ requests:\n$$ \\text{Bytes Transferred per Step} = (P \\cdot b_{\\text{model}}) + B \\cdot \\text{KVCache}_{\\text{size}}(S_t) $$\n$$ \\mathbf{\\text{TPOT}(t) = \\frac{P \\cdot b_{\\text{model}} + B \\cdot (2 \\cdot L \\cdot N_{kv} \\cdot d_h \\cdot b_{\\text{kv}} \\cdot S_t)}{B_{\\text{mem}}}} $$\n\n---\n\n### 1.2 The KV Cache Memory Equation\n\nFor a Transformer with $L$ layers, $N_{kv}$ Key/Value heads, head dimension $d_h$, sequence length $S$, and batch size $B$:\n\n$$ \\mathbf{\\text{Memory}_{\\text{KV}} = 2 \\times B \\times S \\times L \\times N_{kv} \\times d_h \\times b_{\\text{kv}} \\quad [\\text{Bytes}]} $$\n\n#### Concrete Production Sizing Example:\n- Model: LLaMA-3 70B ($L = 80, N_q = 64, N_{kv} = 8, d_h = 128$).\n- Precision: FP16 ($b_{\\text{kv}} = 2\\text{ bytes}$).\n- Context Length: $S = 8192$, Batch Size: $B = 32$.\n\n$$ \\text{Memory}_{\\text{KV}} = 2 \\times 32 \\times 8192 \\times 80 \\times 8 \\times 128 \\times 2 = 85,899,345,920 \\text{ Bytes} \\approx \\mathbf{80.0 \\text{ GB}} $$\n\n*Insight*: The KV cache alone occupies an entire 80GB H100 GPU's VRAM. Without memory management, KV cache fragmentation causes premature Out-Of-Memory (OOM) failures.\n\n---\n\n## 2. Memory & Scheduling Engines: PagedAttention vs. RadixAttention\n\n### 2.1 PagedAttention (vLLM Architecture)\n\nIn traditional serving, KV caches are allocated contiguously for maximum sequence length ($S_{\\max}$), causing **$60\\%-80\\%$ VRAM waste** due to internal fragmentation, external fragmentation, and reservation waste.\n\n#### OS Virtual Memory Analogy:\nPagedAttention partitions the KV cache into fixed-size **Physical Blocks (Pages)** (e.g. 16 or 32 tokens).\n- **Logical KV Blocks**: Continuous token indices $0 \\dots S-1$.\n- **Physical Block Table**: Maps logical blocks to non-contiguous physical pages in GPU VRAM.\n- **Copy-on-Write (CoW)**: When an agent branches or forks multiple parallel generation trajectories (e.g. Tree-of-Thought, Beam Search), child processes share parent physical pages until a new token is appended.\n\n```\nLogical Blocks (Request A):   [ Block 0 ] \u2500\u2500\u25ba Physical Page #14 (VRAM)\n                              [ Block 1 ] \u2500\u2500\u25ba Physical Page #3  (VRAM)\n                              [ Block 2 ] \u2500\u2500\u25ba Physical Page #89 (VRAM)\n```\n\n$$\\text{Memory Waste in PagedAttention} \\leq \\frac{\\text{Block Size} - 1}{\\text{Average Sequence Length}} \\approx \\frac{15}{2048} < \\mathbf{0.73\\%}$$\n\n---\n\n### 2.2 RadixAttention (SGLang Architecture)\n\nWhile PagedAttention manages memory per request, multi-turn AI agents and tool-calling loops frequently reuse long shared system prompts, tool schemas, and multi-turn dialogue histories.\n\n#### Radix Tree Structure:\nSGLang maintains a global **Radix Tree (Prefix Trie)** over all past and present KV cache pages in GPU VRAM:\n- Nodes in the tree represent token sequences with associated KV cache pointers.\n- When a new request arrives, SGLang traverses the Radix Tree to find the **longest common prefix match**.\n- If matched, the engine **skips prefill entirely** for the matched prefix, reducing TTFT from seconds to milliseconds.\n- **Cache Eviction Policy (LRU)**: When VRAM is full, least recently used leaf nodes are recursively evicted.\n\n```\n                  [ Root (Empty) ]\n                         \u2502\n        \u250c\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2534\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2510\n        \u25bc                                 \u25bc\n[ System Prompt & Tool Schemas (1.5k tok) ] [ Math Agent Prompt (800 tok) ]\n        \u2502\n   \u250c\u2500\u2500\u2500\u2500\u2534\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2510\n   \u25bc                             \u25bc\n[ Turn 1: User Query A ]   [ Turn 1: User Query B ]\n   \u2502\n[ Turn 2: Tool Execution Result ]\n```\n\n---\n\n## 3. Advanced Serving Architectures\n\n### 3.1 Disaggregated Prefill and Decode (PD Split / Mooncake / Splitwise)\n\nIn unified serving nodes, heavy prefills and continuous decodes run on the same GPUs, causing:\n1. **Preemption Stalls**: A massive prefill monopolizes Tensor Cores, stalling active decode streams and creating massive P99 TPOT latency spikes.\n2. **Hardware Inefficiency**: Prefill requires massive compute (FLOPs-bound), while decode requires massive memory bandwidth.\n\n#### The Disaggregated Architecture:\n- **Prefill Fleet**: Compute-optimized GPUs (e.g. NVIDIA H100 with high TFLOPs) dedicated exclusively to processing prompt tokens.\n- **KV Transfer Network**: High-speed RDMA / PCIe / NVLink transfers the generated KV cache directly to the Decode Fleet.\n- **Decode Fleet**: Memory-bandwidth-optimized GPUs (or large clustered pools) dedicated exclusively to autoregressive token generation.\n\n```\nIncoming Request \u2500\u2500\u25ba [ Prefill Node (Compute Heavy) ] \n                            \u2502 \n                            \u25bc (RDMA KV Cache Transfer: ~100 GB/s)\n                     [ Decode Node (Bandwidth Heavy) ] \u2500\u2500\u25ba Token Stream\n```\n\n---\n\n### 3.2 Chunked Prefill & Iteration-Level Continuous Batching (Sarathi-Serve)\n\nTo prevent prefill requests from starving decode steps in a unified engine:\n- Chunk long prefills into smaller segments (e.g., $C = 512$ tokens).\n- Interleave chunked prefill GEMMs with ongoing decode steps within the same continuous batch iteration:\n  $$ \\text{Batch Budget} = \\text{Chunked Prefill}(512 \\text{ tokens}) + \\sum_{i=1}^{B_{\\text{decode}}} \\text{Decode}(1 \\text{ token}) $$\n- Keeps GPU compute utilization near 100% while strictly bounding P99 Inter-Token Latency (ITL).\n\n---\n\n## 4. Speculative Decoding Mathematics\n\n### 4.1 Target Model Verification & Expected Acceptance Length\n\nLet $M_p$ be a small, fast **Draft Model** (e.g. 1B params), and $M_q$ be the large **Target Model** (e.g. 70B params).\n1. Draft model autoregressively generates $K$ draft tokens: $(\\tilde{x}_1, \\dots, \\tilde{x}_K)$.\n2. Target model evaluates all $K$ tokens in a **single parallel forward pass** (as a prefill).\n3. The acceptance criterion for token $\\tilde{x}_{n}$ (Leviathan et al., 2023) is:\n   $$ P(\\text{Accept } \\tilde{x}_n) = \\min\\left( 1, \\; \\frac{q(\\tilde{x}_n \\mid x_{<n})}{p(\\tilde{x}_n \\mid x_{<n})} \\right) $$\n   If rejected, sample replacement token from the residual distribution:\n   $$ P_{\\text{res}}(x) = \\frac{\\max(0, q(x) - p(x))}{1 - \\sum_y \\min(p(y), q(y))} $$\n\n#### Mathematical Proof: Expected Tokens per Step ($\\mathbb{E}[N]$)\nLet $\\alpha \\in [0, 1]$ be the average acceptance probability per token:\n$$ \\mathbb{E}[N] = 1 + \\sum_{k=1}^K \\alpha^k = 1 + \\frac{\\alpha(1 - \\alpha^K)}{1 - \\alpha} = \\mathbf{\\frac{1 - \\alpha^{K+1}}{1 - \\alpha}} $$\n\n- If $\\alpha = 0.8$ and $K = 5$:\n  $$ \\mathbb{E}[N] = \\frac{1 - 0.8^6}{1 - 0.8} = \\frac{1 - 0.262}{0.2} = \\mathbf{3.69 \\text{ tokens/step}} $$\n\n- **Theoretical Latency Speedup**:\n  Let $t_p$ be the draft step time, and $t_q$ be the target step time ($t_p \\ll t_q$).\n  $$ \\text{Speedup} = \\frac{\\mathbb{E}[N] \\cdot t_q}{K \\cdot t_p + t_q} = \\frac{\\frac{1 - \\alpha^{K+1}}{1 - \\alpha}}{1 + K \\frac{t_p}{t_q}} $$\n\n---\n\n## 5. Quantization Mathematics: FP8, INT8, and INT4\n\n```\nFP16:  1 Sign | 5 Exponent | 10 Mantissa  (Dynamic Range: 10^-5 to 6.5x10^4)\nFP8 E4M3: 1 Sign | 4 Exponent | 3 Mantissa  (Higher Precision: Best for Weights & Activations)\nFP8 E5M2: 1 Sign | 5 Exponent | 2 Mantissa  (Wider Dynamic Range: Best for Gradients & KV Cache)\n```\n\n### 5.1 Symmetric Block Quantization\nGiven continuous weight vector $W \\in \\mathbb{R}^N$:\n$$ s = \\frac{\\max(|W|)}{2^{b-1} - 1} \\quad \\text{(Quantization Scale Factor)} $$\n$$ W_{\\text{quant}} = \\text{clamp}\\left( \\left\\lfloor \\frac{W}{s} \\right\\rceil, \\; -2^{b-1}, \\; 2^{b-1} - 1 \\right) $$\n$$ W_{\\text{dequant}} = W_{\\text{quant}} \\times s $$\n\n### 5.2 SmoothQuant: Outlier Migration (Xiao et al., 2023)\nIn LLMs, activations have extreme systematic outlier channels ($> 100\\times$ normal values), making activation quantization difficult.  \nSmoothQuant mathematically migrates the quantization difficulty from activations $X$ to weights $W$ by scaling channels with diagonal matrix $S = \\text{diag}(s)$:\n\n$$ Y = X W = (X S^{-1}) (S W) = \\hat{X} \\hat{W} $$\nWhere the per-channel scale $s_j$ is:\n$$ s_j = \\frac{\\max(|X_j|)^\\alpha}{\\max(|W_j|)^{1 - \\alpha}} \\quad (\\alpha = 0.5 \\text{ splits difficulty equally}) $$\n\n---\n\n## 6. PyTorch Simulation: Paged KV-Cache Allocator\n\n```python\nimport torch\nfrom typing import List, Dict\n\nclass PagedKVCacheManager:\n    \"\"\"\n    Physical Block Memory Allocator for PagedAttention.\n    \"\"\"\n    def __init__(self, num_blocks: int, block_size: int, num_layers: int, num_heads: int, head_dim: int):\n        self.block_size = block_size\n        self.num_layers = num_layers\n        self.num_heads = num_heads\n        self.head_dim = head_dim\n        \n        # Allocate physical memory pool: [Num_Blocks, Num_Layers, 2 (K/V), Block_Size, Num_Heads, Head_Dim]\n        self.gpu_memory_pool = torch.zeros(\n            (num_blocks, num_layers, 2, block_size, num_heads, head_dim),\n            dtype=torch.float16,\n            device=\"cuda\" if torch.cuda.is_available() else \"cpu\"\n        )\n        \n        # Free list tracking available physical block IDs\n        self.free_blocks = list(range(num_blocks))\n        self.block_tables: Dict[int, List[int]] = {} # Request ID -> [Physical Block IDs]\n\n    def allocate_request(self, request_id: int, prompt_len: int) -> List[int]:\n        num_blocks_needed = (prompt_len + self.block_size - 1) // self.block_size\n        assert len(self.free_blocks) >= num_blocks_needed, \"Out of Memory (OOM): No free physical blocks!\"\n        \n        allocated = [self.free_blocks.pop(0) for _ in range(num_blocks_needed)]\n        self.block_tables[request_id] = allocated\n        return allocated\n\n    def append_token(self, request_id: int, current_len: int) -> int:\n        \"\"\"\n        Allocates a new block if the current sequence length crosses block boundary.\n        \"\"\"\n        if current_len % self.block_size == 0:\n            assert len(self.free_blocks) > 0, \"OOM during token decode!\"\n            new_block = self.free_blocks.pop(0)\n            self.block_tables[request_id].append(new_block)\n            return new_block\n        return self.block_tables[request_id][-1]\n\n    def free_request(self, request_id: int):\n        if request_id in self.block_tables:\n            self.free_blocks.extend(self.block_tables[request_id])\n            del self.block_tables[request_id]\n\nif __name__ == \"__main__\":\n    manager = PagedKVCacheManager(num_blocks=100, block_size=16, num_layers=4, num_heads=8, head_dim=64)\n    req1_blocks = manager.allocate_request(request_id=1, prompt_len=35) # Requires 3 blocks\n    assert len(req1_blocks) == 3\n    print(f\"Request 1 assigned physical blocks: {req1_blocks}\")\n    \n    # Simulate generating tokens until new page is triggered\n    manager.append_token(request_id=1, current_len=48) # 48 % 16 == 0 -> Allocates 4th block\n    assert len(manager.block_tables[1]) == 4\n    print(f\"Request 1 expanded to physical blocks: {manager.block_tables[1]}\")\n    \n    manager.free_request(request_id=1)\n    assert len(manager.free_blocks) == 100\n    print(\"Paged KV Cache Allocation and Free Lifecycle Verified.\")\n```\n\n---\n\n## 7. Deep Interview Interrogation Ladder\n\n- **Level 1 (Concept)**: What is the primary hardware difference between the prefill phase and the decode phase in LLM serving?\n- **Level 3 (Derivation)**: Calculate the exact KV cache memory footprint for a 70B parameter model ($L=80, N_{kv}=8, d_h=128$) at batch size 64 with 8k context in FP16.\n- **Level 5 (Mechanics)**: How does PagedAttention eliminate external and internal memory fragmentation?\n- **Level 7 (Speculative Decoding Proof)**: Prove mathematically why the expected number of tokens accepted per step in Speculative Decoding is $\\frac{1 - \\alpha^{K+1}}{1 - \\alpha}$.\n- **Level 9 (Serving Architecture)**: Why does unified serving suffer from P99 latency spikes during long prefills, and how does Disaggregated Prefill/Decode (PD Disaggregation) resolve it?\n- **Level 10 (Principal Engineering)**: Design an inference cluster architecture serving a high-volume agentic workflow with shared system prompts and dynamic multi-step branching. Detail the cache eviction policy, KV transfer protocol across nodes, and speculative draft validation strategy.\n";
-    function renderMarkdown(rawText) {
-      const blockMath = [];
-      let text = rawText.replace(/\$\$([\s\S]*?)\$\$/g, (m, math) => { blockMath.push(math.trim()); return `%%%BM_${blockMath.length-1}%%%`; });
-      const inlineMath = [];
-      text = text.replace(/\$([^\$\n]+?)\$/g, (m, math) => { inlineMath.push(math.trim()); return `%%%IM_${inlineMath.length-1}%%%`; });
-      let html = marked.parse(text);
-      html = html.replace(/%%%BM_(\d+)%%%/g, (m, id) => {
-        try { return katex.renderToString(blockMath[parseInt(id)], { displayMode: true, throwOnError: false }); } catch(e) { return `<pre>${blockMath[parseInt(id)]}</pre>`; }
-      });
-      html = html.replace(/%%%IM_(\d+)%%%/g, (m, id) => {
-        try { return katex.renderToString(inlineMath[parseInt(id)], { displayMode: false, throwOnError: false }); } catch(e) { return `<code>${inlineMath[parseInt(id)]}</code>`; }
-      });
-      return html;
-    }
-    document.getElementById('content').innerHTML = renderMarkdown(rawMarkdown);
-    Prism.highlightAll();
-    mermaid.initialize({ startOnLoad: false, theme: 'dark' });
-    document.querySelectorAll('.language-mermaid').forEach(el => {
-      const parent = el.parentElement;
-      const code = el.textContent;
-      const div = document.createElement('div');
-      div.className = 'mermaid';
-      div.textContent = code;
-      parent.replaceWith(div);
+    document.addEventListener('DOMContentLoaded', () => {
+      try {
+        if (typeof renderMathInElement !== 'undefined') {
+          renderMathInElement(document.getElementById('content'), {
+            delimiters: [
+              { left: '$$', right: '$$', display: true },
+              { left: '$', right: '$', display: false }
+            ],
+            throwOnError: false
+          });
+        }
+      } catch(e){}
+      try { Prism.highlightAll(); } catch(e){}
+      try {
+        mermaid.initialize({ startOnLoad: true, theme: 'dark' });
+      } catch(e){}
     });
-    mermaid.run();
   </script>
 </body>
 </html>

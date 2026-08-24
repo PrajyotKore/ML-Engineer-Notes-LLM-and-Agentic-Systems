@@ -8,7 +8,7 @@
   <link href="https://fonts.googleapis.com/css2?family=Fira+Code:wght@400;500;600&family=Inter:wght@300;400;500;600;700;800&family=Outfit:wght@500;600;700;800&display=swap" rel="stylesheet">
   <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/katex@0.16.9/dist/katex.min.css">
   <script defer src="https://cdn.jsdelivr.net/npm/katex@0.16.9/dist/katex.min.js"></script>
-  <script src="https://cdn.jsdelivr.net/npm/marked@11.1.1/marked.min.js"></script>
+  <script defer src="https://cdn.jsdelivr.net/npm/katex@0.16.9/dist/contrib/auto-render.min.js"></script>
   <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/prism/1.29.0/themes/prism-tomorrow.min.css">
   <script src="https://cdnjs.cloudflare.com/ajax/libs/prism/1.29.0/prism.min.js"></script>
   <script src="https://cdnjs.cloudflare.com/ajax/libs/prism/1.29.0/components/prism-python.min.js"></script>
@@ -35,37 +35,192 @@
 </head>
 <body>
   <div class="container">
-    <a href="../index.html" class="nav-back">← Back to Master Knowledge Hub</a>
-    <div id="content"></div>
+    <a href="../index.html#14_OBSERVABILITY_AND_DEBUGGING" class="nav-back">← Back to Master Knowledge Hub</a>
+    <div id="content"><h1>14_OBSERVABILITY_AND_DEBUGGING — Mathematical &amp; Production Incident Reference</h1>
+<blockquote>
+<p><strong>Audience</strong>: ML Engineers, LLM Systems Engineers, and AI Researchers preparing for senior/principal technical interviews.<br />
+<strong>Core Objective</strong>: Provide an exhaustive reference on distributed ML observability, queueing theory mathematics (Little's Law, M/M/k queues), Model FLOPs Utilization (MFU) formulas, OpenTelemetry tracing for agentic pipelines, and production RCA playbooks.</p>
+</blockquote>
+<hr />
+<h2>1. Queueing Theory &amp; Inference Latency Modeling</h2>
+<p>In high-throughput LLM serving systems, requests queue at the API router and inference engine before being scheduled into continuous batches.</p>
+<pre><code>Incoming Request Stream (Arrival Rate λ)
+        │
+        ▼
+┌────────────────────────────────────────────────────────┐
+│             Router Queue (Length L_q)                  │
+└───────────────────────┬────────────────────────────────┘
+                        │ Dispatched to k GPU Servers (Service Rate μ)
+                        ▼
+┌────────────────────────────────────────────────────────┐
+│        k Parallel GPU Inference Workers                │
+└────────────────────────────────────────────────────────┘
+</code></pre>
+<h3>1.1 Little's Law</h3>
+<p>In any stable stationary queueing system:</p>
+<div class="katex-display">$$\mathbf{L = \lambda W}$$</div>
+
+<p>Where:<br />
+- <span class="katex-inline">$L$</span>: Average number of requests in the system.<br />
+- <span class="katex-inline">$\lambda$</span>: Average arrival rate of requests (requests / second).<br />
+- <span class="katex-inline">$W$</span>: Average time a request spends in the system (Total Latency = Queue Time + Execution Time).</p>
+<hr />
+<h3>1.2 <span class="katex-inline">$M/M/k$</span> Queueing System Dynamics &amp; The Utilization Wall</h3>
+<p>Let a serving cluster possess <span class="katex-inline">$k$</span> parallel GPU workers, each serving requests at mean rate <span class="katex-inline">$\mu$</span> (requests/sec), with Poisson arrivals at rate <span class="katex-inline">$\lambda$</span>.</p>
+<ul>
+<li><strong>Cluster Utilization Factor (<span class="katex-inline">$\rho$</span>)</strong>:<br />
+  <div class="katex-display">$$\rho = \frac{\lambda}{k \mu}$$</div></li>
+</ul>
+<p>For system stability, <span class="katex-inline">$\rho &lt; 1.0$</span>.</p>
+<ul>
+<li><strong>Average Waiting Time in Queue (<span class="katex-inline">$W_q$</span>)</strong>:<br />
+  <div class="katex-display">$$W_q \approx \frac{C(k, \lambda/\mu)}{k \mu - \lambda} = \frac{C(k, \lambda/\mu)}{k \mu (1 - \rho)}$$</div></li>
+</ul>
+<p>Where <span class="katex-inline">$C(k, \lambda/\mu)$</span> is the Erlang-C formula.</p>
+<pre><code>  Average Queue Latency W_q
+   ▲
+   │                                           / (Asymptote at ρ = 1.0)
+   │                                          /
+   │                                         /
+   │                                       /
+   │                       _______________/
+   └──────────────────────┴───────────────┴────────► System Utilization ρ
+   0                     0.70            1.0
+</code></pre>
+<h4>Profound Mathematical Takeaway for Systems Architects:</h4>
+<p>As GPU utilization <span class="katex-inline">$\rho$</span> approaches <span class="katex-inline">$1.0$</span> (<span class="katex-inline">$100\%$</span>), <strong>queue waiting time explodes asymptotically to infinity</strong> (<span class="katex-inline">$W_q \propto \frac{1}{1 - \rho}$</span>).<br />
+<em>Sizing Rule</em>: Never target <span class="katex-inline">$100\%$</span> GPU utilization during peak traffic. Target <strong><span class="katex-inline">$\rho \in [0.70, 0.80]$</span></strong> to absorb traffic bursts without catastrophic P99 latency spikes.</p>
+<hr />
+<h2>2. Hardware Efficiency: Model FLOPs Utilization (MFU)</h2>
+<p>The <strong>Model FLOPs Utilization (MFU)</strong> (Chowdhery et al., 2022) measures the fraction of theoretical peak GPU compute achieved by real-world execution.</p>
+<h3>2.1 The Exact MFU Formulation for Training &amp; Inference</h3>
+<p>Let:<br />
+- <span class="katex-inline">$P$</span>: Model parameter count (excluding embeddings).<br />
+- <span class="katex-inline">$T_{\text{tokens}}$</span>: Measured throughput (tokens processed per second across cluster).<br />
+- <span class="katex-inline">$N_{\text{gpus}}$</span>: Total number of GPUs in cluster.<br />
+- <span class="katex-inline">$C_{\text{peak}}$</span>: Theoretical peak compute per GPU (FLOPs/s, e.g. <span class="katex-inline">$989 \text{ TFLOPs}$</span> for H100 FP16).</p>
+<h4>Standard FLOPs per Token:</h4>
+<ul>
+<li><strong>Forward Pass (Inference)</strong>: <span class="katex-inline">$2 P \text{ FLOPs/token}$</span></li>
+<li><strong>Forward + Backward Pass (Training)</strong>: <span class="katex-inline">$6 P \text{ FLOPs/token}$</span> (with activation recomputation: <span class="katex-inline">$\approx 8 P \text{ FLOPs/token}$</span>)</li>
+</ul>
+<div class="katex-display">$$\mathbf{\text{MFU}_{\text{train}} = \frac{T_{\text{tokens}} \times 6 P}{N_{\text{gpus}} \times C_{\text{peak}}}}$$</div>
+<div class="katex-display">$$\mathbf{\text{MFU}_{\text{inference}} = \frac{T_{\text{tokens}} \times 2 P}{N_{\text{gpus}} \times C_{\text{peak}}}}$$</div>
+
+<ul>
+<li><em>Industry Benchmarks</em>:</li>
+<li>Poorly optimized cluster: <span class="katex-inline">$\text{MFU} &lt; 30\%$</span></li>
+<li>Good production setup: <span class="katex-inline">$\text{MFU} \approx 45\% - 55\%$</span></li>
+<li>World-class frontier infrastructure (Megatron + FlashAttention-3): <span class="katex-inline">$\text{MFU} &gt; 60\% - 70\%$</span></li>
+</ul>
+<hr />
+<h2>3. Distributed Tracing for Agentic Pipelines (OpenTelemetry)</h2>
+<p>Because an autonomous agent performs non-deterministic multi-step tool calls, traditional linear stack traces fail. We use hierarchical <strong>OpenTelemetry Spans</strong>:</p>
+<pre><code>[ Root Trace: User Request &quot;Analyze sales data and email chart&quot; ]
+   │
+   ├─── Span 1: [Router / Model Selection] ── (Duration: 15ms)
+   │
+   ├─── Span 2: [Agent Step 1: ReAct Planning] ── (Duration: 450ms)
+   │      └── Attribute: {&quot;thought&quot;: &quot;I need to query PostgreSQL for sales data&quot;}
+   │      └── Attribute: {&quot;tool_call&quot;: &quot;sql_query&quot;, &quot;args&quot;: {&quot;query&quot;: &quot;SELECT * FROM sales&quot;}}
+   │
+   ├─── Span 3: [Tool Execution: PostgreSQL Query] ── (Duration: 85ms)
+   │      └── Attribute: {&quot;rows_returned&quot;: 1420}
+   │
+   ├─── Span 4: [Agent Step 2: Code Execution] ── (Duration: 620ms)
+   │      └── Attribute: {&quot;sandbox&quot;: &quot;firecracker&quot;, &quot;script&quot;: &quot;plot_sales.py&quot;}
+   │
+   └─── Span 5: [Output Validation Guardrail] ── (Duration: 40ms)
+</code></pre>
+<hr />
+<h2>4. Production Root Cause Analysis (RCA) Incident Playbooks</h2>
+<h3>Case 1: "P99 Time To First Token (TTFT) Spikes by 500%, but Average Latency is Normal"</h3>
+<ul>
+<li><strong>Layer</strong>: Serving Scheduling.</li>
+<li><strong>Root Cause</strong>: Large prompt prefill starvation in continuous batching. A single user sent a <span class="katex-inline">$64\text{k}$</span> token PDF, monopolizing Tensor Cores and delaying the prefill queue of all concurrent requests.</li>
+<li><strong>Mitigation</strong>: Implement <strong>Chunked Prefill</strong> (cap prefill chunk to 512 tokens per iteration) and configure priority admission queues.</li>
+</ul>
+<h3>Case 2: "Training Step Time Gradually Increases by 2% Every Hour"</h3>
+<ul>
+<li><strong>Layer</strong>: CUDA / Host Memory.</li>
+<li><strong>Root Cause</strong>: Host CPU memory leak in PyTorch DataLoader workers (e.g. accumulating Python list references across epochs without resetting reference counts), triggering CPU RAM swapping to disk and throttling PCIe batch transfers.</li>
+<li><strong>Mitigation</strong>: Set <code>persistent_workers=True</code> in DataLoader and profile host virtual memory via <code>tracemalloc</code>.</li>
+</ul>
+<hr />
+<h2>5. Python Reference: OpenTelemetry Distributed Trace Generator</h2>
+<pre><code class="language-python">import time
+import uuid
+import json
+
+class Span:
+    def __init__(self, name: str, trace_id: str, parent_span_id: str = None):
+        self.name = name
+        self.trace_id = trace_id
+        self.span_id = str(uuid.uuid4())[:8]
+        self.parent_span_id = parent_span_id
+        self.start_time = time.time()
+        self.end_time = None
+        self.attributes = {}
+
+    def set_attribute(self, key: str, value: any):
+        self.attributes[key] = value
+
+    def finish(self):
+        self.end_time = time.time()
+
+    def to_dict(self):
+        return {
+            &quot;name&quot;: self.name,
+            &quot;trace_id&quot;: self.trace_id,
+            &quot;span_id&quot;: self.span_id,
+            &quot;parent_span_id&quot;: self.parent_span_id,
+            &quot;duration_ms&quot;: round((self.end_time - self.start_time) * 1000, 2) if self.end_time else None,
+            &quot;attributes&quot;: self.attributes
+        }
+
+if __name__ == &quot;__main__&quot;:
+    trace_id = str(uuid.uuid4())[:8]
+    root_span = Span(&quot;agent_workflow&quot;, trace_id)
+
+    # Simulate child tool span
+    tool_span = Span(&quot;execute_sql&quot;, trace_id, parent_span_id=root_span.span_id)
+    tool_span.set_attribute(&quot;query&quot;, &quot;SELECT count(*) FROM users&quot;)
+    time.sleep(0.05)
+    tool_span.finish()
+
+    root_span.finish()
+    print(&quot;Exported OpenTelemetry Spans:&quot;)
+    print(json.dumps([root_span.to_dict(), tool_span.to_dict()], indent=2))
+</code></pre>
+<hr />
+<h2>6. Deep Interview Interrogation Ladder</h2>
+<ul>
+<li><strong>Level 1 (Concept)</strong>: State Little's Law and explain its variables.</li>
+<li><strong>Level 3 (Queueing Math)</strong>: In an <span class="katex-inline">$M/M/k$</span> queue, why does queue latency explode as utilization <span class="katex-inline">$\rho \to 1.0$</span>?</li>
+<li><strong>Level 5 (MFU Calculus)</strong>: Calculate the Model FLOPs Utilization (MFU) of a 70B parameter model training run on 512 H100 GPUs achieving 120,000 tokens/second.</li>
+<li><strong>Level 7 (Tracing)</strong>: Design the OpenTelemetry tracing schema for a multi-agent system executing recursive reflection loops.</li>
+<li><strong>Level 9 (RCA Investigation)</strong>: During an inference deployment, GPU utilization is at 25%, but requests are timing out at the API gateway. What three metrics do you check first to isolate the bottleneck?</li>
+<li><strong>Level 10 (Principal Engineering)</strong>: You are on-call when a production alert triggers: 1% of agent sessions are entering infinite tool-call loops, burning $50,000/hour in external API credits. Walk through your mitigation protocol, telemetry isolation, and permanent architectural fix.</li>
+</ul></div>
   </div>
   <script>
-    const rawMarkdown = "# 14_OBSERVABILITY_AND_DEBUGGING \u2014 Mathematical & Production Incident Reference\n\n> **Audience**: ML Engineers, LLM Systems Engineers, and AI Researchers preparing for senior/principal technical interviews.  \n> **Core Objective**: Provide an exhaustive reference on distributed ML observability, queueing theory mathematics (Little's Law, M/M/k queues), Model FLOPs Utilization (MFU) formulas, OpenTelemetry tracing for agentic pipelines, and production RCA playbooks.\n\n---\n\n## 1. Queueing Theory & Inference Latency Modeling\n\nIn high-throughput LLM serving systems, requests queue at the API router and inference engine before being scheduled into continuous batches.\n\n```\nIncoming Request Stream (Arrival Rate \u03bb)\n        \u2502\n        \u25bc\n\u250c\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2510\n\u2502             Router Queue (Length L_q)                  \u2502\n\u2514\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u252c\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2518\n                        \u2502 Dispatched to k GPU Servers (Service Rate \u03bc)\n                        \u25bc\n\u250c\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2510\n\u2502        k Parallel GPU Inference Workers                \u2502\n\u2514\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2518\n```\n\n### 1.1 Little's Law\n\nIn any stable stationary queueing system:\n\n$$ \\mathbf{L = \\lambda W} $$\n\nWhere:\n- $L$: Average number of requests in the system.\n- $\\lambda$: Average arrival rate of requests (requests / second).\n- $W$: Average time a request spends in the system (Total Latency = Queue Time + Execution Time).\n\n---\n\n### 1.2 $M/M/k$ Queueing System Dynamics & The Utilization Wall\n\nLet a serving cluster possess $k$ parallel GPU workers, each serving requests at mean rate $\\mu$ (requests/sec), with Poisson arrivals at rate $\\lambda$.\n\n- **Cluster Utilization Factor ($\\rho$)**:\n  $$ \\rho = \\frac{\\lambda}{k \\mu} $$\n  For system stability, $\\rho < 1.0$.\n\n- **Average Waiting Time in Queue ($W_q$)**:\n  $$ W_q \\approx \\frac{C(k, \\lambda/\\mu)}{k \\mu - \\lambda} = \\frac{C(k, \\lambda/\\mu)}{k \\mu (1 - \\rho)} $$\n  Where $C(k, \\lambda/\\mu)$ is the Erlang-C formula.\n\n```\n  Average Queue Latency W_q\n   \u25b2\n   \u2502                                           / (Asymptote at \u03c1 = 1.0)\n   \u2502                                          /\n   \u2502                                         /\n   \u2502                                       /\n   \u2502                       _______________/\n   \u2514\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2534\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2534\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u25ba System Utilization \u03c1\n   0                     0.70            1.0\n```\n\n#### Profound Mathematical Takeaway for Systems Architects:\nAs GPU utilization $\\rho$ approaches $1.0$ ($100\\%$), **queue waiting time explodes asymptotically to infinity** ($W_q \\propto \\frac{1}{1 - \\rho}$).  \n*Sizing Rule*: Never target $100\\%$ GPU utilization during peak traffic. Target **$\\rho \\in [0.70, 0.80]$** to absorb traffic bursts without catastrophic P99 latency spikes.\n\n---\n\n## 2. Hardware Efficiency: Model FLOPs Utilization (MFU)\n\nThe **Model FLOPs Utilization (MFU)** (Chowdhery et al., 2022) measures the fraction of theoretical peak GPU compute achieved by real-world execution.\n\n### 2.1 The Exact MFU Formulation for Training & Inference\n\nLet:\n- $P$: Model parameter count (excluding embeddings).\n- $T_{\\text{tokens}}$: Measured throughput (tokens processed per second across cluster).\n- $N_{\\text{gpus}}$: Total number of GPUs in cluster.\n- $C_{\\text{peak}}$: Theoretical peak compute per GPU (FLOPs/s, e.g. $989 \\text{ TFLOPs}$ for H100 FP16).\n\n#### Standard FLOPs per Token:\n- **Forward Pass (Inference)**: $2 P \\text{ FLOPs/token}$\n- **Forward + Backward Pass (Training)**: $6 P \\text{ FLOPs/token}$ (with activation recomputation: $\\approx 8 P \\text{ FLOPs/token}$)\n\n$$\\mathbf{\\text{MFU}_{\\text{train}} = \\frac{T_{\\text{tokens}} \\times 6 P}{N_{\\text{gpus}} \\times C_{\\text{peak}}}}$$\n$$\\mathbf{\\text{MFU}_{\\text{inference}} = \\frac{T_{\\text{tokens}} \\times 2 P}{N_{\\text{gpus}} \\times C_{\\text{peak}}}}$$\n\n- *Industry Benchmarks*:\n  - Poorly optimized cluster: $\\text{MFU} < 30\\%$\n  - Good production setup: $\\text{MFU} \\approx 45\\% - 55\\%$\n  - World-class frontier infrastructure (Megatron + FlashAttention-3): $\\text{MFU} > 60\\% - 70\\%$\n\n---\n\n## 3. Distributed Tracing for Agentic Pipelines (OpenTelemetry)\n\nBecause an autonomous agent performs non-deterministic multi-step tool calls, traditional linear stack traces fail. We use hierarchical **OpenTelemetry Spans**:\n\n```\n[ Root Trace: User Request \"Analyze sales data and email chart\" ]\n   \u2502\n   \u251c\u2500\u2500\u2500 Span 1: [Router / Model Selection] \u2500\u2500 (Duration: 15ms)\n   \u2502\n   \u251c\u2500\u2500\u2500 Span 2: [Agent Step 1: ReAct Planning] \u2500\u2500 (Duration: 450ms)\n   \u2502      \u2514\u2500\u2500 Attribute: {\"thought\": \"I need to query PostgreSQL for sales data\"}\n   \u2502      \u2514\u2500\u2500 Attribute: {\"tool_call\": \"sql_query\", \"args\": {\"query\": \"SELECT * FROM sales\"}}\n   \u2502\n   \u251c\u2500\u2500\u2500 Span 3: [Tool Execution: PostgreSQL Query] \u2500\u2500 (Duration: 85ms)\n   \u2502      \u2514\u2500\u2500 Attribute: {\"rows_returned\": 1420}\n   \u2502\n   \u251c\u2500\u2500\u2500 Span 4: [Agent Step 2: Code Execution] \u2500\u2500 (Duration: 620ms)\n   \u2502      \u2514\u2500\u2500 Attribute: {\"sandbox\": \"firecracker\", \"script\": \"plot_sales.py\"}\n   \u2502\n   \u2514\u2500\u2500\u2500 Span 5: [Output Validation Guardrail] \u2500\u2500 (Duration: 40ms)\n```\n\n---\n\n## 4. Production Root Cause Analysis (RCA) Incident Playbooks\n\n### Case 1: \"P99 Time To First Token (TTFT) Spikes by 500%, but Average Latency is Normal\"\n- **Layer**: Serving Scheduling.\n- **Root Cause**: Large prompt prefill starvation in continuous batching. A single user sent a $64\\text{k}$ token PDF, monopolizing Tensor Cores and delaying the prefill queue of all concurrent requests.\n- **Mitigation**: Implement **Chunked Prefill** (cap prefill chunk to 512 tokens per iteration) and configure priority admission queues.\n\n### Case 2: \"Training Step Time Gradually Increases by 2% Every Hour\"\n- **Layer**: CUDA / Host Memory.\n- **Root Cause**: Host CPU memory leak in PyTorch DataLoader workers (e.g. accumulating Python list references across epochs without resetting reference counts), triggering CPU RAM swapping to disk and throttling PCIe batch transfers.\n- **Mitigation**: Set `persistent_workers=True` in DataLoader and profile host virtual memory via `tracemalloc`.\n\n---\n\n## 5. Python Reference: OpenTelemetry Distributed Trace Generator\n\n```python\nimport time\nimport uuid\nimport json\n\nclass Span:\n    def __init__(self, name: str, trace_id: str, parent_span_id: str = None):\n        self.name = name\n        self.trace_id = trace_id\n        self.span_id = str(uuid.uuid4())[:8]\n        self.parent_span_id = parent_span_id\n        self.start_time = time.time()\n        self.end_time = None\n        self.attributes = {}\n\n    def set_attribute(self, key: str, value: any):\n        self.attributes[key] = value\n\n    def finish(self):\n        self.end_time = time.time()\n\n    def to_dict(self):\n        return {\n            \"name\": self.name,\n            \"trace_id\": self.trace_id,\n            \"span_id\": self.span_id,\n            \"parent_span_id\": self.parent_span_id,\n            \"duration_ms\": round((self.end_time - self.start_time) * 1000, 2) if self.end_time else None,\n            \"attributes\": self.attributes\n        }\n\nif __name__ == \"__main__\":\n    trace_id = str(uuid.uuid4())[:8]\n    root_span = Span(\"agent_workflow\", trace_id)\n    \n    # Simulate child tool span\n    tool_span = Span(\"execute_sql\", trace_id, parent_span_id=root_span.span_id)\n    tool_span.set_attribute(\"query\", \"SELECT count(*) FROM users\")\n    time.sleep(0.05)\n    tool_span.finish()\n    \n    root_span.finish()\n    print(\"Exported OpenTelemetry Spans:\")\n    print(json.dumps([root_span.to_dict(), tool_span.to_dict()], indent=2))\n```\n\n---\n\n## 6. Deep Interview Interrogation Ladder\n\n- **Level 1 (Concept)**: State Little's Law and explain its variables.\n- **Level 3 (Queueing Math)**: In an $M/M/k$ queue, why does queue latency explode as utilization $\\rho \\to 1.0$?\n- **Level 5 (MFU Calculus)**: Calculate the Model FLOPs Utilization (MFU) of a 70B parameter model training run on 512 H100 GPUs achieving 120,000 tokens/second.\n- **Level 7 (Tracing)**: Design the OpenTelemetry tracing schema for a multi-agent system executing recursive reflection loops.\n- **Level 9 (RCA Investigation)**: During an inference deployment, GPU utilization is at 25%, but requests are timing out at the API gateway. What three metrics do you check first to isolate the bottleneck?\n- **Level 10 (Principal Engineering)**: You are on-call when a production alert triggers: 1% of agent sessions are entering infinite tool-call loops, burning $50,000/hour in external API credits. Walk through your mitigation protocol, telemetry isolation, and permanent architectural fix.\n";
-    function renderMarkdown(rawText) {
-      const blockMath = [];
-      let text = rawText.replace(/\$\$([\s\S]*?)\$\$/g, (m, math) => { blockMath.push(math.trim()); return `%%%BM_${blockMath.length-1}%%%`; });
-      const inlineMath = [];
-      text = text.replace(/\$([^\$\n]+?)\$/g, (m, math) => { inlineMath.push(math.trim()); return `%%%IM_${inlineMath.length-1}%%%`; });
-      let html = marked.parse(text);
-      html = html.replace(/%%%BM_(\d+)%%%/g, (m, id) => {
-        try { return katex.renderToString(blockMath[parseInt(id)], { displayMode: true, throwOnError: false }); } catch(e) { return `<pre>${blockMath[parseInt(id)]}</pre>`; }
-      });
-      html = html.replace(/%%%IM_(\d+)%%%/g, (m, id) => {
-        try { return katex.renderToString(inlineMath[parseInt(id)], { displayMode: false, throwOnError: false }); } catch(e) { return `<code>${inlineMath[parseInt(id)]}</code>`; }
-      });
-      return html;
-    }
-    document.getElementById('content').innerHTML = renderMarkdown(rawMarkdown);
-    Prism.highlightAll();
-    mermaid.initialize({ startOnLoad: false, theme: 'dark' });
-    document.querySelectorAll('.language-mermaid').forEach(el => {
-      const parent = el.parentElement;
-      const code = el.textContent;
-      const div = document.createElement('div');
-      div.className = 'mermaid';
-      div.textContent = code;
-      parent.replaceWith(div);
+    document.addEventListener('DOMContentLoaded', () => {
+      try {
+        if (typeof renderMathInElement !== 'undefined') {
+          renderMathInElement(document.getElementById('content'), {
+            delimiters: [
+              { left: '$$', right: '$$', display: true },
+              { left: '$', right: '$', display: false }
+            ],
+            throwOnError: false
+          });
+        }
+      } catch(e){}
+      try { Prism.highlightAll(); } catch(e){}
+      try {
+        mermaid.initialize({ startOnLoad: true, theme: 'dark' });
+      } catch(e){}
     });
-    mermaid.run();
   </script>
 </body>
 </html>

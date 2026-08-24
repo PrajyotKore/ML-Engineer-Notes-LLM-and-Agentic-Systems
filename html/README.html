@@ -8,7 +8,7 @@
   <link href="https://fonts.googleapis.com/css2?family=Fira+Code:wght@400;500;600&family=Inter:wght@300;400;500;600;700;800&family=Outfit:wght@500;600;700;800&display=swap" rel="stylesheet">
   <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/katex@0.16.9/dist/katex.min.css">
   <script defer src="https://cdn.jsdelivr.net/npm/katex@0.16.9/dist/katex.min.js"></script>
-  <script src="https://cdn.jsdelivr.net/npm/marked@11.1.1/marked.min.js"></script>
+  <script defer src="https://cdn.jsdelivr.net/npm/katex@0.16.9/dist/contrib/auto-render.min.js"></script>
   <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/prism/1.29.0/themes/prism-tomorrow.min.css">
   <script src="https://cdnjs.cloudflare.com/ajax/libs/prism/1.29.0/prism.min.js"></script>
   <script src="https://cdnjs.cloudflare.com/ajax/libs/prism/1.29.0/components/prism-python.min.js"></script>
@@ -35,37 +35,382 @@
 </head>
 <body>
   <div class="container">
-    <a href="../index.html" class="nav-back">← Back to Master Knowledge Hub</a>
-    <div id="content"></div>
+    <a href="../index.html#README" class="nav-back">← Back to Master Knowledge Hub</a>
+    <div id="content"><h1>🧠 ML-Notes — Single Source of Knowledge (SSK)</h1>
+<blockquote>
+<p><strong>A comprehensive, mathematically intensive, and production-grade master reference for ML Engineers (LLM &amp; Agentic Systems).</strong><br />
+Bridging <strong>Rigorous Mathematics <span class="katex-inline">$\longleftrightarrow$</span> Algorithms <span class="katex-inline">$\longleftrightarrow$</span> GPU Bare Metal <span class="katex-inline">$\longleftrightarrow$</span> Production Distributed Systems</strong>.</p>
+</blockquote>
+<p>🌐 <strong>Live Web App (GitHub Pages)</strong>: <strong><a href="https://prajyotkore.github.io/ML-Engineer-Notes-LLM-and-Agentic-Systems/">https://prajyotkore.github.io/ML-Engineer-Notes-LLM-and-Agentic-Systems/</a></strong><br />
+<em>Features instant search, KaTeX mathematical formula rendering, Prism.js code syntax highlighting, and interactive Mermaid architecture diagrams.</em></p>
+<hr />
+<h2>🎯 Purpose &amp; Scope</h2>
+<p>This repository is an exhaustive, production-grade <strong>Single Source of Knowledge (SSK)</strong> built for engineers preparing for Senior, Staff, and Principal <strong>ML Engineer (LLM &amp; Agentic Systems)</strong> technical interviews.</p>
+<p>The core engineering standard this repo answers:</p>
+<blockquote>
+<p><em>"Can this candidate take a frontier research concept, derive its mathematical formulations, map its operations to physical GPU memory hierarchies, scale its training and inference across distributed clusters, integrate it into a durable agentic system, and systematically debug latency, drift, and reliability failures in production?"</em></p>
+</blockquote>
+<p>Every document follows the <strong>10-Level Depth Framework</strong>, progressing from first principles and step-by-step mathematical proofs through to bare-metal CUDA execution and production system design.</p>
+<hr />
+<h2>📐 Complete Dependency Architecture</h2>
+<div class="mermaid">flowchart TD
+    %% Base Layer
+    Math[&quot;01: Mathematical Foundations (SVD, Info Theory, Optimization)&quot;] --&gt; DL[&quot;02_03: Deep Learning (Backprop, RMSNorm, Loss Landscapes)&quot;]
+    DL --&gt; LLM[&quot;04: Modern LLMs (Attention, RoPE, MLA, MoE)&quot;]
+    
+    %% Hardware &amp; Performance Layer
+    GPU[&quot;08: GPU Architecture &amp; FlashAttention-3&quot;] --&gt; Inf[&quot;09: Inference Systems (PagedAttention, SGLang, PD Split)&quot;]
+    GPU --&gt; TS[&quot;07: Training Systems (FSDP-2, 3D Parallelism)&quot;]
+    Net[&quot;18: Distributed Systems (Ring All-Reduce, RDMA)&quot;] --&gt; TS
+    LLM --&gt; Inf
+    LLM --&gt; TS
+    
+    %% Training &amp; Alignment Layer
+    Data[&quot;06: Data Engineering (MinHash LSH, Synthetic Flywheels)&quot;] --&gt; PT[&quot;05: Post-Training (SFT, LoRA, DPO, GRPO)&quot;]
+    LLM --&gt; PT
+    PT --&gt; Eval[&quot;12: Evaluation (Z-Tests, ELO, SWE-bench)&quot;]
+    
+    %% Serving &amp; Agent Layer
+    Inf --&gt; Agent[&quot;10: Agentic Systems (ReAct, FSM JSON, MCP, Hybrid RAG)&quot;]
+    Agent --&gt; Rel[&quot;11: Long-Running Workflows (Temporal, Sagas, Jitter)&quot;]
+    Rel --&gt; Prod[&quot;13/14/15: Production MLOps, Tracing, Safety Guardrails&quot;]
+    
+    %% Synthesis Layer
+    Prod --&gt; SysDes[&quot;16-22: System Design, Production Code &amp; Playbooks&quot;]</div>
+
+<hr />
+<h2>📊 Priority Matrix</h2>
+<table>
+<thead>
+<tr>
+<th style="text-align: center;">Priority</th>
+<th style="text-align: left;">Category</th>
+<th style="text-align: left;">Topics</th>
+<th style="text-align: left;">Files</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td style="text-align: center;"><strong>P0</strong></td>
+<td style="text-align: left;"><strong>Agentic ML Systems</strong></td>
+<td style="text-align: left;">ReAct, Tool Routing, Context/Memory, MCP, FSM JSON</td>
+<td style="text-align: left;"><a href="./10_AGENTIC_ML_SYSTEMS.md">10_AGENTIC_ML_SYSTEMS.md</a></td>
+</tr>
+<tr>
+<td style="text-align: center;"><strong>P0</strong></td>
+<td style="text-align: left;"><strong>Long-Running Workflows</strong></td>
+<td style="text-align: left;">Durable State, Temporal, Sagas, Idempotency, Retries</td>
+<td style="text-align: left;"><a href="./11_LONG_RUNNING_WORKFLOW_RELIABILITY.md">11_LONG_RUNNING_WORKFLOW_RELIABILITY.md</a></td>
+</tr>
+<tr>
+<td style="text-align: center;"><strong>P0</strong></td>
+<td style="text-align: left;"><strong>Post-Training &amp; Reasoning</strong></td>
+<td style="text-align: left;">SFT, LoRA, QLoRA, DPO, GRPO, Test-Time Compute</td>
+<td style="text-align: left;"><a href="./05_POST_TRAINING.md">05_POST_TRAINING.md</a></td>
+</tr>
+<tr>
+<td style="text-align: center;"><strong>P0</strong></td>
+<td style="text-align: left;"><strong>LLM &amp; Inference</strong></td>
+<td style="text-align: left;">PagedAttention, RadixAttention, PD Split, Chunked Prefill</td>
+<td style="text-align: left;"><a href="./04_TRANSFORMERS_AND_LLMS.md">04_TRANSFORMERS_AND_LLMS.md</a> · <a href="./09_INFERENCE_SYSTEMS.md">09_INFERENCE_SYSTEMS.md</a></td>
+</tr>
+<tr>
+<td style="text-align: center;"><strong>P0</strong></td>
+<td style="text-align: left;"><strong>GPU Architecture</strong></td>
+<td style="text-align: left;">SMs, SRAM Tiling, FlashAttention-3, Roofline Model</td>
+<td style="text-align: left;"><a href="./08_GPU_AND_PERFORMANCE.md">08_GPU_AND_PERFORMANCE.md</a></td>
+</tr>
+<tr>
+<td style="text-align: center;"><strong>P0</strong></td>
+<td style="text-align: left;"><strong>Evaluation &amp; Reliability</strong></td>
+<td style="text-align: left;">Z-Tests, ELO Ratings, SWE-bench, LLM-as-judge</td>
+<td style="text-align: left;"><a href="./12_EVALUATION.md">12_EVALUATION.md</a></td>
+</tr>
+<tr>
+<td style="text-align: center;"><strong>P1</strong></td>
+<td style="text-align: left;"><strong>Mathematical Foundations</strong></td>
+<td style="text-align: left;">SVD, Low-Rank, Information Theory, AdamW, Optimization</td>
+<td style="text-align: left;"><a href="./01_MATHEMATICAL_FOUNDATIONS.md">01_MATHEMATICAL_FOUNDATIONS.md</a></td>
+</tr>
+<tr>
+<td style="text-align: center;"><strong>P1</strong></td>
+<td style="text-align: left;"><strong>Training Systems</strong></td>
+<td style="text-align: left;">FSDP-2, 3D Parallelism, Context Parallelism, Checkpointing</td>
+<td style="text-align: left;"><a href="./07_TRAINING_SYSTEMS.md">07_TRAINING_SYSTEMS.md</a></td>
+</tr>
+<tr>
+<td style="text-align: center;"><strong>P1</strong></td>
+<td style="text-align: left;"><strong>Data Engineering</strong></td>
+<td style="text-align: left;">MinHash LSH, Model Collapse, Synthetic Curation</td>
+<td style="text-align: left;"><a href="./06_DATA_AND_SYNTHETIC_DATA.md">06_DATA_AND_SYNTHETIC_DATA.md</a></td>
+</tr>
+<tr>
+<td style="text-align: center;"><strong>P1</strong></td>
+<td style="text-align: left;"><strong>Distributed Systems</strong></td>
+<td style="text-align: left;">Ring All-Reduce, GPUDirect RDMA, InfiniBand NDR</td>
+<td style="text-align: left;"><a href="./18_DISTRIBUTED_SYSTEMS.md">18_DISTRIBUTED_SYSTEMS.md</a></td>
+</tr>
+<tr>
+<td style="text-align: center;"><strong>P1</strong></td>
+<td style="text-align: left;"><strong>Observability</strong></td>
+<td style="text-align: left;">Little's Law, MFU, OpenTelemetry Tracing</td>
+<td style="text-align: left;"><a href="./14_OBSERVABILITY_AND_DEBUGGING.md">14_OBSERVABILITY_AND_DEBUGGING.md</a></td>
+</tr>
+<tr>
+<td style="text-align: center;"><strong>P1</strong></td>
+<td style="text-align: left;"><strong>Systems / ML Design</strong></td>
+<td style="text-align: left;">Architecture Trade-offs, Cost/Latency Scaling</td>
+<td style="text-align: left;"><a href="./16_SYSTEM_DESIGN.md">16_SYSTEM_DESIGN.md</a> · <a href="./13_PRODUCTION_ML.md">13_PRODUCTION_ML.md</a></td>
+</tr>
+<tr>
+<td style="text-align: center;"><strong>P1</strong></td>
+<td style="text-align: left;"><strong>Deep Learning</strong></td>
+<td style="text-align: left;">Backpropagation, Softmax Jacobians, LayerNorm/RMSNorm</td>
+<td style="text-align: left;"><a href="./02_03_ML_AND_DL_FOUNDATIONS.md">02_03_ML_AND_DL_FOUNDATIONS.md</a></td>
+</tr>
+<tr>
+<td style="text-align: center;"><strong>P2</strong></td>
+<td style="text-align: left;"><strong>Python &amp; Coding</strong></td>
+<td style="text-align: left;">PyTorch Modules, FSM Parsers, Continuous Batching</td>
+<td style="text-align: left;"><a href="./17_PYTHON_AND_CODING.md">17_PYTHON_AND_CODING.md</a></td>
+</tr>
+</tbody>
+</table>
+<hr />
+<h2>📚 Complete Document Index</h2>
+<h3>Phase 0 — Foundation &amp; Architecture</h3>
+<table>
+<thead>
+<tr>
+<th style="text-align: left;">File</th>
+<th style="text-align: left;">Description</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td style="text-align: left;"><a href="./00_ROLE_ANALYSIS.md">00_ROLE_ANALYSIS.md</a></td>
+<td style="text-align: left;">Role competency map, priority matrix, and full dependency graph</td>
+</tr>
+</tbody>
+</table>
+<hr />
+<h3>Phase 1 — Mathematical Foundations &amp; Core Deep Learning</h3>
+<table>
+<thead>
+<tr>
+<th style="text-align: left;">File</th>
+<th style="text-align: left;">Description</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td style="text-align: left;"><a href="./01_MATHEMATICAL_FOUNDATIONS.md">01_MATHEMATICAL_FOUNDATIONS.md</a></td>
+<td style="text-align: left;">Rigorous Linear Algebra, SVD, Low-Rank approximations, Probability, Information Theory, AdamW &amp; Optimization Calculus</td>
+</tr>
+<tr>
+<td style="text-align: left;"><a href="./02_03_ML_AND_DL_FOUNDATIONS.md">02_03_ML_AND_DL_FOUNDATIONS.md</a></td>
+<td style="text-align: left;">Backpropagation Jacobian derivations, Softmax/Cross-Entropy gradients, RMSNorm vs. LayerNorm proofs, Residual additive highways</td>
+</tr>
+</tbody>
+</table>
+<hr />
+<h3>Phase 2 — Modern Transformers &amp; LLM Architectures <em>(P0)</em></h3>
+<table>
+<thead>
+<tr>
+<th style="text-align: left;">File</th>
+<th style="text-align: left;">Description</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td style="text-align: left;"><a href="./04_TRANSFORMERS_AND_LLMS.md">04_TRANSFORMERS_AND_LLMS.md</a></td>
+<td style="text-align: left;">Scaled Attention variance proofs, RoPE/YaRN mathematical derivations, Multi-Head Latent Attention (MLA), DeepSeek-V3 MoE load balancing</td>
+</tr>
+</tbody>
+</table>
+<hr />
+<h3>Phase 3 — Post-Training, Alignment &amp; Reasoning Models <em>(P0)</em></h3>
+<table>
+<thead>
+<tr>
+<th style="text-align: left;">File</th>
+<th style="text-align: left;">Description</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td style="text-align: left;"><a href="./05_POST_TRAINING.md">05_POST_TRAINING.md</a></td>
+<td style="text-align: left;">LoRA/QLoRA mathematical updates, step-by-step Bradley-Terry to DPO proof, GRPO &amp; Policy Gradient math for reasoning models</td>
+</tr>
+<tr>
+<td style="text-align: left;"><a href="./06_DATA_AND_SYNTHETIC_DATA.md">06_DATA_AND_SYNTHETIC_DATA.md</a></td>
+<td style="text-align: left;">MinHash Jaccard estimation theorem, LSH S-curves, Model Collapse dynamics, Benchmark decontamination with Bloom filters</td>
+</tr>
+</tbody>
+</table>
+<hr />
+<h3>Phase 4 — GPU Hardware, Performance &amp; Inference Engines <em>(P0)</em></h3>
+<table>
+<thead>
+<tr>
+<th style="text-align: left;">File</th>
+<th style="text-align: left;">Description</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td style="text-align: left;"><a href="./08_GPU_AND_PERFORMANCE.md">08_GPU_AND_PERFORMANCE.md</a></td>
+<td style="text-align: left;">NVIDIA H100 microarchitecture, Roofline Model derivations, SRAM block tiling &amp; online softmax proofs in FlashAttention-1/2/3</td>
+</tr>
+<tr>
+<td style="text-align: left;"><a href="./09_INFERENCE_SYSTEMS.md">09_INFERENCE_SYSTEMS.md</a></td>
+<td style="text-align: left;">PagedAttention virtual memory math, RadixAttention (SGLang), Disaggregated Prefill/Decode (PD Split), Speculative Decoding acceptance proofs</td>
+</tr>
+</tbody>
+</table>
+<hr />
+<h3>Phase 5 — Distributed Scaling &amp; System Infrastructures</h3>
+<table>
+<thead>
+<tr>
+<th style="text-align: left;">File</th>
+<th style="text-align: left;">Description</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td style="text-align: left;"><a href="./07_TRAINING_SYSTEMS.md">07_TRAINING_SYSTEMS.md</a></td>
+<td style="text-align: left;">Static training memory equations (<span class="katex-inline">$16\Phi$</span>), ZeRO-1/2/3 sharding proofs, Megatron 3D Parallelism, 1F1B pipeline bubble fraction</td>
+</tr>
+<tr>
+<td style="text-align: left;"><a href="./18_DISTRIBUTED_SYSTEMS.md">18_DISTRIBUTED_SYSTEMS.md</a></td>
+<td style="text-align: left;">Ring All-Reduce communication proofs (<span class="katex-inline">$2(N-1)/N \cdot M$</span>), Tree All-Reduce, GPUDirect RDMA, InfiniBand NDR network fabric</td>
+</tr>
+</tbody>
+</table>
+<hr />
+<h3>Phase 6 — Agentic ML Systems, Long-Running Workflows &amp; Safety <em>(P0)</em></h3>
+<table>
+<thead>
+<tr>
+<th style="text-align: left;">File</th>
+<th style="text-align: left;">Description</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td style="text-align: left;"><a href="./10_AGENTIC_ML_SYSTEMS.md">10_AGENTIC_ML_SYSTEMS.md</a></td>
+<td style="text-align: left;">Chained reasoning failure math (<span class="katex-inline">$p^N$</span>), FSM Grammar-Constrained logit biasing (Outlines/XGrammar), Model Context Protocol (MCP), Hybrid RRF</td>
+</tr>
+<tr>
+<td style="text-align: left;"><a href="./11_LONG_RUNNING_WORKFLOW_RELIABILITY.md">11_LONG_RUNNING_WORKFLOW_RELIABILITY.md</a></td>
+<td style="text-align: left;">Geometric retry math (<span class="katex-inline">$1-(1-p)^{R+1}$</span>), Exponential Backoff with Full Jitter, Idempotency-Key gateways, Distributed Saga compensation</td>
+</tr>
+<tr>
+<td style="text-align: left;"><a href="./15_SAFETY_AND_ROBUSTNESS.md">15_SAFETY_AND_ROBUSTNESS.md</a></td>
+<td style="text-align: left;">Alignment Tax ROC curves, Direct &amp; Indirect Prompt Injection vectors, Firecracker microVM sandboxing, Least-privilege IAM</td>
+</tr>
+</tbody>
+</table>
+<hr />
+<h3>Phase 7 — Production Evaluation, Observability &amp; MLOps</h3>
+<table>
+<thead>
+<tr>
+<th style="text-align: left;">File</th>
+<th style="text-align: left;">Description</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td style="text-align: left;"><a href="./12_EVALUATION.md">12_EVALUATION.md</a></td>
+<td style="text-align: left;">Two-Proportion Z-Tests, Sample sizing for MDE, Bradley-Terry ELO ratings (Chatbot Arena), LLM-as-a-Judge debiasing</td>
+</tr>
+<tr>
+<td style="text-align: left;"><a href="./13_PRODUCTION_ML.md">13_PRODUCTION_ML.md</a></td>
+<td style="text-align: left;">Population Stability Index (PSI) drift calculus, Canary/Shadow/Blue-Green deployments, Session pinning during rolling updates</td>
+</tr>
+<tr>
+<td style="text-align: left;"><a href="./14_OBSERVABILITY_AND_DEBUGGING.md">14_OBSERVABILITY_AND_DEBUGGING.md</a></td>
+<td style="text-align: left;">Little's Law (<span class="katex-inline">$L=\lambda W$</span>), <span class="katex-inline">$M/M/k$</span> queue utilization walls, MFU calculations, OpenTelemetry distributed tracing schemas</td>
+</tr>
+</tbody>
+</table>
+<hr />
+<h3>Phase 8 — System Design, Production Code &amp; Interview Synthesis</h3>
+<table>
+<thead>
+<tr>
+<th style="text-align: left;">File</th>
+<th style="text-align: left;">Description</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td style="text-align: left;"><a href="./16_SYSTEM_DESIGN.md">16_SYSTEM_DESIGN.md</a></td>
+<td style="text-align: left;">End-to-end whiteboard architecture blueprints with full back-of-the-envelope calculations (100k QPS Serving, Durable Agent Runtimes, RAG)</td>
+</tr>
+<tr>
+<td style="text-align: left;"><a href="./17_PYTHON_AND_CODING.md">17_PYTHON_AND_CODING.md</a></td>
+<td style="text-align: left;">Production-grade runnable PyTorch modules: Multi-Head Latent Attention (MLA), RoPE/YaRN, FSM JSON Logit Processor, Continuous Batcher</td>
+</tr>
+<tr>
+<td style="text-align: left;"><a href="./19_LEADERSHIP_AND_TECHNICAL_JUDGMENT.md">19_LEADERSHIP_AND_TECHNICAL_JUDGMENT.md</a></td>
+<td style="text-align: left;">Staff/Principal engineering trade-off matrices, incident leadership protocols, and architectural arbitration</td>
+</tr>
+<tr>
+<td style="text-align: left;"><a href="./20_INTERVIEW_QUESTION_BANK.md">20_INTERVIEW_QUESTION_BANK.md</a></td>
+<td style="text-align: left;">50+ graded questions from Level 1 (Concepts) to Level 10 (Principal Engineering) across all domains</td>
+</tr>
+<tr>
+<td style="text-align: left;"><a href="./21_CASE_STUDIES.md">21_CASE_STUDIES.md</a></td>
+<td style="text-align: left;">5 detailed real-world production incident Root Cause Analyses (Loss Spikes, Agent Loops, TTFT Starvation, MoE Stragglers)</td>
+</tr>
+<tr>
+<td style="text-align: left;"><a href="./22_FINAL_SYNTHESIS_PLAYBOOKS.md">22_FINAL_SYNTHESIS_PLAYBOOKS.md</a></td>
+<td style="text-align: left;">The Ultimate 2-Hour Formula Sheet, 48-Hour Systems Optimization Playbook, and Cross-Stack Traversal Golden Rule</td>
+</tr>
+</tbody>
+</table>
+<hr />
+<h2>🧭 Study Guide: Recommended Sequence</h2>
+<p><strong>Week 1 — Mathematical Foundations &amp; P0 Core Models</strong><br />
+1. <code>00_ROLE_ANALYSIS.md</code> — understand the competency map<br />
+2. <code>01_MATHEMATICAL_FOUNDATIONS.md</code> + <code>02_03_ML_AND_DL_FOUNDATIONS.md</code> — master linear algebra, calculus, AdamW, and backpropagation<br />
+3. <code>04_TRANSFORMERS_AND_LLMS.md</code> + <code>08_GPU_AND_PERFORMANCE.md</code> — master Attention, RoPE, MLA, and FlashAttention-3 SRAM tiling<br />
+4. <code>09_INFERENCE_SYSTEMS.md</code> — master PagedAttention, RadixAttention, Disaggregated PD split, and Speculative Decoding</p>
+<p><strong>Week 2 — Post-Training, Agentic Systems &amp; Distributed Infrastructure</strong><br />
+5. <code>05_POST_TRAINING.md</code> + <code>06_DATA_AND_SYNTHETIC_DATA.md</code> — master DPO derivation, GRPO reasoning models, and MinHash deduplication<br />
+6. <code>10_AGENTIC_ML_SYSTEMS.md</code> + <code>11_LONG_RUNNING_WORKFLOW_RELIABILITY.md</code> + <code>15_SAFETY_AND_ROBUSTNESS.md</code> — master FSM JSON decoding, Temporal durable workflows, and Firecracker sandboxes<br />
+7. <code>07_TRAINING_SYSTEMS.md</code> + <code>18_DISTRIBUTED_SYSTEMS.md</code> — master ZeRO-1/2/3, 3D Parallelism, and Ring All-Reduce</p>
+<p><strong>Week 3 — Production MLOps, System Design &amp; Interview Execution</strong><br />
+8. <code>12_EVALUATION.md</code> + <code>13_PRODUCTION_ML.md</code> + <code>14_OBSERVABILITY_AND_DEBUGGING.md</code> — master Z-tests, ELO, PSI drift, and Little's Law queueing<br />
+9. <code>16_SYSTEM_DESIGN.md</code> + <code>17_PYTHON_AND_CODING.md</code> — master whiteboard dimensioning and PyTorch coding<br />
+10. <code>19_LEADERSHIP_AND_TECHNICAL_JUDGMENT.md</code> + <code>20_INTERVIEW_QUESTION_BANK.md</code> + <code>21_CASE_STUDIES.md</code><br />
+11. <code>22_FINAL_SYNTHESIS_PLAYBOOKS.md</code> — final 2-hour formula review</p>
+<hr />
+<h2>🏷️ Key Technical Themes</h2>
+<p><code>Multi-Head Latent Attention (MLA)</code> · <code>GRPO (DeepSeek-R1)</code> · <code>Direct Preference Optimization (DPO)</code> · <code>FlashAttention-3</code> · <code>SRAM Tiling</code> · <code>PagedAttention</code> · <code>RadixAttention (SGLang)</code> · <code>Disaggregated Prefill-Decode (PD Split)</code> · <code>Chunked Prefill</code> · <code>Speculative Decoding</code> · <code>FSM Grammar Constrained Decoding</code> · <code>Model Context Protocol (MCP)</code> · <code>Durable Workflows (Temporal)</code> · <code>Distributed Sagas</code> · <code>ZeRO-3 (FSDP-2)</code> · <code>Ring All-Reduce</code> · <code>GPUDirect RDMA</code> · <code>Little's Law</code> · <code>Model FLOPs Utilization (MFU)</code> · <code>Population Stability Index (PSI)</code> · <code>SWE-bench</code></p></div>
   </div>
   <script>
-    const rawMarkdown = "# \ud83e\udde0 ML-Notes \u2014 Single Source of Knowledge (SSK)\n\n> **A comprehensive, mathematically intensive, and production-grade master reference for ML Engineers (LLM & Agentic Systems).**  \n> Bridging **Rigorous Mathematics $\\longleftrightarrow$ Algorithms $\\longleftrightarrow$ GPU Bare Metal $\\longleftrightarrow$ Production Distributed Systems**.\n\n\ud83c\udf10 **Live Web App (GitHub Pages)**: **[https://prajyotkore.github.io/ML-Engineer-Notes-LLM-and-Agentic-Systems/](https://prajyotkore.github.io/ML-Engineer-Notes-LLM-and-Agentic-Systems/)**  \n*Features instant search, KaTeX mathematical formula rendering, Prism.js code syntax highlighting, and interactive Mermaid architecture diagrams.*\n\n---\n\n## \ud83c\udfaf Purpose & Scope\n\nThis repository is an exhaustive, production-grade **Single Source of Knowledge (SSK)** built for engineers preparing for Senior, Staff, and Principal **ML Engineer (LLM & Agentic Systems)** technical interviews.\n\nThe core engineering standard this repo answers:\n\n> *\"Can this candidate take a frontier research concept, derive its mathematical formulations, map its operations to physical GPU memory hierarchies, scale its training and inference across distributed clusters, integrate it into a durable agentic system, and systematically debug latency, drift, and reliability failures in production?\"*\n\nEvery document follows the **10-Level Depth Framework**, progressing from first principles and step-by-step mathematical proofs through to bare-metal CUDA execution and production system design.\n\n---\n\n## \ud83d\udcd0 Complete Dependency Architecture\n\n```mermaid\nflowchart TD\n    %% Base Layer\n    Math[\"01: Mathematical Foundations (SVD, Info Theory, Optimization)\"] --> DL[\"02_03: Deep Learning (Backprop, RMSNorm, Loss Landscapes)\"]\n    DL --> LLM[\"04: Modern LLMs (Attention, RoPE, MLA, MoE)\"]\n    \n    %% Hardware & Performance Layer\n    GPU[\"08: GPU Architecture & FlashAttention-3\"] --> Inf[\"09: Inference Systems (PagedAttention, SGLang, PD Split)\"]\n    GPU --> TS[\"07: Training Systems (FSDP-2, 3D Parallelism)\"]\n    Net[\"18: Distributed Systems (Ring All-Reduce, RDMA)\"] --> TS\n    LLM --> Inf\n    LLM --> TS\n    \n    %% Training & Alignment Layer\n    Data[\"06: Data Engineering (MinHash LSH, Synthetic Flywheels)\"] --> PT[\"05: Post-Training (SFT, LoRA, DPO, GRPO)\"]\n    LLM --> PT\n    PT --> Eval[\"12: Evaluation (Z-Tests, ELO, SWE-bench)\"]\n    \n    %% Serving & Agent Layer\n    Inf --> Agent[\"10: Agentic Systems (ReAct, FSM JSON, MCP, Hybrid RAG)\"]\n    Agent --> Rel[\"11: Long-Running Workflows (Temporal, Sagas, Jitter)\"]\n    Rel --> Prod[\"13/14/15: Production MLOps, Tracing, Safety Guardrails\"]\n    \n    %% Synthesis Layer\n    Prod --> SysDes[\"16-22: System Design, Production Code & Playbooks\"]\n```\n\n---\n\n## \ud83d\udcca Priority Matrix\n\n| Priority | Category | Topics | Files |\n|:---:|:---|:---|:---|\n| **P0** | **Agentic ML Systems** | ReAct, Tool Routing, Context/Memory, MCP, FSM JSON | [10_AGENTIC_ML_SYSTEMS.md](./10_AGENTIC_ML_SYSTEMS.md) |\n| **P0** | **Long-Running Workflows** | Durable State, Temporal, Sagas, Idempotency, Retries | [11_LONG_RUNNING_WORKFLOW_RELIABILITY.md](./11_LONG_RUNNING_WORKFLOW_RELIABILITY.md) |\n| **P0** | **Post-Training & Reasoning** | SFT, LoRA, QLoRA, DPO, GRPO, Test-Time Compute | [05_POST_TRAINING.md](./05_POST_TRAINING.md) |\n| **P0** | **LLM & Inference** | PagedAttention, RadixAttention, PD Split, Chunked Prefill | [04_TRANSFORMERS_AND_LLMS.md](./04_TRANSFORMERS_AND_LLMS.md) \u00b7 [09_INFERENCE_SYSTEMS.md](./09_INFERENCE_SYSTEMS.md) |\n| **P0** | **GPU Architecture** | SMs, SRAM Tiling, FlashAttention-3, Roofline Model | [08_GPU_AND_PERFORMANCE.md](./08_GPU_AND_PERFORMANCE.md) |\n| **P0** | **Evaluation & Reliability** | Z-Tests, ELO Ratings, SWE-bench, LLM-as-judge | [12_EVALUATION.md](./12_EVALUATION.md) |\n| **P1** | **Mathematical Foundations** | SVD, Low-Rank, Information Theory, AdamW, Optimization | [01_MATHEMATICAL_FOUNDATIONS.md](./01_MATHEMATICAL_FOUNDATIONS.md) |\n| **P1** | **Training Systems** | FSDP-2, 3D Parallelism, Context Parallelism, Checkpointing | [07_TRAINING_SYSTEMS.md](./07_TRAINING_SYSTEMS.md) |\n| **P1** | **Data Engineering** | MinHash LSH, Model Collapse, Synthetic Curation | [06_DATA_AND_SYNTHETIC_DATA.md](./06_DATA_AND_SYNTHETIC_DATA.md) |\n| **P1** | **Distributed Systems** | Ring All-Reduce, GPUDirect RDMA, InfiniBand NDR | [18_DISTRIBUTED_SYSTEMS.md](./18_DISTRIBUTED_SYSTEMS.md) |\n| **P1** | **Observability** | Little's Law, MFU, OpenTelemetry Tracing | [14_OBSERVABILITY_AND_DEBUGGING.md](./14_OBSERVABILITY_AND_DEBUGGING.md) |\n| **P1** | **Systems / ML Design** | Architecture Trade-offs, Cost/Latency Scaling | [16_SYSTEM_DESIGN.md](./16_SYSTEM_DESIGN.md) \u00b7 [13_PRODUCTION_ML.md](./13_PRODUCTION_ML.md) |\n| **P1** | **Deep Learning** | Backpropagation, Softmax Jacobians, LayerNorm/RMSNorm | [02_03_ML_AND_DL_FOUNDATIONS.md](./02_03_ML_AND_DL_FOUNDATIONS.md) |\n| **P2** | **Python & Coding** | PyTorch Modules, FSM Parsers, Continuous Batching | [17_PYTHON_AND_CODING.md](./17_PYTHON_AND_CODING.md) |\n\n---\n\n## \ud83d\udcda Complete Document Index\n\n### Phase 0 \u2014 Foundation & Architecture\n| File | Description |\n|:---|:---|\n| [00_ROLE_ANALYSIS.md](./00_ROLE_ANALYSIS.md) | Role competency map, priority matrix, and full dependency graph |\n\n---\n\n### Phase 1 \u2014 Mathematical Foundations & Core Deep Learning\n| File | Description |\n|:---|:---|\n| [01_MATHEMATICAL_FOUNDATIONS.md](./01_MATHEMATICAL_FOUNDATIONS.md) | Rigorous Linear Algebra, SVD, Low-Rank approximations, Probability, Information Theory, AdamW & Optimization Calculus |\n| [02_03_ML_AND_DL_FOUNDATIONS.md](./02_03_ML_AND_DL_FOUNDATIONS.md) | Backpropagation Jacobian derivations, Softmax/Cross-Entropy gradients, RMSNorm vs. LayerNorm proofs, Residual additive highways |\n\n---\n\n### Phase 2 \u2014 Modern Transformers & LLM Architectures *(P0)*\n| File | Description |\n|:---|:---|\n| [04_TRANSFORMERS_AND_LLMS.md](./04_TRANSFORMERS_AND_LLMS.md) | Scaled Attention variance proofs, RoPE/YaRN mathematical derivations, Multi-Head Latent Attention (MLA), DeepSeek-V3 MoE load balancing |\n\n---\n\n### Phase 3 \u2014 Post-Training, Alignment & Reasoning Models *(P0)*\n| File | Description |\n|:---|:---|\n| [05_POST_TRAINING.md](./05_POST_TRAINING.md) | LoRA/QLoRA mathematical updates, step-by-step Bradley-Terry to DPO proof, GRPO & Policy Gradient math for reasoning models |\n| [06_DATA_AND_SYNTHETIC_DATA.md](./06_DATA_AND_SYNTHETIC_DATA.md) | MinHash Jaccard estimation theorem, LSH S-curves, Model Collapse dynamics, Benchmark decontamination with Bloom filters |\n\n---\n\n### Phase 4 \u2014 GPU Hardware, Performance & Inference Engines *(P0)*\n| File | Description |\n|:---|:---|\n| [08_GPU_AND_PERFORMANCE.md](./08_GPU_AND_PERFORMANCE.md) | NVIDIA H100 microarchitecture, Roofline Model derivations, SRAM block tiling & online softmax proofs in FlashAttention-1/2/3 |\n| [09_INFERENCE_SYSTEMS.md](./09_INFERENCE_SYSTEMS.md) | PagedAttention virtual memory math, RadixAttention (SGLang), Disaggregated Prefill/Decode (PD Split), Speculative Decoding acceptance proofs |\n\n---\n\n### Phase 5 \u2014 Distributed Scaling & System Infrastructures\n| File | Description |\n|:---|:---|\n| [07_TRAINING_SYSTEMS.md](./07_TRAINING_SYSTEMS.md) | Static training memory equations ($16\\Phi$), ZeRO-1/2/3 sharding proofs, Megatron 3D Parallelism, 1F1B pipeline bubble fraction |\n| [18_DISTRIBUTED_SYSTEMS.md](./18_DISTRIBUTED_SYSTEMS.md) | Ring All-Reduce communication proofs ($2(N-1)/N \\cdot M$), Tree All-Reduce, GPUDirect RDMA, InfiniBand NDR network fabric |\n\n---\n\n### Phase 6 \u2014 Agentic ML Systems, Long-Running Workflows & Safety *(P0)*\n| File | Description |\n|:---|:---|\n| [10_AGENTIC_ML_SYSTEMS.md](./10_AGENTIC_ML_SYSTEMS.md) | Chained reasoning failure math ($p^N$), FSM Grammar-Constrained logit biasing (Outlines/XGrammar), Model Context Protocol (MCP), Hybrid RRF |\n| [11_LONG_RUNNING_WORKFLOW_RELIABILITY.md](./11_LONG_RUNNING_WORKFLOW_RELIABILITY.md) | Geometric retry math ($1-(1-p)^{R+1}$), Exponential Backoff with Full Jitter, Idempotency-Key gateways, Distributed Saga compensation |\n| [15_SAFETY_AND_ROBUSTNESS.md](./15_SAFETY_AND_ROBUSTNESS.md) | Alignment Tax ROC curves, Direct & Indirect Prompt Injection vectors, Firecracker microVM sandboxing, Least-privilege IAM |\n\n---\n\n### Phase 7 \u2014 Production Evaluation, Observability & MLOps\n| File | Description |\n|:---|:---|\n| [12_EVALUATION.md](./12_EVALUATION.md) | Two-Proportion Z-Tests, Sample sizing for MDE, Bradley-Terry ELO ratings (Chatbot Arena), LLM-as-a-Judge debiasing |\n| [13_PRODUCTION_ML.md](./13_PRODUCTION_ML.md) | Population Stability Index (PSI) drift calculus, Canary/Shadow/Blue-Green deployments, Session pinning during rolling updates |\n| [14_OBSERVABILITY_AND_DEBUGGING.md](./14_OBSERVABILITY_AND_DEBUGGING.md) | Little's Law ($L=\\lambda W$), $M/M/k$ queue utilization walls, MFU calculations, OpenTelemetry distributed tracing schemas |\n\n---\n\n### Phase 8 \u2014 System Design, Production Code & Interview Synthesis\n| File | Description |\n|:---|:---|\n| [16_SYSTEM_DESIGN.md](./16_SYSTEM_DESIGN.md) | End-to-end whiteboard architecture blueprints with full back-of-the-envelope calculations (100k QPS Serving, Durable Agent Runtimes, RAG) |\n| [17_PYTHON_AND_CODING.md](./17_PYTHON_AND_CODING.md) | Production-grade runnable PyTorch modules: Multi-Head Latent Attention (MLA), RoPE/YaRN, FSM JSON Logit Processor, Continuous Batcher |\n| [19_LEADERSHIP_AND_TECHNICAL_JUDGMENT.md](./19_LEADERSHIP_AND_TECHNICAL_JUDGMENT.md) | Staff/Principal engineering trade-off matrices, incident leadership protocols, and architectural arbitration |\n| [20_INTERVIEW_QUESTION_BANK.md](./20_INTERVIEW_QUESTION_BANK.md) | 50+ graded questions from Level 1 (Concepts) to Level 10 (Principal Engineering) across all domains |\n| [21_CASE_STUDIES.md](./21_CASE_STUDIES.md) | 5 detailed real-world production incident Root Cause Analyses (Loss Spikes, Agent Loops, TTFT Starvation, MoE Stragglers) |\n| [22_FINAL_SYNTHESIS_PLAYBOOKS.md](./22_FINAL_SYNTHESIS_PLAYBOOKS.md) | The Ultimate 2-Hour Formula Sheet, 48-Hour Systems Optimization Playbook, and Cross-Stack Traversal Golden Rule |\n\n---\n\n## \ud83e\udded Study Guide: Recommended Sequence\n\n**Week 1 \u2014 Mathematical Foundations & P0 Core Models**\n1. `00_ROLE_ANALYSIS.md` \u2014 understand the competency map\n2. `01_MATHEMATICAL_FOUNDATIONS.md` + `02_03_ML_AND_DL_FOUNDATIONS.md` \u2014 master linear algebra, calculus, AdamW, and backpropagation\n3. `04_TRANSFORMERS_AND_LLMS.md` + `08_GPU_AND_PERFORMANCE.md` \u2014 master Attention, RoPE, MLA, and FlashAttention-3 SRAM tiling\n4. `09_INFERENCE_SYSTEMS.md` \u2014 master PagedAttention, RadixAttention, Disaggregated PD split, and Speculative Decoding\n\n**Week 2 \u2014 Post-Training, Agentic Systems & Distributed Infrastructure**\n5. `05_POST_TRAINING.md` + `06_DATA_AND_SYNTHETIC_DATA.md` \u2014 master DPO derivation, GRPO reasoning models, and MinHash deduplication\n6. `10_AGENTIC_ML_SYSTEMS.md` + `11_LONG_RUNNING_WORKFLOW_RELIABILITY.md` + `15_SAFETY_AND_ROBUSTNESS.md` \u2014 master FSM JSON decoding, Temporal durable workflows, and Firecracker sandboxes\n7. `07_TRAINING_SYSTEMS.md` + `18_DISTRIBUTED_SYSTEMS.md` \u2014 master ZeRO-1/2/3, 3D Parallelism, and Ring All-Reduce\n\n**Week 3 \u2014 Production MLOps, System Design & Interview Execution**\n8. `12_EVALUATION.md` + `13_PRODUCTION_ML.md` + `14_OBSERVABILITY_AND_DEBUGGING.md` \u2014 master Z-tests, ELO, PSI drift, and Little's Law queueing\n9. `16_SYSTEM_DESIGN.md` + `17_PYTHON_AND_CODING.md` \u2014 master whiteboard dimensioning and PyTorch coding\n10. `19_LEADERSHIP_AND_TECHNICAL_JUDGMENT.md` + `20_INTERVIEW_QUESTION_BANK.md` + `21_CASE_STUDIES.md`\n11. `22_FINAL_SYNTHESIS_PLAYBOOKS.md` \u2014 final 2-hour formula review\n\n---\n\n## \ud83c\udff7\ufe0f Key Technical Themes\n\n`Multi-Head Latent Attention (MLA)` \u00b7 `GRPO (DeepSeek-R1)` \u00b7 `Direct Preference Optimization (DPO)` \u00b7 `FlashAttention-3` \u00b7 `SRAM Tiling` \u00b7 `PagedAttention` \u00b7 `RadixAttention (SGLang)` \u00b7 `Disaggregated Prefill-Decode (PD Split)` \u00b7 `Chunked Prefill` \u00b7 `Speculative Decoding` \u00b7 `FSM Grammar Constrained Decoding` \u00b7 `Model Context Protocol (MCP)` \u00b7 `Durable Workflows (Temporal)` \u00b7 `Distributed Sagas` \u00b7 `ZeRO-3 (FSDP-2)` \u00b7 `Ring All-Reduce` \u00b7 `GPUDirect RDMA` \u00b7 `Little's Law` \u00b7 `Model FLOPs Utilization (MFU)` \u00b7 `Population Stability Index (PSI)` \u00b7 `SWE-bench`\n";
-    function renderMarkdown(rawText) {
-      const blockMath = [];
-      let text = rawText.replace(/\$\$([\s\S]*?)\$\$/g, (m, math) => { blockMath.push(math.trim()); return `%%%BM_${blockMath.length-1}%%%`; });
-      const inlineMath = [];
-      text = text.replace(/\$([^\$\n]+?)\$/g, (m, math) => { inlineMath.push(math.trim()); return `%%%IM_${inlineMath.length-1}%%%`; });
-      let html = marked.parse(text);
-      html = html.replace(/%%%BM_(\d+)%%%/g, (m, id) => {
-        try { return katex.renderToString(blockMath[parseInt(id)], { displayMode: true, throwOnError: false }); } catch(e) { return `<pre>${blockMath[parseInt(id)]}</pre>`; }
-      });
-      html = html.replace(/%%%IM_(\d+)%%%/g, (m, id) => {
-        try { return katex.renderToString(inlineMath[parseInt(id)], { displayMode: false, throwOnError: false }); } catch(e) { return `<code>${inlineMath[parseInt(id)]}</code>`; }
-      });
-      return html;
-    }
-    document.getElementById('content').innerHTML = renderMarkdown(rawMarkdown);
-    Prism.highlightAll();
-    mermaid.initialize({ startOnLoad: false, theme: 'dark' });
-    document.querySelectorAll('.language-mermaid').forEach(el => {
-      const parent = el.parentElement;
-      const code = el.textContent;
-      const div = document.createElement('div');
-      div.className = 'mermaid';
-      div.textContent = code;
-      parent.replaceWith(div);
+    document.addEventListener('DOMContentLoaded', () => {
+      try {
+        if (typeof renderMathInElement !== 'undefined') {
+          renderMathInElement(document.getElementById('content'), {
+            delimiters: [
+              { left: '$$', right: '$$', display: true },
+              { left: '$', right: '$', display: false }
+            ],
+            throwOnError: false
+          });
+        }
+      } catch(e){}
+      try { Prism.highlightAll(); } catch(e){}
+      try {
+        mermaid.initialize({ startOnLoad: true, theme: 'dark' });
+      } catch(e){}
     });
-    mermaid.run();
   </script>
 </body>
 </html>

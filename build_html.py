@@ -1,6 +1,11 @@
 import os
 import json
 import re
+import html
+import markdown
+from markdown.extensions.tables import TableExtension
+from markdown.extensions.fenced_code import FencedCodeExtension
+from markdown.extensions.codehilite import CodeHiliteExtension
 
 ROOT_DIR = os.path.dirname(os.path.abspath(__file__))
 HTML_DIR = os.path.join(ROOT_DIR, "html")
@@ -33,21 +38,74 @@ DOC_FILES = [
     {"id": "README", "file": "README.md", "title": "README & Master Curriculum", "priority": "P0", "phase": "Overview"}
 ]
 
-# Read all markdown contents
+def convert_md_to_html(raw_md: str) -> str:
+    """
+    Robust server-side pre-rendering of Markdown with KaTeX math protection and Mermaid detection.
+    """
+    # 1. Protect block math $$...$$
+    block_math_list = []
+    def save_block_math(match):
+        block_math_list.append(match.group(1).strip())
+        return f"<!--BLOCK_MATH_{len(block_math_list)-1}-->"
+    
+    text = re.sub(r'\$\$([\s\S]*?)\$\$', save_block_math, raw_md)
+
+    # 2. Protect inline math $...$
+    inline_math_list = []
+    def save_inline_math(match):
+        inline_math_list.append(match.group(1).strip())
+        return f"<!--INLINE_MATH_{len(inline_math_list)-1}-->"
+    
+    text = re.sub(r'\$([^\$\n]+?)\$', save_inline_math, text)
+
+    # 3. Handle Mermaid blocks before standard code blocks
+    mermaid_blocks = []
+    def save_mermaid(match):
+        mermaid_blocks.append(match.group(1).strip())
+        return f"<!--MERMAID_BLOCK_{len(mermaid_blocks)-1}-->"
+    
+    text = re.sub(r'```mermaid\s*([\s\S]*?)```', save_mermaid, text)
+
+    # 4. Convert markdown to HTML using python-markdown
+    md = markdown.Markdown(extensions=['tables', 'fenced_code', 'nl2br', 'sane_lists'])
+    rendered_html = md.convert(text)
+
+    # 5. Restore Mermaid blocks
+    for i, m_code in enumerate(mermaid_blocks):
+        escaped_mermaid = html.escape(m_code)
+        rendered_html = rendered_html.replace(f"<!--MERMAID_BLOCK_{i}-->", f'<div class="mermaid">{escaped_mermaid}</div>')
+
+    # 6. Restore block math with KaTeX markup
+    for i, b_math in enumerate(block_math_list):
+        escaped_math = html.escape(b_math)
+        rendered_html = rendered_html.replace(f"<!--BLOCK_MATH_{i}-->", f'<div class="katex-display">$${escaped_math}$$</div>')
+
+    # 7. Restore inline math
+    for i, in_math in enumerate(inline_math_list):
+        escaped_math = html.escape(in_math)
+        rendered_html = rendered_html.replace(f"<!--INLINE_MATH_{i}-->", f'<span class="katex-inline">${escaped_math}$</span>')
+
+    return rendered_html
+
+# Read and pre-compile all markdown contents
 docs_data = []
 for item in DOC_FILES:
     file_path = os.path.join(ROOT_DIR, item["file"])
     if os.path.exists(file_path):
         with open(file_path, "r", encoding="utf-8") as f:
             content = f.read()
+        
+        pre_rendered_html = convert_md_to_html(content)
+        
         docs_data.append({
             **item,
-            "content": content
+            "content": content,
+            "html": pre_rendered_html
         })
     else:
         print(f"Warning: {item['file']} not found.")
 
-print(f"Loaded {len(docs_data)} markdown files.")
+print(f"Pre-rendered {len(docs_data)} markdown files.")
 
 # Generate Master Interactive Single-Page App (index.html)
 INDEX_HTML = r"""<!DOCTYPE html>
@@ -65,9 +123,7 @@ INDEX_HTML = r"""<!DOCTYPE html>
   <!-- KaTeX for LaTeX Math -->
   <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/katex@0.16.9/dist/katex.min.css">
   <script defer src="https://cdn.jsdelivr.net/npm/katex@0.16.9/dist/katex.min.js"></script>
-
-  <!-- Marked (Markdown Parser) -->
-  <script src="https://cdn.jsdelivr.net/npm/marked@11.1.1/marked.min.js"></script>
+  <script defer src="https://cdn.jsdelivr.net/npm/katex@0.16.9/dist/contrib/auto-render.min.js"></script>
 
   <!-- Prism.js for Syntax Highlighting -->
   <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/prism/1.29.0/themes/prism-tomorrow.min.css">
@@ -442,7 +498,7 @@ INDEX_HTML = r"""<!DOCTYPE html>
       border: 1px solid var(--border-color);
       border-radius: 8px;
       padding: 20px;
-      margin-bottom: 24px;
+      margin: 24px 0;
       display: flex;
       justify-content: center;
     }
@@ -576,7 +632,7 @@ INDEX_HTML = r"""<!DOCTYPE html>
 
     <div class="content-container">
       <div class="markdown-body" id="docContent">
-        <!-- Rendered markdown content -->
+        <!-- Rendered HTML content -->
       </div>
 
       <aside class="toc-sidebar">
@@ -589,7 +645,7 @@ INDEX_HTML = r"""<!DOCTYPE html>
   </main>
 
   <script>
-    // Embedded Knowledge Data
+    // Pre-rendered HTML Knowledge Base
     const DOCS = __DOCS_DATA_PLACEHOLDER__;
 
     let currentDocIndex = 0;
@@ -655,52 +711,6 @@ INDEX_HTML = r"""<!DOCTYPE html>
       });
     });
 
-    // Custom Marked extension to protect LaTeX math blocks from markdown processing
-    function renderMarkdownWithKaTeX(rawText) {
-      // 1. Protect block math $$...$$
-      const blockMath = [];
-      let text = rawText.replace(/\$\$([\s\S]*?)\$\$/g, (match, math) => {
-        blockMath.push(math.trim());
-        return `%%%BLOCK_MATH_${blockMath.length - 1}%%%`;
-      });
-
-      // 2. Protect inline math $...$
-      const inlineMath = [];
-      text = text.replace(/\$([^\$\n]+?)\$/g, (match, math) => {
-        inlineMath.push(math.trim());
-        return `%%%INLINE_MATH_${inlineMath.length - 1}%%%`;
-      });
-
-      // 3. Parse Markdown
-      let html = marked.parse(text);
-
-      // 4. Restore block math with KaTeX
-      html = html.replace(/%%%BLOCK_MATH_(\d+)%%%/g, (match, id) => {
-        try {
-          if (typeof katex !== 'undefined') {
-            return katex.renderToString(blockMath[parseInt(id)], { displayMode: true, throwOnError: false });
-          }
-          return `<div class="katex-display">$$${blockMath[parseInt(id)]}$$</div>`;
-        } catch (e) {
-          return `<pre class="math-error">${blockMath[parseInt(id)]}</pre>`;
-        }
-      });
-
-      // 5. Restore inline math with KaTeX
-      html = html.replace(/%%%INLINE_MATH_(\d+)%%%/g, (match, id) => {
-        try {
-          if (typeof katex !== 'undefined') {
-            return katex.renderToString(inlineMath[parseInt(id)], { displayMode: false, throwOnError: false });
-          }
-          return `<code>$${inlineMath[parseInt(id)]}$</code>`;
-        } catch (e) {
-          return `<code>${inlineMath[parseInt(id)]}</code>`;
-        }
-      });
-
-      return html;
-    }
-
     function generateTOC() {
       const tocList = document.getElementById('tocList');
       tocList.innerHTML = '';
@@ -736,7 +746,8 @@ INDEX_HTML = r"""<!DOCTYPE html>
       document.getElementById('breadcrumbDoc').textContent = doc.file.replace('.md', '');
 
       const contentDiv = document.getElementById('docContent');
-      contentDiv.innerHTML = renderMarkdownWithKaTeX(doc.content);
+      // Direct insertion of pre-compiled HTML (fast & 100% reliable)
+      contentDiv.innerHTML = doc.html;
 
       // Add Next / Previous navigation footer
       const prevDoc = idx > 0 ? DOCS[idx - 1] : null;
@@ -744,33 +755,48 @@ INDEX_HTML = r"""<!DOCTYPE html>
       
       let navFooterHtml = '<div class="doc-nav-footer">';
       if (prevDoc) {
-        navFooterHtml += `<div class="doc-nav-btn" onclick="loadDoc(${idx - 1})"><span class="label">← Previous</span><span class="title">${prevDoc.file.replace('.md', '')}</span></div>`;
+        navFooterHtml += `<div class="doc-nav-btn" onclick="window.location.hash='${prevDoc.id}'; loadDoc(${idx - 1})"><span class="label">← Previous</span><span class="title">${prevDoc.file.replace('.md', '')}</span></div>`;
       } else {
         navFooterHtml += '<div></div>';
       }
       if (nextDoc) {
-        navFooterHtml += `<div class="doc-nav-btn" onclick="loadDoc(${idx + 1})" style="text-align: right;"><span class="label">Next →</span><span class="title">${nextDoc.file.replace('.md', '')}</span></div>`;
+        navFooterHtml += `<div class="doc-nav-btn" onclick="window.location.hash='${nextDoc.id}'; loadDoc(${idx + 1})" style="text-align: right;"><span class="label">Next →</span><span class="title">${nextDoc.file.replace('.md', '')}</span></div>`;
       }
       navFooterHtml += '</div>';
       contentDiv.insertAdjacentHTML('beforeend', navFooterHtml);
 
-      // Re-run Prism highlight
-      if (typeof Prism !== 'undefined') {
-        Prism.highlightAllUnder(contentDiv);
+      // Render KaTeX Math safely
+      try {
+        if (typeof renderMathInElement !== 'undefined') {
+          renderMathInElement(contentDiv, {
+            delimiters: [
+              { left: '$$', right: '$$', display: true },
+              { left: '$', right: '$', display: false }
+            ],
+            throwOnError: false
+          });
+        }
+      } catch (err) {
+        console.warn('KaTeX render error:', err);
       }
 
-      // Re-run Mermaid
-      if (typeof mermaid !== 'undefined') {
-        mermaid.initialize({ startOnLoad: false, theme: 'dark', securityLevel: 'loose' });
-        document.querySelectorAll('.language-mermaid').forEach(el => {
-          const parent = el.parentElement;
-          const code = el.textContent;
-          const div = document.createElement('div');
-          div.className = 'mermaid';
-          div.textContent = code;
-          parent.replaceWith(div);
-        });
-        mermaid.run();
+      // Syntax Highlight safely
+      try {
+        if (typeof Prism !== 'undefined') {
+          Prism.highlightAllUnder(contentDiv);
+        }
+      } catch (err) {
+        console.warn('Prism highlight error:', err);
+      }
+
+      // Render Mermaid safely
+      try {
+        if (typeof mermaid !== 'undefined') {
+          mermaid.initialize({ startOnLoad: false, theme: 'dark', securityLevel: 'loose' });
+          mermaid.run({ nodes: contentDiv.querySelectorAll('.mermaid') });
+        }
+      } catch (err) {
+        console.warn('Mermaid render error:', err);
       }
 
       // Generate TOC
@@ -817,7 +843,7 @@ STANDALONE_TEMPLATE = r"""<!DOCTYPE html>
   <link href="https://fonts.googleapis.com/css2?family=Fira+Code:wght@400;500;600&family=Inter:wght@300;400;500;600;700;800&family=Outfit:wght@500;600;700;800&display=swap" rel="stylesheet">
   <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/katex@0.16.9/dist/katex.min.css">
   <script defer src="https://cdn.jsdelivr.net/npm/katex@0.16.9/dist/katex.min.js"></script>
-  <script src="https://cdn.jsdelivr.net/npm/marked@11.1.1/marked.min.js"></script>
+  <script defer src="https://cdn.jsdelivr.net/npm/katex@0.16.9/dist/contrib/auto-render.min.js"></script>
   <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/prism/1.29.0/themes/prism-tomorrow.min.css">
   <script src="https://cdnjs.cloudflare.com/ajax/libs/prism/1.29.0/prism.min.js"></script>
   <script src="https://cdnjs.cloudflare.com/ajax/libs/prism/1.29.0/components/prism-python.min.js"></script>
@@ -844,37 +870,27 @@ STANDALONE_TEMPLATE = r"""<!DOCTYPE html>
 </head>
 <body>
   <div class="container">
-    <a href="../index.html" class="nav-back">← Back to Master Knowledge Hub</a>
-    <div id="content"></div>
+    <a href="../index.html#{{DOC_ID}}" class="nav-back">← Back to Master Knowledge Hub</a>
+    <div id="content">{{PRE_COMPILED_HTML}}</div>
   </div>
   <script>
-    const rawMarkdown = {{CONTENT_JSON}};
-    function renderMarkdown(rawText) {
-      const blockMath = [];
-      let text = rawText.replace(/\$\$([\s\S]*?)\$\$/g, (m, math) => { blockMath.push(math.trim()); return `%%%BM_${blockMath.length-1}%%%`; });
-      const inlineMath = [];
-      text = text.replace(/\$([^\$\n]+?)\$/g, (m, math) => { inlineMath.push(math.trim()); return `%%%IM_${inlineMath.length-1}%%%`; });
-      let html = marked.parse(text);
-      html = html.replace(/%%%BM_(\d+)%%%/g, (m, id) => {
-        try { return katex.renderToString(blockMath[parseInt(id)], { displayMode: true, throwOnError: false }); } catch(e) { return `<pre>${blockMath[parseInt(id)]}</pre>`; }
-      });
-      html = html.replace(/%%%IM_(\d+)%%%/g, (m, id) => {
-        try { return katex.renderToString(inlineMath[parseInt(id)], { displayMode: false, throwOnError: false }); } catch(e) { return `<code>${inlineMath[parseInt(id)]}</code>`; }
-      });
-      return html;
-    }
-    document.getElementById('content').innerHTML = renderMarkdown(rawMarkdown);
-    Prism.highlightAll();
-    mermaid.initialize({ startOnLoad: false, theme: 'dark' });
-    document.querySelectorAll('.language-mermaid').forEach(el => {
-      const parent = el.parentElement;
-      const code = el.textContent;
-      const div = document.createElement('div');
-      div.className = 'mermaid';
-      div.textContent = code;
-      parent.replaceWith(div);
+    document.addEventListener('DOMContentLoaded', () => {
+      try {
+        if (typeof renderMathInElement !== 'undefined') {
+          renderMathInElement(document.getElementById('content'), {
+            delimiters: [
+              { left: '$$', right: '$$', display: true },
+              { left: '$', right: '$', display: false }
+            ],
+            throwOnError: false
+          });
+        }
+      } catch(e){}
+      try { Prism.highlightAll(); } catch(e){}
+      try {
+        mermaid.initialize({ startOnLoad: true, theme: 'dark' });
+      } catch(e){}
     });
-    mermaid.run();
   </script>
 </body>
 </html>
@@ -883,7 +899,10 @@ STANDALONE_TEMPLATE = r"""<!DOCTYPE html>
 for doc in docs_data:
     file_name = doc["file"].replace(".md", ".html")
     out_path = os.path.join(HTML_DIR, file_name)
-    html_content = STANDALONE_TEMPLATE.replace("{{TITLE}}", doc["title"]).replace("{{CONTENT_JSON}}", json.dumps(doc["content"]))
+    html_content = (STANDALONE_TEMPLATE
+                    .replace("{{TITLE}}", doc["title"])
+                    .replace("{{DOC_ID}}", doc["id"])
+                    .replace("{{PRE_COMPILED_HTML}}", doc["html"]))
     with open(out_path, "w", encoding="utf-8") as f:
         f.write(html_content)
 

@@ -8,7 +8,7 @@
   <link href="https://fonts.googleapis.com/css2?family=Fira+Code:wght@400;500;600&family=Inter:wght@300;400;500;600;700;800&family=Outfit:wght@500;600;700;800&display=swap" rel="stylesheet">
   <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/katex@0.16.9/dist/katex.min.css">
   <script defer src="https://cdn.jsdelivr.net/npm/katex@0.16.9/dist/katex.min.js"></script>
-  <script src="https://cdn.jsdelivr.net/npm/marked@11.1.1/marked.min.js"></script>
+  <script defer src="https://cdn.jsdelivr.net/npm/katex@0.16.9/dist/contrib/auto-render.min.js"></script>
   <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/prism/1.29.0/themes/prism-tomorrow.min.css">
   <script src="https://cdnjs.cloudflare.com/ajax/libs/prism/1.29.0/prism.min.js"></script>
   <script src="https://cdnjs.cloudflare.com/ajax/libs/prism/1.29.0/components/prism-python.min.js"></script>
@@ -35,37 +35,81 @@
 </head>
 <body>
   <div class="container">
-    <a href="../index.html" class="nav-back">← Back to Master Knowledge Hub</a>
-    <div id="content"></div>
+    <a href="../index.html#22_FINAL_SYNTHESIS_PLAYBOOKS" class="nav-back">← Back to Master Knowledge Hub</a>
+    <div id="content"><h1>22_FINAL_SYNTHESIS_PLAYBOOKS — The Ultimate 2-Hour Interview Sheet</h1>
+<blockquote>
+<p><strong>Audience</strong>: ML Engineers, LLM Systems Engineers, and AI Researchers preparing for senior/principal technical interviews.<br />
+<strong>Core Objective</strong>: The ultimate high-density formula sheet and operational playbooks for final revision before technical rounds.</p>
+</blockquote>
+<hr />
+<h2>1. The Core Mathematical Formula Sheet</h2>
+<pre><code>┌─────────────────────────────────────────────────────────────────────────────────────────────┐
+│ 1. Scaled Attention:      Attention(Q,K,V) = Softmax( QK^T / √d_k + M ) V                   │
+│ 2. Cross-Entropy Gradient: ∂L / ∂z_i = p_i - y_i                                            │
+│ 3. AdamW Parameter Update: θ_{t+1} = (1 - ηλ)θ_t - (η / (√v_hat_t + ε)) m_hat_t            │
+│ 4. LoRA Forward Pass:     h = W_0 x + (α / r) B A x                                         │
+│ 5. DPO Closed-Form Loss:  L_DPO = -E[ log σ( β log(π_θ(y_w|x)/π_ref(y_w|x))               │
+│                                           - β log(π_θ(y_l|x)/π_ref(y_l|x)) ) ]              │
+│ 6. GRPO Advantage:        A_i = (r_i - Mean({r})) / (Std({r}) + ε)                          │
+│ 7. KV Cache Footprint:    Memory_KV = 2 · B · S · L · N_kv · d_h · b_kv  [Bytes]            │
+│ 8. Arithmetic Intensity:  AI = FLOPs / Memory_Bytes  [FLOPs/Byte]                            │
+│ 9. Little's Law:          L = λ W                                                           │
+│ 10. Ring All-Reduce Comm: Data per Node = 2 ((N - 1) / N) M  [Bytes]                        │
+│ 11. Workflow Reliability: P(Workflow) = [ 1 - (1 - p)^{R+1} ]^N                             │
+│ 12. Population Drift PSI: PSI = ∑ (Actual_i - Expected_i) · ln(Actual_i / Expected_i)       │
+│ 13. MFU Formula:          MFU = (Tokens_per_sec · 6P) / (N_gpus · Peak_TFLOPs)              │
+└─────────────────────────────────────────────────────────────────────────────────────────────┘
+</code></pre>
+<hr />
+<h2>2. The 48-Hour Systems Optimization Playbook</h2>
+<p>When asked how to optimize any failing or slow ML system:</p>
+<pre><code>[ Tier 1: The Data Lever (Highest ROI) ]
+- Decontaminate evaluation leakage (MinHash LSH).
+- Filter low-quality synthetic data; enforce format validation.
+        │
+        ▼
+[ Tier 2: The Systems &amp; Hardware Lever (Massive ROI) ]
+- FlashAttention-3 &amp; FP8 GEMMs (SRAM tiling).
+- PagedAttention / RadixAttention prefix caching.
+- Continuous Batching with Chunked Prefill.
+- FSDP-2 / Megatron Tensor Parallelism.
+        │
+        ▼
+[ Tier 3: The Architecture Lever (High ROI) ]
+- Multi-Head Latent Attention (MLA) for 5x KV cache reduction.
+- Speculative Decoding (EAGLE / Medusa).
+- GQA &amp; DeepSeek MoE Auxiliary-Loss-Free load balancing.
+        │
+        ▼
+[ Tier 4: The Algorithm &amp; Custom Loss Lever (Highest Risk / Lowest ROI) ]
+- DPO vs GRPO vs SimPO.
+- Custom activation functions / architectures (Avoid unless doing pure research).
+</code></pre>
+<hr />
+<h2>3. The Cross-Stack Traversal Golden Rule</h2>
+<blockquote>
+<p><em>"A Senior / Principal ML Engineer must seamlessly trace a high-level product failure (e.g. 'The agent booked the wrong hotel') down through the Durable Workflow Engine, into the OpenTelemetry Trace, across the Inference Router, through the Paged KV Cache, into the Attention Matrix, back to the Post-Training Loss Formulation, down to corrupted data tokens in the synthetic pipeline."</em></p>
+</blockquote>
+<p>If you can demonstrate this end-to-end traversal from <strong>Mathematics <span class="katex-inline">$\longleftrightarrow$</span> GPU Bare Metal <span class="katex-inline">$\longleftrightarrow$</span> Production Systems</strong>, you will pass with distinction.</p></div>
   </div>
   <script>
-    const rawMarkdown = "# 22_FINAL_SYNTHESIS_PLAYBOOKS \u2014 The Ultimate 2-Hour Interview Sheet\n\n> **Audience**: ML Engineers, LLM Systems Engineers, and AI Researchers preparing for senior/principal technical interviews.  \n> **Core Objective**: The ultimate high-density formula sheet and operational playbooks for final revision before technical rounds.\n\n---\n\n## 1. The Core Mathematical Formula Sheet\n\n```\n\u250c\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2510\n\u2502 1. Scaled Attention:      Attention(Q,K,V) = Softmax( QK^T / \u221ad_k + M ) V                   \u2502\n\u2502 2. Cross-Entropy Gradient: \u2202L / \u2202z_i = p_i - y_i                                            \u2502\n\u2502 3. AdamW Parameter Update: \u03b8_{t+1} = (1 - \u03b7\u03bb)\u03b8_t - (\u03b7 / (\u221av_hat_t + \u03b5)) m_hat_t            \u2502\n\u2502 4. LoRA Forward Pass:     h = W_0 x + (\u03b1 / r) B A x                                         \u2502\n\u2502 5. DPO Closed-Form Loss:  L_DPO = -E[ log \u03c3( \u03b2 log(\u03c0_\u03b8(y_w|x)/\u03c0_ref(y_w|x))               \u2502\n\u2502                                           - \u03b2 log(\u03c0_\u03b8(y_l|x)/\u03c0_ref(y_l|x)) ) ]              \u2502\n\u2502 6. GRPO Advantage:        A_i = (r_i - Mean({r})) / (Std({r}) + \u03b5)                          \u2502\n\u2502 7. KV Cache Footprint:    Memory_KV = 2 \u00b7 B \u00b7 S \u00b7 L \u00b7 N_kv \u00b7 d_h \u00b7 b_kv  [Bytes]            \u2502\n\u2502 8. Arithmetic Intensity:  AI = FLOPs / Memory_Bytes  [FLOPs/Byte]                            \u2502\n\u2502 9. Little's Law:          L = \u03bb W                                                           \u2502\n\u2502 10. Ring All-Reduce Comm: Data per Node = 2 ((N - 1) / N) M  [Bytes]                        \u2502\n\u2502 11. Workflow Reliability: P(Workflow) = [ 1 - (1 - p)^{R+1} ]^N                             \u2502\n\u2502 12. Population Drift PSI: PSI = \u2211 (Actual_i - Expected_i) \u00b7 ln(Actual_i / Expected_i)       \u2502\n\u2502 13. MFU Formula:          MFU = (Tokens_per_sec \u00b7 6P) / (N_gpus \u00b7 Peak_TFLOPs)              \u2502\n\u2514\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2518\n```\n\n---\n\n## 2. The 48-Hour Systems Optimization Playbook\n\nWhen asked how to optimize any failing or slow ML system:\n\n```\n[ Tier 1: The Data Lever (Highest ROI) ]\n- Decontaminate evaluation leakage (MinHash LSH).\n- Filter low-quality synthetic data; enforce format validation.\n        \u2502\n        \u25bc\n[ Tier 2: The Systems & Hardware Lever (Massive ROI) ]\n- FlashAttention-3 & FP8 GEMMs (SRAM tiling).\n- PagedAttention / RadixAttention prefix caching.\n- Continuous Batching with Chunked Prefill.\n- FSDP-2 / Megatron Tensor Parallelism.\n        \u2502\n        \u25bc\n[ Tier 3: The Architecture Lever (High ROI) ]\n- Multi-Head Latent Attention (MLA) for 5x KV cache reduction.\n- Speculative Decoding (EAGLE / Medusa).\n- GQA & DeepSeek MoE Auxiliary-Loss-Free load balancing.\n        \u2502\n        \u25bc\n[ Tier 4: The Algorithm & Custom Loss Lever (Highest Risk / Lowest ROI) ]\n- DPO vs GRPO vs SimPO.\n- Custom activation functions / architectures (Avoid unless doing pure research).\n```\n\n---\n\n## 3. The Cross-Stack Traversal Golden Rule\n\n> *\"A Senior / Principal ML Engineer must seamlessly trace a high-level product failure (e.g. 'The agent booked the wrong hotel') down through the Durable Workflow Engine, into the OpenTelemetry Trace, across the Inference Router, through the Paged KV Cache, into the Attention Matrix, back to the Post-Training Loss Formulation, down to corrupted data tokens in the synthetic pipeline.\"*\n\nIf you can demonstrate this end-to-end traversal from **Mathematics $\\longleftrightarrow$ GPU Bare Metal $\\longleftrightarrow$ Production Systems**, you will pass with distinction.\n";
-    function renderMarkdown(rawText) {
-      const blockMath = [];
-      let text = rawText.replace(/\$\$([\s\S]*?)\$\$/g, (m, math) => { blockMath.push(math.trim()); return `%%%BM_${blockMath.length-1}%%%`; });
-      const inlineMath = [];
-      text = text.replace(/\$([^\$\n]+?)\$/g, (m, math) => { inlineMath.push(math.trim()); return `%%%IM_${inlineMath.length-1}%%%`; });
-      let html = marked.parse(text);
-      html = html.replace(/%%%BM_(\d+)%%%/g, (m, id) => {
-        try { return katex.renderToString(blockMath[parseInt(id)], { displayMode: true, throwOnError: false }); } catch(e) { return `<pre>${blockMath[parseInt(id)]}</pre>`; }
-      });
-      html = html.replace(/%%%IM_(\d+)%%%/g, (m, id) => {
-        try { return katex.renderToString(inlineMath[parseInt(id)], { displayMode: false, throwOnError: false }); } catch(e) { return `<code>${inlineMath[parseInt(id)]}</code>`; }
-      });
-      return html;
-    }
-    document.getElementById('content').innerHTML = renderMarkdown(rawMarkdown);
-    Prism.highlightAll();
-    mermaid.initialize({ startOnLoad: false, theme: 'dark' });
-    document.querySelectorAll('.language-mermaid').forEach(el => {
-      const parent = el.parentElement;
-      const code = el.textContent;
-      const div = document.createElement('div');
-      div.className = 'mermaid';
-      div.textContent = code;
-      parent.replaceWith(div);
+    document.addEventListener('DOMContentLoaded', () => {
+      try {
+        if (typeof renderMathInElement !== 'undefined') {
+          renderMathInElement(document.getElementById('content'), {
+            delimiters: [
+              { left: '$$', right: '$$', display: true },
+              { left: '$', right: '$', display: false }
+            ],
+            throwOnError: false
+          });
+        }
+      } catch(e){}
+      try { Prism.highlightAll(); } catch(e){}
+      try {
+        mermaid.initialize({ startOnLoad: true, theme: 'dark' });
+      } catch(e){}
     });
-    mermaid.run();
   </script>
 </body>
 </html>
