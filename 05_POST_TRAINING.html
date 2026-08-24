@@ -1,0 +1,1084 @@
+<!DOCTYPE html>
+<html lang="en" class="dark">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>05_POST_TRAINING — ML Engineer (SSK)</title>
+  
+  <!-- Fonts -->
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Fira+Code:wght@400;500;600&family=Inter:wght@300;400;500;600;700;800&family=Outfit:wght@500;600;700;800&display=swap" rel="stylesheet">
+  
+  <!-- KaTeX for LaTeX Math -->
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/katex@0.16.9/dist/katex.min.css">
+  <script defer src="https://cdn.jsdelivr.net/npm/katex@0.16.9/dist/katex.min.js"></script>
+  <script defer src="https://cdn.jsdelivr.net/npm/katex@0.16.9/dist/contrib/auto-render.min.js"></script>
+
+  <!-- Prism.js for Syntax Highlighting -->
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/prism/1.29.0/themes/prism-tomorrow.min.css">
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/prism/1.29.0/prism.min.js"></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/prism/1.29.0/components/prism-python.min.js"></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/prism/1.29.0/components/prism-bash.min.js"></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/prism/1.29.0/components/prism-json.min.js"></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/prism/1.29.0/components/prism-c.min.js"></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/prism/1.29.0/components/prism-cpp.min.js"></script>
+
+  <!-- Mermaid.js for Architecture Diagrams -->
+  <script src="https://cdn.jsdelivr.net/npm/mermaid@10.8.0/dist/mermaid.min.js"></script>
+
+  <style>
+    :root {
+      --bg-primary: #0a0d14;
+      --bg-secondary: #111622;
+      --bg-card: rgba(22, 28, 42, 0.75);
+      --bg-hover: #1c2436;
+      --border-color: rgba(255, 255, 255, 0.08);
+      --border-focus: rgba(99, 102, 241, 0.5);
+      --text-primary: #f1f5f9;
+      --text-secondary: #94a3b8;
+      --text-muted: #64748b;
+      --accent-primary: #6366f1;
+      --accent-gradient: linear-gradient(135deg, #6366f1 0%, #a855f7 50%, #ec4899 100%);
+      --accent-glow: rgba(99, 102, 241, 0.25);
+      --p0-color: #ef4444;
+      --p0-bg: rgba(239, 68, 68, 0.15);
+      --p1-color: #3b82f6;
+      --p1-bg: rgba(59, 130, 246, 0.15);
+      --p2-color: #10b981;
+      --p2-bg: rgba(16, 185, 129, 0.15);
+      --sidebar-width: 320px;
+      --toc-width: 260px;
+    }
+
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+
+    body {
+      font-family: 'Inter', -apple-system, BlinkMacSystemFont, sans-serif;
+      background-color: var(--bg-primary);
+      color: var(--text-primary);
+      line-height: 1.65;
+      overflow-x: hidden;
+      display: flex;
+      height: 100vh;
+    }
+
+    /* Scrollbars */
+    ::-webkit-scrollbar { width: 6px; height: 6px; }
+    ::-webkit-scrollbar-track { background: transparent; }
+    ::-webkit-scrollbar-thumb { background: rgba(255, 255, 255, 0.15); border-radius: 4px; }
+    ::-webkit-scrollbar-thumb:hover { background: rgba(255, 255, 255, 0.3); }
+
+    /* Left Sidebar Navigation */
+    aside.sidebar {
+      width: var(--sidebar-width);
+      min-width: var(--sidebar-width);
+      background: var(--bg-secondary);
+      border-right: 1px solid var(--border-color);
+      display: flex;
+      flex-direction: column;
+      height: 100vh;
+      z-index: 50;
+    }
+
+    .brand-header {
+      padding: 20px 24px;
+      border-bottom: 1px solid var(--border-color);
+      background: rgba(10, 13, 20, 0.5);
+      backdrop-filter: blur(10px);
+    }
+
+    .brand-title {
+      font-family: 'Outfit', sans-serif;
+      font-size: 1.15rem;
+      font-weight: 700;
+      background: var(--accent-gradient);
+      -webkit-background-clip: text;
+      -webkit-text-fill-color: transparent;
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      text-decoration: none;
+    }
+
+    .brand-subtitle {
+      font-size: 0.75rem;
+      color: var(--text-muted);
+      margin-top: 4px;
+      text-transform: uppercase;
+      letter-spacing: 0.05em;
+    }
+
+    .search-box {
+      padding: 14px 20px;
+      border-bottom: 1px solid var(--border-color);
+    }
+
+    .search-input {
+      width: 100%;
+      background: rgba(0, 0, 0, 0.3);
+      border: 1px solid var(--border-color);
+      border-radius: 8px;
+      padding: 10px 14px;
+      color: var(--text-primary);
+      font-size: 0.85rem;
+      outline: none;
+      transition: all 0.2s;
+    }
+    .search-input:focus {
+      border-color: var(--accent-primary);
+      box-shadow: 0 0 0 3px var(--accent-glow);
+    }
+
+    .nav-list {
+      flex: 1;
+      overflow-y: auto;
+      padding: 12px 14px;
+      list-style: none;
+    }
+
+    .nav-phase-header {
+      font-size: 0.7rem;
+      font-weight: 700;
+      text-transform: uppercase;
+      color: var(--text-muted);
+      letter-spacing: 0.08em;
+      padding: 14px 10px 6px 10px;
+    }
+
+    .nav-item {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      padding: 8px 12px;
+      border-radius: 6px;
+      color: var(--text-secondary);
+      font-size: 0.82rem;
+      text-decoration: none;
+      transition: all 0.15s ease;
+      margin-bottom: 2px;
+      border: 1px solid transparent;
+    }
+    .nav-item:hover {
+      background: var(--bg-hover);
+      color: var(--text-primary);
+    }
+    .nav-item.active {
+      background: rgba(99, 102, 241, 0.15);
+      color: #818cf8;
+      border-color: rgba(99, 102, 241, 0.3);
+      font-weight: 600;
+    }
+
+    .priority-badge {
+      font-size: 0.65rem;
+      font-weight: 700;
+      padding: 2px 6px;
+      border-radius: 4px;
+      text-transform: uppercase;
+    }
+    .priority-p0 { color: var(--p0-color); background: var(--p0-bg); }
+    .priority-p1 { color: var(--p1-color); background: var(--p1-bg); }
+    .priority-p2 { color: var(--p2-color); background: var(--p2-bg); }
+
+    /* Main Content Area */
+    main.main-viewport {
+      flex: 1;
+      height: 100vh;
+      overflow-y: auto;
+      display: flex;
+      flex-direction: column;
+      position: relative;
+    }
+
+    .top-toolbar {
+      position: sticky;
+      top: 0;
+      background: rgba(10, 13, 20, 0.85);
+      backdrop-filter: blur(12px);
+      border-bottom: 1px solid var(--border-color);
+      padding: 12px 36px;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      z-index: 40;
+    }
+
+    .breadcrumbs {
+      font-size: 0.85rem;
+      color: var(--text-secondary);
+      display: flex;
+      align-items: center;
+      gap: 8px;
+    }
+    .breadcrumbs a {
+      color: var(--text-secondary);
+      text-decoration: none;
+    }
+    .breadcrumbs a:hover {
+      color: #818cf8;
+    }
+    .breadcrumbs span.current {
+      color: var(--text-primary);
+      font-weight: 600;
+    }
+
+    .tool-actions {
+      display: flex;
+      gap: 12px;
+      align-items: center;
+    }
+
+    .btn {
+      background: rgba(255, 255, 255, 0.05);
+      border: 1px solid var(--border-color);
+      color: var(--text-primary);
+      padding: 6px 14px;
+      border-radius: 6px;
+      font-size: 0.8rem;
+      font-weight: 500;
+      cursor: pointer;
+      display: flex;
+      align-items: center;
+      gap: 6px;
+      text-decoration: none;
+      transition: all 0.2s;
+    }
+    .btn:hover {
+      background: rgba(255, 255, 255, 0.1);
+      border-color: rgba(255, 255, 255, 0.2);
+    }
+
+    .content-container {
+      display: flex;
+      flex: 1;
+      max-width: 1600px;
+      margin: 0 auto;
+      width: 100%;
+    }
+
+    .markdown-body {
+      flex: 1;
+      padding: 40px 48px 100px 48px;
+      max-width: 960px;
+    }
+
+    /* Markdown Styling */
+    .markdown-body h1 {
+      font-family: 'Outfit', sans-serif;
+      font-size: 2.2rem;
+      font-weight: 800;
+      margin-bottom: 24px;
+      padding-bottom: 12px;
+      border-bottom: 1px solid var(--border-color);
+      letter-spacing: -0.02em;
+      color: #fff;
+    }
+
+    .markdown-body h2 {
+      font-family: 'Outfit', sans-serif;
+      font-size: 1.5rem;
+      font-weight: 700;
+      margin-top: 40px;
+      margin-bottom: 16px;
+      color: #e2e8f0;
+      border-bottom: 1px solid rgba(255, 255, 255, 0.05);
+      padding-bottom: 8px;
+    }
+
+    .markdown-body h3 {
+      font-size: 1.15rem;
+      font-weight: 600;
+      margin-top: 28px;
+      margin-bottom: 12px;
+      color: #cbd5e1;
+    }
+
+    .markdown-body h4 {
+      font-size: 1.0rem;
+      font-weight: 600;
+      margin-top: 20px;
+      margin-bottom: 8px;
+      color: #94a3b8;
+    }
+
+    .markdown-body p {
+      margin-bottom: 16px;
+      color: #cbd5e1;
+      font-size: 0.96rem;
+    }
+
+    .markdown-body ul, .markdown-body ol {
+      margin-bottom: 18px;
+      padding-left: 24px;
+      color: #cbd5e1;
+    }
+    .markdown-body li {
+      margin-bottom: 6px;
+    }
+
+    .markdown-body blockquote {
+      border-left: 4px solid var(--accent-primary);
+      background: rgba(99, 102, 241, 0.08);
+      padding: 14px 20px;
+      border-radius: 0 8px 8px 0;
+      margin-bottom: 20px;
+      color: #e2e8f0;
+      font-size: 0.92rem;
+    }
+
+    .markdown-body table {
+      width: 100%;
+      border-collapse: collapse;
+      margin-bottom: 24px;
+      font-size: 0.88rem;
+      background: rgba(17, 22, 34, 0.6);
+      border-radius: 8px;
+      overflow: hidden;
+      border: 1px solid var(--border-color);
+    }
+    .markdown-body th {
+      background: rgba(30, 41, 59, 0.8);
+      padding: 12px 16px;
+      text-align: left;
+      font-weight: 600;
+      color: #f1f5f9;
+      border-bottom: 1px solid var(--border-color);
+    }
+    .markdown-body td {
+      padding: 10px 16px;
+      border-bottom: 1px solid rgba(255, 255, 255, 0.04);
+      color: #cbd5e1;
+    }
+    .markdown-body tr:hover td {
+      background: rgba(255, 255, 255, 0.02);
+    }
+
+    .markdown-body code {
+      font-family: 'Fira Code', monospace;
+      font-size: 0.85em;
+      background: rgba(255, 255, 255, 0.08);
+      color: #f472b6;
+      padding: 2px 6px;
+      border-radius: 4px;
+    }
+
+    .markdown-body pre {
+      background: #0f141f !important;
+      border: 1px solid var(--border-color);
+      border-radius: 8px;
+      padding: 18px !important;
+      margin-bottom: 24px;
+      overflow-x: auto;
+      position: relative;
+    }
+    .markdown-body pre code {
+      background: transparent !important;
+      color: #e2e8f0;
+      padding: 0;
+      font-size: 0.88rem;
+    }
+
+    /* Math Formulas */
+    .katex-display {
+      margin: 20px 0;
+      padding: 14px 20px;
+      background: rgba(17, 22, 34, 0.5);
+      border-radius: 8px;
+      border: 1px solid rgba(255, 255, 255, 0.05);
+      overflow-x: auto;
+      overflow-y: hidden;
+    }
+
+    /* Mermaid diagrams */
+    .mermaid {
+      background: rgba(15, 20, 31, 0.9);
+      border: 1px solid var(--border-color);
+      border-radius: 8px;
+      padding: 20px;
+      margin-bottom: 24px;
+      display: flex;
+      justify-content: center;
+    }
+
+    /* Navigation Footer */
+    .doc-nav-footer {
+      display: flex;
+      justify-content: space-between;
+      margin-top: 60px;
+      padding-top: 24px;
+      border-top: 1px solid var(--border-color);
+    }
+    .doc-nav-btn {
+      display: flex;
+      flex-direction: column;
+      text-decoration: none;
+      padding: 12px 20px;
+      background: var(--bg-secondary);
+      border: 1px solid var(--border-color);
+      border-radius: 8px;
+      transition: all 0.2s;
+    }
+    .doc-nav-btn:hover {
+      border-color: var(--accent-primary);
+      background: var(--bg-hover);
+    }
+    .doc-nav-btn .label {
+      font-size: 0.72rem;
+      color: var(--text-muted);
+      text-transform: uppercase;
+      letter-spacing: 0.05em;
+    }
+    .doc-nav-btn .title {
+      font-size: 0.9rem;
+      color: #818cf8;
+      font-weight: 600;
+      margin-top: 2px;
+    }
+
+    /* Right TOC Sidebar */
+    aside.toc-sidebar {
+      width: var(--toc-width);
+      padding: 40px 24px 40px 12px;
+      position: sticky;
+      top: 60px;
+      height: calc(100vh - 60px);
+      overflow-y: auto;
+      display: flex;
+      flex-direction: column;
+    }
+
+    .toc-title {
+      font-size: 0.75rem;
+      font-weight: 700;
+      text-transform: uppercase;
+      letter-spacing: 0.08em;
+      color: var(--text-muted);
+      margin-bottom: 14px;
+    }
+
+    .toc-list {
+      list-style: none;
+      display: flex;
+      flex-direction: column;
+      gap: 6px;
+      border-left: 1px solid var(--border-color);
+    }
+    .toc-item {
+      padding-left: 14px;
+    }
+    .toc-item.h3 {
+      padding-left: 24px;
+    }
+    .toc-link {
+      color: var(--text-secondary);
+      font-size: 0.8rem;
+      text-decoration: none;
+      display: block;
+      transition: color 0.15s;
+      white-space: nowrap;
+      overflow: hidden;
+      text-overflow: ellipsis;
+    }
+    .toc-link:hover {
+      color: #818cf8;
+    }
+
+    /* Responsive */
+    @media (max-width: 1200px) {
+      aside.toc-sidebar { display: none; }
+    }
+    @media (max-width: 768px) {
+      aside.sidebar { position: fixed; transform: translateX(-100%); transition: transform 0.3s; }
+      aside.sidebar.open { transform: translateX(0); }
+      .markdown-body { padding: 24px 20px; }
+    }
+  </style>
+</head>
+<body>
+
+  <!-- Left Sidebar Navigation -->
+  <aside class="sidebar">
+    <div class="brand-header">
+      <a href="index.html" class="brand-title">
+        <span>⚡</span> ML Engineer (SSK)
+      </a>
+      <div class="brand-subtitle">LLM & Agentic Systems</div>
+    </div>
+    
+    <div class="search-box">
+      <input type="text" id="searchInput" class="search-input" placeholder="Quick search topics & math...">
+    </div>
+
+    <ul class="nav-list" id="navList">
+      <li class="nav-phase-header">Phase 0: Architecture</li>
+        <li>
+          <a href="00_ROLE_ANALYSIS.html" class="nav-item">
+            <span>00_ROLE_ANALYSIS</span>
+            <span class="priority-badge priority-p1">P1</span>
+          </a>
+        </li>
+        <li class="nav-phase-header">Phase 1: Foundations</li>
+        <li>
+          <a href="01_MATHEMATICAL_FOUNDATIONS.html" class="nav-item">
+            <span>01_MATHEMATICAL_FOUNDATIONS</span>
+            <span class="priority-badge priority-p1">P1</span>
+          </a>
+        </li>
+        
+        <li>
+          <a href="02_03_ML_AND_DL_FOUNDATIONS.html" class="nav-item">
+            <span>02_03_ML_AND_DL_FOUNDATIONS</span>
+            <span class="priority-badge priority-p1">P1</span>
+          </a>
+        </li>
+        <li class="nav-phase-header">Phase 2: Core LLM</li>
+        <li>
+          <a href="04_TRANSFORMERS_AND_LLMS.html" class="nav-item">
+            <span>04_TRANSFORMERS_AND_LLMS</span>
+            <span class="priority-badge priority-p0">P0</span>
+          </a>
+        </li>
+        <li class="nav-phase-header">Phase 3: Alignment & Reasoning</li>
+        <li>
+          <a href="05_POST_TRAINING.html" class="nav-item active">
+            <span>05_POST_TRAINING</span>
+            <span class="priority-badge priority-p0">P0</span>
+          </a>
+        </li>
+        
+        <li>
+          <a href="06_DATA_AND_SYNTHETIC_DATA.html" class="nav-item">
+            <span>06_DATA_AND_SYNTHETIC_DATA</span>
+            <span class="priority-badge priority-p1">P1</span>
+          </a>
+        </li>
+        <li class="nav-phase-header">Phase 4: Hardware & Inference</li>
+        <li>
+          <a href="08_GPU_AND_PERFORMANCE.html" class="nav-item">
+            <span>08_GPU_AND_PERFORMANCE</span>
+            <span class="priority-badge priority-p0">P0</span>
+          </a>
+        </li>
+        
+        <li>
+          <a href="09_INFERENCE_SYSTEMS.html" class="nav-item">
+            <span>09_INFERENCE_SYSTEMS</span>
+            <span class="priority-badge priority-p0">P0</span>
+          </a>
+        </li>
+        <li class="nav-phase-header">Phase 5: Distributed Scaling</li>
+        <li>
+          <a href="07_TRAINING_SYSTEMS.html" class="nav-item">
+            <span>07_TRAINING_SYSTEMS</span>
+            <span class="priority-badge priority-p1">P1</span>
+          </a>
+        </li>
+        
+        <li>
+          <a href="18_DISTRIBUTED_SYSTEMS.html" class="nav-item">
+            <span>18_DISTRIBUTED_SYSTEMS</span>
+            <span class="priority-badge priority-p1">P1</span>
+          </a>
+        </li>
+        <li class="nav-phase-header">Phase 6: Agentic Systems</li>
+        <li>
+          <a href="10_AGENTIC_ML_SYSTEMS.html" class="nav-item">
+            <span>10_AGENTIC_ML_SYSTEMS</span>
+            <span class="priority-badge priority-p0">P0</span>
+          </a>
+        </li>
+        
+        <li>
+          <a href="11_LONG_RUNNING_WORKFLOW_RELIABILITY.html" class="nav-item">
+            <span>11_LONG_RUNNING_WORKFLOW_RELIABILITY</span>
+            <span class="priority-badge priority-p0">P0</span>
+          </a>
+        </li>
+        
+        <li>
+          <a href="15_SAFETY_AND_ROBUSTNESS.html" class="nav-item">
+            <span>15_SAFETY_AND_ROBUSTNESS</span>
+            <span class="priority-badge priority-p0">P0</span>
+          </a>
+        </li>
+        <li class="nav-phase-header">Phase 7: Production & MLOps</li>
+        <li>
+          <a href="12_EVALUATION.html" class="nav-item">
+            <span>12_EVALUATION</span>
+            <span class="priority-badge priority-p0">P0</span>
+          </a>
+        </li>
+        
+        <li>
+          <a href="13_PRODUCTION_ML.html" class="nav-item">
+            <span>13_PRODUCTION_ML</span>
+            <span class="priority-badge priority-p1">P1</span>
+          </a>
+        </li>
+        
+        <li>
+          <a href="14_OBSERVABILITY_AND_DEBUGGING.html" class="nav-item">
+            <span>14_OBSERVABILITY_AND_DEBUGGING</span>
+            <span class="priority-badge priority-p1">P1</span>
+          </a>
+        </li>
+        <li class="nav-phase-header">Phase 8: Synthesis & Interview Prep</li>
+        <li>
+          <a href="16_SYSTEM_DESIGN.html" class="nav-item">
+            <span>16_SYSTEM_DESIGN</span>
+            <span class="priority-badge priority-p1">P1</span>
+          </a>
+        </li>
+        
+        <li>
+          <a href="17_PYTHON_AND_CODING.html" class="nav-item">
+            <span>17_PYTHON_AND_CODING</span>
+            <span class="priority-badge priority-p2">P2</span>
+          </a>
+        </li>
+        
+        <li>
+          <a href="19_LEADERSHIP_AND_TECHNICAL_JUDGMENT.html" class="nav-item">
+            <span>19_LEADERSHIP_AND_TECHNICAL_JUDGMENT</span>
+            <span class="priority-badge priority-p1">P1</span>
+          </a>
+        </li>
+        
+        <li>
+          <a href="20_INTERVIEW_QUESTION_BANK.html" class="nav-item">
+            <span>20_INTERVIEW_QUESTION_BANK</span>
+            <span class="priority-badge priority-p0">P0</span>
+          </a>
+        </li>
+        
+        <li>
+          <a href="21_CASE_STUDIES.html" class="nav-item">
+            <span>21_CASE_STUDIES</span>
+            <span class="priority-badge priority-p0">P0</span>
+          </a>
+        </li>
+        
+        <li>
+          <a href="22_FINAL_SYNTHESIS_PLAYBOOKS.html" class="nav-item">
+            <span>22_FINAL_SYNTHESIS_PLAYBOOKS</span>
+            <span class="priority-badge priority-p0">P0</span>
+          </a>
+        </li>
+        <li class="nav-phase-header">Overview</li>
+        <li>
+          <a href="README.html" class="nav-item">
+            <span>README</span>
+            <span class="priority-badge priority-p0">P0</span>
+          </a>
+        </li>
+        
+    </ul>
+  </aside>
+
+  <!-- Main Viewport -->
+  <main class="main-viewport">
+    <div class="top-toolbar">
+      <div class="breadcrumbs">
+        <a href="index.html">Curriculum</a>
+        <span>/</span>
+        <span>Phase 3: Alignment & Reasoning</span>
+        <span>/</span>
+        <span class="current">05_POST_TRAINING</span>
+      </div>
+      <div class="tool-actions">
+        <button class="btn" onclick="window.print()">🖨️ Print / PDF</button>
+      </div>
+    </div>
+
+    <div class="content-container">
+      <article class="markdown-body" id="docContent">
+        <h1>05_POST_TRAINING — Mathematical &amp; Mechanistic Reference</h1>
+<blockquote>
+<p><strong>Audience</strong>: ML Engineers, LLM Systems Engineers, and AI Researchers preparing for senior/principal technical interviews.<br />
+<strong>Core Objective</strong>: Provide an exhaustive mathematical and algorithmic breakdown of Post-Training — spanning SFT, LoRA/QLoRA, the step-by-step derivation of Direct Preference Optimization (DPO), and Group Relative Policy Optimization (GRPO) for reasoning models (DeepSeek-R1 style).</p>
+</blockquote>
+<hr />
+<h2 id="heading-0">1. Supervised Fine-Tuning (SFT) Mathematics</h2>
+<p>Given a dataset of instruction-response pairs <span class="katex-inline">$\mathcal{D}_{\text{SFT}} = \{(x^{(i)}, y^{(i)})\}_{i=1}^N$</span>, where <span class="katex-inline">$x$</span> is the prompt tokens <span class="katex-inline">$(x_1, \dots, x_{S_p})$</span> and <span class="katex-inline">$y$</span> is the response tokens <span class="katex-inline">$(y_1, \dots, y_{S_r})$</span>.</p>
+<h3 id="heading-1">1.1 The Masked Cross-Entropy Objective</h3>
+<p>We only compute gradients over the <strong>response tokens</strong> <span class="katex-inline">$y$</span>, masking out the prompt tokens <span class="katex-inline">$x$</span> from the loss calculation:</p>
+<div class="katex-display">$$\mathcal{L}_{\text{SFT}}(\theta) = -\frac{1}{N} \sum_{i=1}^N \sum_{t=1}^{S_r^{(i)}} \log P_\theta\left(y_t^{(i)} \mid x^{(i)}, y_{&lt;t}^{(i)}\right)$$</div>
+
+<pre><code>Prompt Tokens (x_1, x_2, x_3)           Response Tokens (y_1, y_2, y_3, &lt;EOS&gt;)
+[ Loss Mask = 0, Gradient = 0 ]        [ Loss Mask = 1, Gradient = (p_t - target) ]
+</code></pre>
+<p><em>Why Masking Prompt Tokens is Mandatory</em>: If prompt tokens are included in the loss, the model allocates substantial capacity to predicting user syntax, grammar, and prompt templates rather than mastering instruction-following and tool formatting.</p>
+<hr />
+<h2 id="heading-2">2. Parameter-Efficient Fine-Tuning: LoRA, QLoRA, and DoRA</h2>
+<h3 id="heading-3">2.1 Low-Rank Adaptation (LoRA)</h3>
+<p>Let <span class="katex-inline">$W_0 \in \mathbb{R}^{d_{\text{out}} \times d_{\text{in}}}$</span> be a frozen pre-trained weight matrix.<br />
+LoRA decomposes the weight update <span class="katex-inline">$\Delta W$</span> into the product of two low-rank matrices:</p>
+<div class="katex-display">$$W = W_0 + \Delta W = W_0 + \frac{\alpha}{r} B A$$</div>
+
+<p>Where:<br />
+- <span class="katex-inline">$A \in \mathbb{R}^{r \times d_{\text{in}}}$</span> is initialized from Gaussian distribution <span class="katex-inline">$\mathcal{N}\left(0, \sigma^2 = \frac{1}{r}\right)$</span>.<br />
+- <span class="katex-inline">$B \in \mathbb{R}^{d_{\text{out}} \times r}$</span> is initialized to strictly <strong>zero</strong>: <span class="katex-inline">$B = 0$</span>.<br />
+- <span class="katex-inline">$r \ll \min(d_{\text{in}}, d_{\text{out}})$</span> is the intrinsic rank (typically <span class="katex-inline">$r \in [8, 64]$</span>).<br />
+- <span class="katex-inline">$\alpha$</span> is a constant scaling hyperparameter (typically <span class="katex-inline">$\alpha = 2r \implies \text{scaling} = 2$</span>).</p>
+<pre><code>                Input Vector x (dim d_in)
+                    │
+            ┌───────┴───────┐
+            ▼               ▼
+     Frozen W_0        Matrix A (dim r x d_in)
+     (d_out x d_in)         │
+            │          Matrix B (dim d_out x r) [Init = 0]
+            │               │
+            │          Scale (α / r)
+            │               │
+            └───────┬───────┘
+                    ▼
+           Output h = W_0 x + (α/r) B A x
+</code></pre>
+<h4>Why <span class="katex-inline">$B = 0$</span> Initialization is Mandatory:</h4>
+<p>At step <span class="katex-inline">$t=0$</span>:</p>
+<div class="katex-display">$$\Delta W = \frac{\alpha}{r} (0) A = 0 \implies W = W_0$$</div>
+<p>This guarantees that training begins exactly from the pre-trained model's output without introducing catastrophic initial perturbation.</p>
+<h4>Gradient Derivations for LoRA Parameters:</h4>
+<p>Let the incoming gradient from the downstream loss be <span class="katex-inline">$G = \frac{\partial \mathcal{L}}{\partial h} \in \mathbb{R}^{B \times d_{\text{out}}}$</span>, and input activation be <span class="katex-inline">$X \in \mathbb{R}^{B \times d_{\text{in}}}$</span>.<br />
+The forward pass is <span class="katex-inline">$h = X W_0^T + \frac{\alpha}{r} X A^T B^T$</span>.</p>
+<div class="katex-display">$$\frac{\partial \mathcal{L}}{\partial B} = \frac{\alpha}{r} G^T (X A^T) \in \mathbb{R}^{d_{\text{out}} \times r}$$</div>
+<div class="katex-display">$$\frac{\partial \mathcal{L}}{\partial A} = \frac{\alpha}{r} (G B)^T X \in \mathbb{R}^{r \times d_{\text{in}}}$$</div>
+<div class="katex-display">$$\frac{\partial \mathcal{L}}{\partial X} = G W_0 + \frac{\alpha}{r} G B A \in \mathbb{R}^{B \times d_{\text{in}}}$$</div>
+
+<p><em>Zero Inference Overhead</em>: Before deployment, compute <span class="katex-inline">$W_{\text{merged}} = W_0 + \frac{\alpha}{r} B A$</span>. Inference latency is identical to the base model.</p>
+<hr />
+<h3 id="heading-4">2.2 QLoRA: NormalFloat4 (NF4) &amp; Double Quantization (Dettmers et al., 2023)</h3>
+<p>QLoRA enables fine-tuning a 70B parameter model on a single 80GB GPU by quantizing base weights <span class="katex-inline">$W_0$</span> to 4-bit NormalFloat while training 16-bit LoRA adapters.</p>
+<ol>
+<li><strong>NormalFloat4 (NF4) Quantile Construction</strong>:<br />
+   Weights of pre-trained models follow a normal distribution <span class="katex-inline">$W_0 \sim \mathcal{N}(0, \sigma^2)$</span>.<br />
+   NF4 constructs 16 discrete quantization bins <span class="katex-inline">$q_i \in [-1, 1]$</span> (<span class="katex-inline">$i \in \{0, \dots, 15\}$</span>) such that each bin contains an <strong>equal probability mass</strong>:<br />
+   <div class="katex-display">$$q_i = \frac{1}{2} \left( Q_X\left(\frac{i}{2^k}\right) + Q_X\left(\frac{i+1}{2^k}\right) \right)$$</div></li>
+</ol>
+<p>where <span class="katex-inline">$Q_X(\cdot)$</span> is the quantile function (inverse CDF) of the standard normal distribution <span class="katex-inline">$\mathcal{N}(0, 1)$</span>.</p>
+<ol start="2">
+<li><strong>Double Quantization (DQ)</strong>:<br />
+   Quantization divides weights into blocks of size 64 with a 32-bit FP32 quantization scale <span class="katex-inline">$c_1$</span>.<br />
+   <span class="katex-inline">$c_1$</span></li>
+</ol>
+<p>adds  of overhead.<br />
+   Double Quantization quantizes the scales <span class="katex-inline">$c_1$</span> themselves into 8-bit integers with a second block size of 256 (<span class="katex-inline">$c_2$</span> in FP32):<br />
+   <div class="katex-display">$$\text{Scale Memory Overhead} = \frac{8}{64} + \frac{32}{64 \times 256} = 0.125 + 0.00195 = \mathbf{0.127 \text{ bits/parameter}}$$</div></p>
+<p>Saves <span class="katex-inline">$\sim 0.373$</span> bits per parameter (<span class="katex-inline">$\sim 3.2\text{ GB}$</span> on a 70B model).</p>
+<hr />
+<h2 id="heading-5">3. Preference Alignment: Direct Preference Optimization (DPO)</h2>
+<h3 id="heading-6">3.1 The Bradley-Terry Preference Model</h3>
+<p>Given prompt <span class="katex-inline">$x$</span> and two candidate responses: winning response <span class="katex-inline">$y_w$</span> and losing response <span class="katex-inline">$y_l$</span> (<span class="katex-inline">$y_w \succ y_l$</span>).<br />
+The Bradley-Terry (BT) model posits that human preference is governed by an underlying latent reward function <span class="katex-inline">$r^*(x, y)$</span>:</p>
+<div class="katex-display">$$P(y_w \succ y_l \mid x) = \sigma\left(r^*(x, y_w) - r^*(x, y_l)\right) = \frac{1}{1 + e^{-(r^*(x, y_w) - r^*(x, y_l))}}$$</div>
+
+<hr />
+<h3 id="heading-7">3.2 Classical RLHF Objective Formulation</h3>
+<p>In standard PPO-based RLHF, we optimize the policy <span class="katex-inline">$\pi_\theta$</span> to maximize expected reward while penalizing divergence from the reference policy <span class="katex-inline">$\pi_{\text{ref}}$</span> (preventing reward hacking):</p>
+<div class="katex-display">$$\max_{\pi_\theta} \mathbb{E}_{x \sim \mathcal{D}, y \sim \pi_\theta}\left[ r(x, y) \right] - \beta \mathbb{D}_{\text{KL}}\left( \pi_\theta(y \mid x) \parallel \pi_{\text{ref}}(y \mid x) \right)$$</div>
+
+<p>Expanding the KL divergence:</p>
+<div class="katex-display">$$\max_{\pi_\theta} \mathbb{E}_{x \sim \mathcal{D}} \left[ \sum_y \pi_\theta(y \mid x) r(x, y) - \beta \sum_y \pi_\theta(y \mid x) \log \frac{\pi_\theta(y \mid x)}{\pi_{\text{ref}}(y \mid x)} \right]$$</div>
+<div class="katex-display">$$= \max_{\pi_\theta} \mathbb{E}_{x \sim \mathcal{D}} \left[ \beta \sum_y \pi_\theta(y \mid x) \left( \frac{1}{\beta} r(x, y) - \log \frac{\pi_\theta(y \mid x)}{\pi_{\text{ref}}(y \mid x)} \right) \right]$$</div>
+
+<hr />
+<h3 id="heading-8">3.3 The Step-by-Step DPO Derivation (Rafailov et al., 2023)</h3>
+<h4>Step 1: Solving the Optimal Policy in Closed Form</h4>
+<p>Let <span class="katex-inline">$Z(x) = \sum_y \pi_{\text{ref}}(y \mid x) \exp\left(\frac{1}{\beta} r(x, y)\right)$</span> be the partition function.<br />
+We can rewrite the objective inside the expectation as:</p>
+<div class="katex-display">$$-\beta \sum_y \pi_\theta(y \mid x) \log \frac{\pi_\theta(y \mid x)}{\frac{1}{Z(x)} \pi_{\text{ref}}(y \mid x) \exp\left(\frac{1}{\beta} r(x, y)\right)} + \beta \log Z(x)$$</div>
+<div class="katex-display">$$= -\beta \mathbb{D}_{\text{KL}}\left( \pi_\theta(y \mid x) \;\parallel\; \pi^*(y \mid x) \right) + \beta \log Z(x)$$</div>
+
+<p>Where the optimal policy distribution <span class="katex-inline">$\pi^*$</span> is:</p>
+<div class="katex-display">$$\pi^*(y \mid x) = \frac{1}{Z(x)} \pi_{\text{ref}}(y \mid x) \exp\left(\frac{1}{\beta} r(x, y)\right)$$</div>
+
+<p>Because KL divergence is non-negative (<span class="katex-inline">$\mathbb{D}_{\text{KL}} \geq 0$</span>) and minimized to <span class="katex-inline">$0$</span> if and only if <span class="katex-inline">$\pi_\theta = \pi^*$</span>, the theoretical optimal policy is:</p>
+<div class="katex-display">$$\mathbf{\pi_\theta^*(y \mid x) = \frac{1}{Z(x)} \pi_{\text{ref}}(y \mid x) \exp\left(\frac{1}{\beta} r(x, y)\right)}$$</div>
+
+<h4>Step 2: Re-parameterizing the Reward Function</h4>
+<p>Taking the natural logarithm on both sides:</p>
+<div class="katex-display">$$\log \pi_\theta^*(y \mid x) = \log \pi_{\text{ref}}(y \mid x) + \frac{1}{\beta} r(x, y) - \log Z(x)$$</div>
+<p>Rearranging to isolate the exact reward function <span class="katex-inline">$r(x, y)$</span>:</p>
+<div class="katex-display">$$\mathbf{r(x, y) = \beta \log \frac{\pi_\theta^*(y \mid x)}{\pi_{\text{ref}}(y \mid x)} + \beta \log Z(x)}$$</div>
+
+<h4>Step 3: Substituting into the Bradley-Terry Preference Likelihood</h4>
+<p>Substitute the re-parameterized reward <span class="katex-inline">$r(x, y)$</span> into the Bradley-Terry formula <span class="katex-inline">$P(y_w \succ y_l \mid x) = \sigma(r(x, y_w) - r(x, y_l))$</span>:</p>
+<div class="katex-display">$$r(x, y_w) - r(x, y_l) = \left[ \beta \log \frac{\pi_\theta(y_w \mid x)}{\pi_{\text{ref}}(y_w \mid x)} + \beta \log Z(x) \right] - \left[ \beta \log \frac{\pi_\theta(y_l \mid x)}{\pi_{\text{ref}}(y_l \mid x)} + \beta \log Z(x) \right]$$</div>
+
+<div class="katex-display">$$\mathbf{r(x, y_w) - r(x, y_l) = \beta \log \frac{\pi_\theta(y_w \mid x)}{\pi_{\text{ref}}(y_w \mid x)} - \beta \log \frac{\pi_\theta(y_l \mid x)}{\pi_{\text{ref}}(y_l \mid x)}}$$</div>
+
+<p><strong>Notice that the partition function <span class="katex-inline">$Z(x)$</span> completely cancels out!</strong></p>
+<h4>Step 4: The Closed-Form DPO Loss Function</h4>
+<p>Minimizing the Negative Log-Likelihood of preferences yields the DPO loss:</p>
+<div class="katex-display">$$\mathbf{\mathcal{L}_{\text{DPO}}(\theta; \pi_{\text{ref}}) = -\mathbb{E}_{(x, y_w, y_l) \sim \mathcal{D}} \left[ \log \sigma \left( \beta \log \frac{\pi_\theta(y_w \mid x)}{\pi_{\text{ref}}(y_w \mid x)} - \beta \log \frac{\pi_\theta(y_l \mid x)}{\pi_{\text{ref}}(y_l \mid x)} \right) \right]}$$</div>
+
+<p><em>Why DPO Revolutionized Alignment</em>: Completely eliminates the need to train a separate Reward Model, eliminates Actor-Critic networks, eliminates PPO hyperparameter instability, and requires <span class="katex-inline">$2\times$</span> less GPU VRAM.</p>
+<hr />
+<h3 id="heading-9">3.4 Analytical Gradient of the DPO Loss</h3>
+<p>Let <span class="katex-inline">$u = \beta \log \frac{\pi_\theta(y_w \mid x)}{\pi_{\text{ref}}(y_w \mid x)} - \beta \log \frac{\pi_\theta(y_l \mid x)}{\pi_{\text{ref}}(y_l \mid x)}$</span>.<br />
+Since <span class="katex-inline">$\frac{d}{du} [-\log \sigma(u)] = -(1 - \sigma(u)) = -\sigma(-u)$</span>:</p>
+<div class="katex-display">$$\nabla_\theta \mathcal{L}_{\text{DPO}} = -\beta \cdot \underbrace{\sigma\left( \hat{r}_\theta(x, y_l) - \hat{r}_\theta(x, y_w) \right)}_{\text{Implicit Error Weight } w(x, y_w, y_l)} \left[ \underbrace{\nabla_\theta \log \pi_\theta(y_w \mid x)}_{\text{Increase likelihood of } y_w} - \underbrace{\nabla_\theta \log \pi_\theta(y_l \mid x)}_{\text{Decrease likelihood of } y_l} \right]$$</div>
+
+<h4>Gradient Mechanics:</h4>
+<ul>
+<li>When the model currently prefers the wrong answer (<span class="katex-inline">$\hat{r}_\theta(y_l) &gt; \hat{r}_\theta(y_w)$</span>), the error weight <span class="katex-inline">$\sigma(\hat{r}_\theta(y_l) - \hat{r}_\theta(y_w)) \to 1$</span>, applying the maximum gradient update.</li>
+<li>When the model already strongly prefers the winning response (<span class="katex-inline">$\hat{r}_\theta(y_w) \gg \hat{r}_\theta(y_l)$</span>), the gradient scales to <span class="katex-inline">$0$</span>, avoiding unnecessary updates.</li>
+</ul>
+<hr />
+<h2 id="heading-10">4. Reasoning Models &amp; Reinforcement Learning: GRPO (DeepSeek-R1)</h2>
+<h3 id="heading-11">4.1 Group Relative Policy Optimization (GRPO)</h3>
+<p>Traditional PPO trains an <strong>Actor Model</strong> <span class="katex-inline">$\pi_\theta$</span> and a <strong>Critic Model</strong> <span class="katex-inline">$V_\phi$</span>. For a 70B model, the Critic model requires an additional 70B parameters in GPU VRAM and complex Value function fitting.<br />
+DeepSeek introduced <strong>GRPO (Group Relative Policy Optimization)</strong>, which eliminates the Critic network entirely.</p>
+<pre><code>Prompt x ──────► Generate Group of G Outputs: {y_1, y_2, ..., y_G}
+                     │
+                     ▼
+         Evaluate Rule-Based Rewards: {r_1, r_2, ..., r_G}
+         (e.g., Math Correctness = 1.0, Formatting = 0.5)
+                     │
+                     ▼
+         Compute Group-Normalized Advantages:
+         A_i = (r_i - Mean({r})) / Std({r})
+                     │
+                     ▼
+         Update Policy π_θ with Clipped Surrogate Loss + KL Regularization
+</code></pre>
+<h3 id="heading-12">4.2 Mathematical Formulation of GRPO</h3>
+<p>For each prompt <span class="katex-inline">$x$</span>, the model samples a group of <span class="katex-inline">$G$</span> candidate outputs <span class="katex-inline">$\{y_1, y_2, \dots, y_G\} \sim \pi_{\theta_{\text{old}}}(y \mid x)$</span>.</p>
+<h4>1. Group Advantage Normalization:</h4>
+<p>Instead of using a learned baseline <span class="katex-inline">$V(s)$</span>, GRPO computes advantages relative to the group:</p>
+<div class="katex-display">$$A_i = \frac{r_i - \text{mean}(\{r_1, r_2, \dots, r_G\})}{\text{std}(\{r_1, r_2, \dots, r_G\}) + \epsilon}$$</div>
+
+<h4>2. The GRPO Objective Function:</h4>
+<div class="katex-display">$$\mathcal{J}_{\text{GRPO}}(\theta) = \mathbb{E}_{x \sim \mathcal{D}, \{y_i\}_{i=1}^G \sim \pi_{\theta_{\text{old}}}} \left[ \frac{1}{G} \sum_{i=1}^G \left( \min\left( \frac{\pi_\theta(y_i \mid x)}{\pi_{\theta_{\text{old}}}(y_i \mid x)} A_i, \; \text{clip}\left(\frac{\pi_\theta(y_i \mid x)}{\pi_{\theta_{\text{old}}}(y_i \mid x)}, 1-\epsilon, 1+\epsilon\right) A_i \right) - \beta \mathbb{D}_{\text{KL}}\left(\pi_\theta \parallel \pi_{\text{ref}}\right) \right) \right]$$</div>
+
+<p>Where the unbiased KL divergence estimator is:</p>
+<div class="katex-display">$$\mathbb{D}_{\text{KL}}\left(\pi_\theta \parallel \pi_{\text{ref}}\right) = \frac{\pi_{\text{ref}}(y_i \mid x)}{\pi_\theta(y_i \mid x)} - \log \frac{\pi_{\text{ref}}(y_i \mid x)}{\pi_\theta(y_i \mid x)} - 1$$</div>
+
+<h3 id="heading-13">4.3 Rule-Based Verifiable Rewards vs. Learned Reward Models</h3>
+<p>In reasoning tasks (Math, Code, Tool Use), using neural Reward Models causes <strong>Reward Hacking</strong> (the model learns to game the reward model's semantic vulnerabilities).<br />
+GRPO uses deterministic <strong>Rule-Based Verifiers</strong>:<br />
+1. <strong>Accuracy Reward</strong>: Executes the generated Python code in a sandbox or parses final answer tags <code>&lt;answer&gt;...&lt;/answer&gt;</code> against ground-truth LaTeX (<span class="katex-inline">$r_{\text{acc}} \in \{0, 1\}$</span>).<br />
+2. <strong>Format Reward</strong>: Enforces that reasoning occurs strictly inside <code>&lt;think&gt;...&lt;/think&gt;</code> tags (<span class="katex-inline">$r_{\text{format}} \in \{0, 1\}$</span>).</p>
+<hr />
+<h2 id="heading-14">5. PyTorch Implementation: DPO and GRPO Loss Functions</h2>
+<pre><code class="language-python">import torch
+import torch.nn as nn
+import torch.nn.functional as F
+
+class DPOLoss(nn.Module):
+    &quot;&quot;&quot;
+    Direct Preference Optimization (DPO) Loss Module.
+    &quot;&quot;&quot;
+    def __init__(self, beta: float = 0.1):
+        super().__init__()
+        self.beta = beta
+
+    def forward(
+        self,
+        policy_chosen_logps: torch.Tensor,   # [Batch]
+        policy_rejected_logps: torch.Tensor, # [Batch]
+        reference_chosen_logps: torch.Tensor,# [Batch]
+        reference_rejected_logps: torch.Tensor# [Batch]
+    ) -&gt; torch.Tensor:
+        # Compute log-ratio differences: log(π_θ(y|x) / π_ref(y|x))
+        pi_logratios = policy_chosen_logps - policy_rejected_logps
+        ref_logratios = reference_chosen_logps - reference_rejected_logps
+
+        logits = pi_logratios - ref_logratios
+        loss = -F.logsigmoid(self.beta * logits)
+        return loss.mean()
+
+class GRPOLoss(nn.Module):
+    &quot;&quot;&quot;
+    Group Relative Policy Optimization (GRPO) Loss Module.
+    &quot;&quot;&quot;
+    def __init__(self, clip_eps: float = 0.2, beta: float = 0.04):
+        super().__init__()
+        self.clip_eps = clip_eps
+        self.beta = beta
+
+    def forward(
+        self,
+        logp_theta: torch.Tensor,      # [Group_Size, Seq_Len]
+        logp_old: torch.Tensor,        # [Group_Size, Seq_Len]
+        logp_ref: torch.Tensor,        # [Group_Size, Seq_Len]
+        rewards: torch.Tensor          # [Group_Size]
+    ) -&gt; torch.Tensor:
+        # 1. Compute Group Normalized Advantage: (r - mean) / std
+        mean_r = rewards.mean()
+        std_r = rewards.std() + 1e-8
+        advantages = ((rewards - mean_r) / std_r).unsqueeze(-1) # [Group_Size, 1]
+
+        # 2. Probability Ratio: π_θ / π_old
+        ratios = torch.exp(logp_theta - logp_old)
+
+        # 3. Clipped Surrogate Objective
+        surr1 = ratios * advantages
+        surr2 = torch.clamp(ratios, 1.0 - self.clip_eps, 1.0 + self.clip_eps) * advantages
+        policy_loss = -torch.min(surr1, surr2).mean()
+
+        # 4. KL Divergence Penalty: D_KL(π_θ || π_ref)
+        kl = torch.exp(logp_ref - logp_theta) - (logp_ref - logp_theta) - 1.0
+        kl_loss = self.beta * kl.mean()
+
+        return policy_loss + kl_loss
+
+if __name__ == &quot;__main__&quot;:
+    B = 4
+    dpo = DPOLoss(beta=0.1)
+    p_w, p_l = torch.tensor([-2.1, -1.5, -3.0, -0.8]), torch.tensor([-4.5, -3.2, -4.1, -2.9])
+    r_w, r_l = torch.tensor([-2.0, -1.6, -3.1, -0.9]), torch.tensor([-3.8, -3.0, -3.5, -2.5])
+    loss = dpo(p_w, p_l, r_w, r_l)
+    print(f&quot;DPO Loss computation verified: {loss.item():.4f}&quot;)
+</code></pre>
+<hr />
+<h2 id="heading-15">6. Deep Interview Interrogation Ladder</h2>
+<ul>
+<li><strong>Level 1 (Concept)</strong>: What is the primary difference between SFT and Preference Optimization?</li>
+<li><strong>Level 3 (Derivation)</strong>: Write out the Bradley-Terry preference model and explain why the partition function <span class="katex-inline">$Z(x)$</span> cancels out in DPO.</li>
+<li><strong>Level 5 (Mechanics)</strong>: Why is matrix <span class="katex-inline">$B$</span> initialized to zero in LoRA, and what happens mathematically if both <span class="katex-inline">$A$</span> and <span class="katex-inline">$B$</span> are initialized with Gaussian noise?</li>
+<li><strong>Level 7 (RL for Reasoning)</strong>: Explain how GRPO estimates advantage without a Critic network, and why rule-based verifiers prevent reward hacking in math/code reasoning.</li>
+<li><strong>Level 9 (Deep Systems)</strong>: In QLoRA, why does NormalFloat4 (NF4) achieve better quantization fidelity than standard uniform 4-bit integer quantization (INT4)?</li>
+<li><strong>Level 10 (Principal Engineering)</strong>: You need to align a 70B agent for tool-use and long-running workflows. When would you choose DPO vs. GRPO vs. Rejection-Sampling SFT, and how do you prevent mode collapse during iterative post-training?</li>
+</ul>
+<span class="katex-inline">$\frac{32}{64} = 0.5 \text{ bits/param}$</span>
+        
+        <!-- Navigation Footer -->
+        <div class="doc-nav-footer">
+          
+        <a href="04_TRANSFORMERS_AND_LLMS.html" class="doc-nav-btn">
+          <span class="label">← Previous</span>
+          <span class="title">04_TRANSFORMERS_AND_LLMS</span>
+        </a>
+        
+          
+        <a href="06_DATA_AND_SYNTHETIC_DATA.html" class="doc-nav-btn" style="text-align: right;">
+          <span class="label">Next →</span>
+          <span class="title">06_DATA_AND_SYNTHETIC_DATA</span>
+        </a>
+        
+        </div>
+      </article>
+
+      <aside class="toc-sidebar">
+        <div class="toc-title">On This Page</div>
+        <ul class="toc-list">
+          
+        <li class="toc-item">
+          <a href="#heading-0" class="toc-link">Supervised Fine-Tuning (SFT) Mathematics</a>
+        </li>
+        
+        <li class="toc-item h3">
+          <a href="#heading-1" class="toc-link">The Masked Cross-Entropy Objective</a>
+        </li>
+        
+        <li class="toc-item">
+          <a href="#heading-2" class="toc-link">Parameter-Efficient Fine-Tuning: LoRA, QLoRA, and DoRA</a>
+        </li>
+        
+        <li class="toc-item h3">
+          <a href="#heading-3" class="toc-link">Low-Rank Adaptation (LoRA)</a>
+        </li>
+        
+        <li class="toc-item h3">
+          <a href="#heading-4" class="toc-link">QLoRA: NormalFloat4 (NF4) &amp; Double Quantization (Dettmers et al., 2023)</a>
+        </li>
+        
+        <li class="toc-item">
+          <a href="#heading-5" class="toc-link">Preference Alignment: Direct Preference Optimization (DPO)</a>
+        </li>
+        
+        <li class="toc-item h3">
+          <a href="#heading-6" class="toc-link">The Bradley-Terry Preference Model</a>
+        </li>
+        
+        <li class="toc-item h3">
+          <a href="#heading-7" class="toc-link">Classical RLHF Objective Formulation</a>
+        </li>
+        
+        <li class="toc-item h3">
+          <a href="#heading-8" class="toc-link">The Step-by-Step DPO Derivation (Rafailov et al., 2023)</a>
+        </li>
+        
+        <li class="toc-item h3">
+          <a href="#heading-9" class="toc-link">Analytical Gradient of the DPO Loss</a>
+        </li>
+        
+        <li class="toc-item">
+          <a href="#heading-10" class="toc-link">Reasoning Models &amp; Reinforcement Learning: GRPO (DeepSeek-R1)</a>
+        </li>
+        
+        <li class="toc-item h3">
+          <a href="#heading-11" class="toc-link">Group Relative Policy Optimization (GRPO)</a>
+        </li>
+        
+        <li class="toc-item h3">
+          <a href="#heading-12" class="toc-link">Mathematical Formulation of GRPO</a>
+        </li>
+        
+        <li class="toc-item h3">
+          <a href="#heading-13" class="toc-link">Rule-Based Verifiable Rewards vs. Learned Reward Models</a>
+        </li>
+        
+        <li class="toc-item">
+          <a href="#heading-14" class="toc-link">PyTorch Implementation: DPO and GRPO Loss Functions</a>
+        </li>
+        
+        <li class="toc-item">
+          <a href="#heading-15" class="toc-link">Deep Interview Interrogation Ladder</a>
+        </li>
+        
+        </ul>
+      </aside>
+    </div>
+  </main>
+
+  <script>
+    // Search filter for sidebar
+    document.getElementById('searchInput').addEventListener('input', (e) => {
+      const query = e.target.value.toLowerCase();
+      document.querySelectorAll('.nav-item').forEach(item => {
+        const text = item.textContent.toLowerCase();
+        item.style.display = text.includes(query) ? 'flex' : 'none';
+      });
+    });
+
+    // Initialize KaTeX, Prism, and Mermaid on static DOM
+    document.addEventListener('DOMContentLoaded', () => {
+      // 1. KaTeX Math Render
+      try {
+        if (typeof renderMathInElement !== 'undefined') {
+          renderMathInElement(document.getElementById('docContent'), {
+            delimiters: [
+              { left: '$$', right: '$$', display: true },
+              { left: '$', right: '$', display: false }
+            ],
+            throwOnError: false
+          });
+        }
+      } catch (e) {
+        console.warn('KaTeX render error:', e);
+      }
+
+      // 2. Prism Code Highlight
+      try {
+        if (typeof Prism !== 'undefined') {
+          Prism.highlightAll();
+        }
+      } catch (e) {
+        console.warn('Prism highlight error:', e);
+      }
+
+      // 3. Mermaid Diagrams Render
+      try {
+        if (typeof mermaid !== 'undefined') {
+          mermaid.initialize({ startOnLoad: true, theme: 'dark', securityLevel: 'loose' });
+        }
+      } catch (e) {
+        console.warn('Mermaid render error:', e);
+      }
+    });
+  </script>
+</body>
+</html>

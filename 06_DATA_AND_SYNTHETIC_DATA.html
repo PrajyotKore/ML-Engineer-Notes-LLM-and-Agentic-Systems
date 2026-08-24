@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>00_ROLE_ANALYSIS — ML Engineer (SSK)</title>
+  <title>06_DATA_AND_SYNTHETIC_DATA — ML Engineer (SSK)</title>
   
   <!-- Fonts -->
   <link rel="preconnect" href="https://fonts.googleapis.com">
@@ -513,7 +513,7 @@
     <ul class="nav-list" id="navList">
       <li class="nav-phase-header">Phase 0: Architecture</li>
         <li>
-          <a href="00_ROLE_ANALYSIS.html" class="nav-item active">
+          <a href="00_ROLE_ANALYSIS.html" class="nav-item">
             <span>00_ROLE_ANALYSIS</span>
             <span class="priority-badge priority-p1">P1</span>
           </a>
@@ -548,7 +548,7 @@
         </li>
         
         <li>
-          <a href="06_DATA_AND_SYNTHETIC_DATA.html" class="nav-item">
+          <a href="06_DATA_AND_SYNTHETIC_DATA.html" class="nav-item active">
             <span>06_DATA_AND_SYNTHETIC_DATA</span>
             <span class="priority-badge priority-p1">P1</span>
           </a>
@@ -682,9 +682,9 @@
       <div class="breadcrumbs">
         <a href="index.html">Curriculum</a>
         <span>/</span>
-        <span>Phase 0: Architecture</span>
+        <span>Phase 3: Alignment & Reasoning</span>
         <span>/</span>
-        <span class="current">00_ROLE_ANALYSIS</span>
+        <span class="current">06_DATA_AND_SYNTHETIC_DATA</span>
       </div>
       <div class="tool-actions">
         <button class="btn" onclick="window.print()">🖨️ Print / PDF</button>
@@ -693,167 +693,195 @@
 
     <div class="content-container">
       <article class="markdown-body" id="docContent">
-        <h1>00_ROLE_ANALYSIS — ML Engineer (LLM &amp; Agentic Systems)</h1>
-<h2 id="heading-0">1. Role Context &amp; Core Hypothesis</h2>
-<p><strong>Role Context:</strong> This role targets building a proactive AI assistant that executes real-world tasks, performs multi-step reasoning, interacts with external tools, and handles long-running workflows with high reliability under production constraints.</p>
-<p><strong>Core Interview Hypothesis:</strong> "Can this candidate take an ML/LLM research idea, turn it into a trainable system, adapt it effectively, deploy it efficiently, integrate it into an agentic product, measure whether it actually works, debug it in production, and continuously improve it under latency, cost, reliability, and safety constraints?"</p>
-<p>The ML execution layer sits exactly at the boundary of Research, Systems Engineering, and Product Outcomes. The candidate must span these seamlessly.</p>
+        <h1>06_DATA_AND_SYNTHETIC_DATA — Mathematical &amp; Mechanistic Reference</h1>
+<blockquote>
+<p><strong>Audience</strong>: ML Engineers, LLM Systems Engineers, and AI Researchers preparing for senior/principal technical interviews.<br />
+<strong>Core Objective</strong>: Provide an exhaustive mathematical and algorithmic reference on data engineering for LLMs — covering MinHash LSH deduplication proofs, Model Collapse dynamics, decontamination metrics, synthetic data generation pipelines, and closed-loop production flywheels.</p>
+</blockquote>
 <hr />
-<h2 id="heading-1">2. Role Decomposition</h2>
-<h3 id="heading-2">Explicit Technical Requirements</h3>
-<ul>
-<li>Python, PyTorch, CUDA, Triton</li>
-<li>GPU-based training and inference architecture (vLLM, SGLang, Megatron-LM, FSDP-2)</li>
-<li>SFT, LoRA, QLoRA, DPO, GRPO (Reasoning Models)</li>
-<li>Data pipelines (MinHash LSH, Synthetic data curation, Decontamination)</li>
-<li>Evaluation systems (SWE-bench, GAIA, Statistical significance) and latency/cost optimization</li>
-</ul>
-<h3 id="heading-3">Implicit Technical Requirements</h3>
-<ul>
-<li><strong>Hardware/Software Co-design Awareness</strong>: Understanding how PyTorch ops map to CUDA kernels, SRAM tiling, and memory bandwidth bounds.</li>
-<li><strong>Probabilistic Engineering</strong>: Building deterministic, reliable long-running workflows on top of inherently non-deterministic LLM behavior.</li>
-</ul>
-<h3 id="heading-4">Staff/Principal-Level Requirements</h3>
-<ul>
-<li><strong>Architectural Judgment</strong>: Knowing when to use full fine-tuning vs. LoRA vs. Prompt Engineering vs. Distillation vs. GRPO based on data scale and latency budgets.</li>
-<li><strong>Incident Leadership</strong>: Ability to trace a 99th percentile (P99) latency spike from the network layer down to KV-cache fragmentation on a specific GPU.</li>
-</ul>
-<hr />
-<h2 id="heading-5">3. Role Competency Model &amp; Priority Matrix</h2>
-<table>
-<thead>
-<tr>
-<th style="text-align: center;">Priority</th>
-<th style="text-align: left;">Category</th>
-<th style="text-align: left;">Topics</th>
-<th style="text-align: left;">Files</th>
-</tr>
-</thead>
-<tbody>
-<tr>
-<td style="text-align: center;"><strong>P0</strong></td>
-<td style="text-align: left;"><strong>Agentic ML Systems</strong></td>
-<td style="text-align: left;">ReAct, Tool Routing, Context/Memory, MCP, FSM JSON</td>
-<td style="text-align: left;"><a href="./10_AGENTIC_ML_SYSTEMS.md">10_AGENTIC_ML_SYSTEMS.md</a></td>
-</tr>
-<tr>
-<td style="text-align: center;"><strong>P0</strong></td>
-<td style="text-align: left;"><strong>Long-Running Workflows</strong></td>
-<td style="text-align: left;">Durable State, Temporal, Sagas, Idempotency, Retries</td>
-<td style="text-align: left;"><a href="./11_LONG_RUNNING_WORKFLOW_RELIABILITY.md">11_LONG_RUNNING_WORKFLOW_RELIABILITY.md</a></td>
-</tr>
-<tr>
-<td style="text-align: center;"><strong>P0</strong></td>
-<td style="text-align: left;"><strong>Post-Training &amp; Reasoning</strong></td>
-<td style="text-align: left;">SFT, LoRA, QLoRA, DPO, GRPO, Test-Time Compute</td>
-<td style="text-align: left;"><a href="./05_POST_TRAINING.md">05_POST_TRAINING.md</a></td>
-</tr>
-<tr>
-<td style="text-align: center;"><strong>P0</strong></td>
-<td style="text-align: left;"><strong>LLM &amp; Inference</strong></td>
-<td style="text-align: left;">PagedAttention, RadixAttention, PD Split, Chunked Prefill</td>
-<td style="text-align: left;"><a href="./04_TRANSFORMERS_AND_LLMS.md">04_TRANSFORMERS_AND_LLMS.md</a> · <a href="./09_INFERENCE_SYSTEMS.md">09_INFERENCE_SYSTEMS.md</a></td>
-</tr>
-<tr>
-<td style="text-align: center;"><strong>P0</strong></td>
-<td style="text-align: left;"><strong>GPU Architecture</strong></td>
-<td style="text-align: left;">SMs, SRAM Tiling, FlashAttention-3, Roofline Model</td>
-<td style="text-align: left;"><a href="./08_GPU_AND_PERFORMANCE.md">08_GPU_AND_PERFORMANCE.md</a></td>
-</tr>
-<tr>
-<td style="text-align: center;"><strong>P0</strong></td>
-<td style="text-align: left;"><strong>Evaluation &amp; Reliability</strong></td>
-<td style="text-align: left;">Z-Tests, ELO Ratings, SWE-bench, LLM-as-judge</td>
-<td style="text-align: left;"><a href="./12_EVALUATION.md">12_EVALUATION.md</a></td>
-</tr>
-<tr>
-<td style="text-align: center;"><strong>P1</strong></td>
-<td style="text-align: left;"><strong>Mathematical Foundations</strong></td>
-<td style="text-align: left;">SVD, Low-Rank, Information Theory, AdamW, Optimization</td>
-<td style="text-align: left;"><a href="./01_MATHEMATICAL_FOUNDATIONS.md">01_MATHEMATICAL_FOUNDATIONS.md</a></td>
-</tr>
-<tr>
-<td style="text-align: center;"><strong>P1</strong></td>
-<td style="text-align: left;"><strong>Training Systems</strong></td>
-<td style="text-align: left;">FSDP-2, 3D Parallelism, Context Parallelism, Checkpointing</td>
-<td style="text-align: left;"><a href="./07_TRAINING_SYSTEMS.md">07_TRAINING_SYSTEMS.md</a></td>
-</tr>
-<tr>
-<td style="text-align: center;"><strong>P1</strong></td>
-<td style="text-align: left;"><strong>Data Engineering</strong></td>
-<td style="text-align: left;">MinHash LSH, Model Collapse, Synthetic Curation</td>
-<td style="text-align: left;"><a href="./06_DATA_AND_SYNTHETIC_DATA.md">06_DATA_AND_SYNTHETIC_DATA.md</a></td>
-</tr>
-<tr>
-<td style="text-align: center;"><strong>P1</strong></td>
-<td style="text-align: left;"><strong>Distributed Systems</strong></td>
-<td style="text-align: left;">Ring All-Reduce, GPUDirect RDMA, InfiniBand NDR</td>
-<td style="text-align: left;"><a href="./18_DISTRIBUTED_SYSTEMS.md">18_DISTRIBUTED_SYSTEMS.md</a></td>
-</tr>
-<tr>
-<td style="text-align: center;"><strong>P1</strong></td>
-<td style="text-align: left;"><strong>Observability</strong></td>
-<td style="text-align: left;">Little's Law, MFU, OpenTelemetry Tracing</td>
-<td style="text-align: left;"><a href="./14_OBSERVABILITY_AND_DEBUGGING.md">14_OBSERVABILITY_AND_DEBUGGING.md</a></td>
-</tr>
-<tr>
-<td style="text-align: center;"><strong>P1</strong></td>
-<td style="text-align: left;"><strong>Systems / ML Design</strong></td>
-<td style="text-align: left;">Architecture Trade-offs, Cost/Latency Scaling</td>
-<td style="text-align: left;"><a href="./16_SYSTEM_DESIGN.md">16_SYSTEM_DESIGN.md</a> · <a href="./13_PRODUCTION_ML.md">13_PRODUCTION_ML.md</a></td>
-</tr>
-<tr>
-<td style="text-align: center;"><strong>P1</strong></td>
-<td style="text-align: left;"><strong>Deep Learning</strong></td>
-<td style="text-align: left;">Backpropagation, Softmax Jacobians, LayerNorm/RMSNorm</td>
-<td style="text-align: left;"><a href="./02_03_ML_AND_DL_FOUNDATIONS.md">02_03_ML_AND_DL_FOUNDATIONS.md</a></td>
-</tr>
-<tr>
-<td style="text-align: center;"><strong>P2</strong></td>
-<td style="text-align: left;"><strong>Python &amp; Coding</strong></td>
-<td style="text-align: left;">PyTorch Modules, FSM Parsers, Continuous Batching</td>
-<td style="text-align: left;"><a href="./17_PYTHON_AND_CODING.md">17_PYTHON_AND_CODING.md</a></td>
-</tr>
-</tbody>
-</table>
-<hr />
-<h2 id="heading-6">4. Internal Dependency Graph</h2>
-<div class="mermaid">flowchart TD
-    %% Base Layer
-    Math[&quot;01: Mathematical Foundations (SVD, Info Theory, Optimization)&quot;] --&gt; DL[&quot;02_03: Deep Learning (Backprop, RMSNorm, Loss Landscapes)&quot;]
-    DL --&gt; LLM[&quot;04: Modern LLMs (Attention, RoPE, MLA, MoE)&quot;]
-    
-    %% Hardware &amp; Performance Layer
-    GPU[&quot;08: GPU Architecture &amp; FlashAttention-3&quot;] --&gt; Inf[&quot;09: Inference Systems (PagedAttention, SGLang, PD Split)&quot;]
-    GPU --&gt; TS[&quot;07: Training Systems (FSDP-2, 3D Parallelism)&quot;]
-    Net[&quot;18: Distributed Systems (Ring All-Reduce, RDMA)&quot;] --&gt; TS
-    LLM --&gt; Inf
-    LLM --&gt; TS
-    
-    %% Training &amp; Alignment Layer
-    Data[&quot;06: Data Engineering (MinHash LSH, Synthetic Flywheels)&quot;] --&gt; PT[&quot;05: Post-Training (SFT, LoRA, DPO, GRPO)&quot;]
-    LLM --&gt; PT
-    PT --&gt; Eval[&quot;12: Evaluation (Z-Tests, ELO, SWE-bench)&quot;]
-    
-    %% Serving &amp; Agent Layer
-    Inf --&gt; Agent[&quot;10: Agentic Systems (ReAct, FSM JSON, MCP, Hybrid RAG)&quot;]
-    Agent --&gt; Rel[&quot;11: Long-Running Workflows (Temporal, Sagas, Jitter)&quot;]
-    Rel --&gt; Prod[&quot;13/14/15: Production MLOps, Tracing, Safety Guardrails&quot;]
-    
-    %% Synthesis Layer
-    Prod --&gt; SysDes[&quot;16-22: System Design, Production Code &amp; Playbooks&quot;]</div>
+<h2 id="heading-0">1. Deduplication Mathematics: MinHash &amp; Locality Sensitive Hashing (LSH)</h2>
+<p>Comparing all pairs in a dataset of <span class="katex-inline">$N = 10^8$</span> documents requires <span class="katex-inline">$\binom{N}{2} = \frac{N(N-1)}{2} \approx 5 \times 10^{15}$</span> comparisons, which is computationally intractable (<span class="katex-inline">$O(N^2)$</span>). MinHash with LSH reduces this to <strong><span class="katex-inline">$O(N)$</span> linear time</strong>.</p>
+<h3 id="heading-1">1.1 Jaccard Similarity on <span class="katex-inline">$k$</span>-Shingles</h3>
+<p>Let document <span class="katex-inline">$D$</span> be represented as a set of <span class="katex-inline">$k$</span>-shingles (character or token <span class="katex-inline">$k$</span>-grams) <span class="katex-inline">$S(D)$</span>.<br />
+The Jaccard Similarity between documents <span class="katex-inline">$A$</span> and <span class="katex-inline">$B$</span> is:</p>
+<div class="katex-display">$$J(A, B) = \frac{|S(A) \cap S(B)|}{|S(A) \cup S(B)|} \in [0, 1]$$</div>
 
 <hr />
-<h2 id="heading-7">5. Depth Philosophy &amp; Technical Bridge</h2>
-<p>Every document in this Single Source of Knowledge (SSK) follows the <strong>10-Level Depth Framework</strong>, bridging <strong>Mathematics <span class="katex-inline">$\longleftrightarrow$</span> Algorithms <span class="katex-inline">$\longleftrightarrow$</span> GPU Execution <span class="katex-inline">$\longleftrightarrow$</span> Production Systems</strong>.</p>
+<h3 id="heading-2">1.2 The MinHash Theorem</h3>
+<p>Let <span class="katex-inline">$\pi$</span> be a random permutation of the universal vocabulary of shingles <span class="katex-inline">$\mathcal{U}$</span>.<br />
+Define the MinHash function <span class="katex-inline">$h_\pi(S) = \min_{s \in S} \pi(s)$</span>.</p>
+<h4>Theorem:</h4>
+<div class="katex-display">$$\mathbb{P}\left[ h_\pi(S(A)) = h_\pi(S(B)) \right] = J(A, B)$$</div>
+
+<h4>Step-by-Step Proof:</h4>
+<p>Let the universe of shingles <span class="katex-inline">$\mathcal{U}$</span> be partitioned into three disjoint sets:<br />
+1. <span class="katex-inline">$X$</span>: Shingles present in both <span class="katex-inline">$A$</span> and <span class="katex-inline">$B$</span> (<span class="katex-inline">$S(A) \cap S(B)$</span>). <span class="katex-inline">$|X| = |S(A) \cap S(B)|$</span>.<br />
+2. <span class="katex-inline">$Y$</span>: Shingles present in <span class="katex-inline">$A$</span> but not <span class="katex-inline">$B$</span> (<span class="katex-inline">$S(A) \setminus S(B)$</span>).<br />
+3. <span class="katex-inline">$Z$</span>: Shingles present in <span class="katex-inline">$B$</span> but not <span class="katex-inline">$A$</span> (<span class="katex-inline">$S(B) \setminus S(A)$</span>).<br />
+4. Shingles in neither <span class="katex-inline">$A$</span> nor <span class="katex-inline">$B$</span> do not affect <span class="katex-inline">$h_\pi(S(A) \cup S(B))$</span>.</p>
+<p>The union size is <span class="katex-inline">$|S(A) \cup S(B)| = |X| + |Y| + |Z|$</span>.<br />
+Under a uniform random permutation <span class="katex-inline">$\pi$</span>, every element in <span class="katex-inline">$S(A) \cup S(B)$</span> has an equal probability of being mapped to the minimum value.<br />
+The event <span class="katex-inline">$h_\pi(S(A)) = h_\pi(S(B))$</span> occurs if and only if the minimum element in <span class="katex-inline">$S(A) \cup S(B)$</span> falls into region <span class="katex-inline">$X$</span> (the intersection):</p>
+<div class="katex-display">$$\mathbb{P}\left[ h_\pi(S(A)) = h_\pi(S(B)) \right] = \frac{|X|}{|X| + |Y| + |Z|} = \frac{|S(A) \cap S(B)|}{|S(A) \cup S(B)|} = J(A, B)$$</div>
+
+<p><em>Implication</em>: By computing <span class="katex-inline">$K$</span> independent MinHash functions <span class="katex-inline">$[h_1(A), \dots, h_K(A)]$</span>, the empirical fraction of matching hash values is an <strong>unbiased estimator</strong> of <span class="katex-inline">$J(A, B)$</span>.</p>
+<hr />
+<h3 id="heading-3">1.3 Locality Sensitive Hashing (LSH) S-Curve Analysis</h3>
+<p>To avoid all-to-all hash signature comparisons, we divide the <span class="katex-inline">$K$</span> hash values into <span class="katex-inline">$b$</span> bands of <span class="katex-inline">$r$</span> rows (<span class="katex-inline">$K = b \cdot r$</span>).</p>
+<pre><code>Document Signature (K = b · r hashes)
+┌──────────────┐ ─── Band 1 (r hashes) ───► Hash to Bucket (exact match required)
+├──────────────┤ ─── Band 2 (r hashes) ───► Hash to Bucket
+├──────────────┤ ─── ...
+└──────────────┘ ─── Band b (r hashes) ───► Hash to Bucket
+</code></pre>
+<p>Two documents <span class="katex-inline">$A$</span> and <span class="katex-inline">$B$</span> with Jaccard similarity <span class="katex-inline">$s = J(A, B)$</span> become candidate duplicates if they match in <strong>at least one band</strong>:<br />
+1. Probability of all <span class="katex-inline">$r$</span> hashes matching in a single band: <span class="katex-inline">$s^r$</span><br />
+2. Probability of not matching in a single band: <span class="katex-inline">$1 - s^r$</span><br />
+3. Probability of not matching in all <span class="katex-inline">$b$</span> bands: <span class="katex-inline">$(1 - s^r)^b$</span><br />
+4. Probability of matching in at least one band (Candidate Pair):<br />
+   <div class="katex-display">$$\mathbf{P(\text{Candidate Pair}) = 1 - (1 - s^r)^b}$$</div>
+</p>
+<pre><code>   P(Candidate)
+   1.0 ┼               ┌─────────────
+       │              /
+   0.5 ┼─────────────┼─ (Threshold s*)
+       │            /
+   0.0 ┼───────────┘
+       └─────────────┼───────────────► Jaccard Similarity s
+                    s* = (1/b)^(1/r)
+</code></pre>
+<ul>
+<li><strong>The Characteristic Threshold <span class="katex-inline">$s^*$</span></strong>:<br />
+  <div class="katex-display">$$1 - (1 - (s^*)^r)^b = 0.5 \implies (1 - (s^*)^r)^b = 0.5 \implies s^* \approx \left(\frac{1}{b}\right)^{1/r}$$</div></li>
+</ul>
+<p><em>Example</em>: Setting <span class="katex-inline">$b = 20$</span> bands and <span class="katex-inline">$r = 5$</span> rows (<span class="katex-inline">$K = 100$</span> hashes) yields <span class="katex-inline">$s^* = (1/20)^{1/5} \approx 0.549$</span>. Pairs with similarity <span class="katex-inline">$&gt; 0.7$</span> have <span class="katex-inline">$&gt; 98\%$</span> probability of collision, while pairs with <span class="katex-inline">$&lt; 0.3$</span> similarity have <span class="katex-inline">$&lt; 0.1\%$</span> collision rate.</p>
+<hr />
+<h2 id="heading-4">2. Model Collapse: The Information-Theoretic Hazard</h2>
+<h3 id="heading-5">2.1 Mathematical Formulation of Model Collapse (Shumailov et al., 2024)</h3>
+<p>Consider a recursive data flywheel where generation <span class="katex-inline">$n+1$</span> is trained exclusively on synthetic outputs produced by generation <span class="katex-inline">$n$</span>:</p>
+<div class="katex-display">$$P_{n+1}(x) = \arg\min_Q \mathbb{D}_{\text{KL}}\left( \hat{P}_n(x) \parallel Q(x) \right)$$</div>
+
+<p>Let the true data distribution be a Gaussian <span class="katex-inline">$P_0(x) = \mathcal{N}(\mu_0, \sigma_0^2)$</span>.<br />
+At each generation <span class="katex-inline">$n$</span>, the model samples a finite dataset <span class="katex-inline">$\mathcal{D}_n = \{x_1, \dots, x_{M_n}\} \sim P_n(x)$</span> and fits parameters <span class="katex-inline">$\mu_{n+1}, \sigma_{n+1}^2$</span>.</p>
+<h4>Mean and Variance Dynamics:</h4>
+<ol>
+<li><strong>Mean Drift</strong>:<br />
+   <div class="katex-display">$$\mu_{n+1} = \frac{1}{M_n} \sum_{i=1}^{M_n} x_i \implies \mathbb{E}[\mu_{n+1}] = \mu_0, \quad \text{Var}(\mu_n) = \sigma_0^2 \sum_{k=0}^{n-1} \frac{1}{M_k}$$</div></li>
+</ol>
+<p>As generations progress (<span class="katex-inline">$n \to \infty$</span>), the variance of the estimated mean grows linearly with generation count: <span class="katex-inline">$\text{Var}(\mu_n) \to \infty$</span>. The model drifts far away from the true distribution mean.</p>
+<ol start="2">
+<li><strong>Variance Shrinkage &amp; Tail Loss</strong>:<br />
+   <div class="katex-display">$$\mathbb{E}[\sigma_{n+1}^2] = \sigma_n^2 \left( 1 - \frac{1}{M_n} \right) = \sigma_0^2 \prod_{k=0}^n \left( 1 - \frac{1}{M_k} \right)$$</div></li>
+</ol>
+<p>As <span class="katex-inline">$n \to \infty$</span>:<br />
+   <div class="katex-display">$$\lim_{n \to \infty} \sigma_n^2 = 0$$</div>
+</p>
+<div class="katex-display">$$\mathbf{\lim_{n \to \infty} P_n(x) = \delta(x - \mu_\infty)}$$</div>
+
+<p><strong>Conclusion</strong>: The model distribution collapses to a <strong>Dirac delta function (point mass)</strong>. The model loses all linguistic and conceptual diversity, repeating only the most generic, high-probability tokens.</p>
+<hr />
+<h3 id="heading-6">2.2 Mitigation: Anchored Synthetic Flywheels</h3>
+<p>To prevent model collapse:<br />
+1. <strong>Human Anchor</strong>: Mix synthetic data with a fixed minimum fraction (<span class="katex-inline">$\geq 20\%$</span>) of pristine human data.<br />
+2. <strong>Rejection Sampling / Verifiers</strong>: Filter synthetic generation using deterministic code execution sandboxes or high-precision unit tests rather than raw unconditional generations.</p>
+<hr />
+<h2 id="heading-7">3. Benchmark Decontamination Mathematics</h2>
+<p>If evaluation benchmark questions leak into the pre-training or fine-tuning corpus, evaluation benchmarks measure <strong>memorization</strong> rather than generalization.</p>
+<h3 id="heading-8">3.1 <span class="katex-inline">$N$</span>-Gram Bloom Filter Decontamination</h3>
+<p>Given test benchmark documents <span class="katex-inline">$\mathcal{D}_{\text{eval}}$</span>, extract all 13-token shingles <span class="katex-inline">$\mathcal{S}_{\text{eval}}$</span>.<br />
+Construct a <strong>Bloom Filter</strong> of <span class="katex-inline">$m$</span> bits and <span class="katex-inline">$k$</span> independent hash functions:</p>
+<div class="katex-display">$$k = \frac{m}{|S_{\text{eval}}|} \ln 2$$</div>
+<p>The theoretical False Positive Rate is:</p>
+<div class="katex-display">$$p_{\text{FP}} = \left( 1 - e^{-k |S_{\text{eval}}| / m} \right)^k$$</div>
+
+<p>A training document <span class="katex-inline">$D_{\text{train}}$</span> is flagged and removed if:</p>
+<div class="katex-display">$$\frac{|\{s \in S(D_{\text{train}}) : s \in \text{BloomFilter}(\mathcal{S}_{\text{eval}})\}|}{|S(D_{\text{train}})|} &gt; \tau_{\text{overlap}} \quad (\tau_{\text{overlap}} = 0.05)$$</div>
+
+<hr />
+<h2 id="heading-9">4. PyTorch &amp; Python Implementation: MinHash LSH and Bloom Filter</h2>
+<pre><code class="language-python">import hashlib
+import numpy as np
+
+class MinHashLSH:
+    &quot;&quot;&quot;
+    MinHash with Locality Sensitive Hashing for document deduplication.
+    &quot;&quot;&quot;
+    def __init__(self, num_hashes: int = 100, num_bands: int = 20):
+        assert num_hashes % num_bands == 0
+        self.num_hashes = num_hashes
+        self.num_bands = num_bands
+        self.rows_per_band = num_hashes // num_bands
+
+        # Random hash coefficients: (a * x + b) % prime
+        np.random.seed(42)
+        self.a = np.random.randint(1, 2**31 - 1, size=num_hashes, dtype=np.int64)
+        self.b = np.random.randint(0, 2**31 - 1, size=num_hashes, dtype=np.int64)
+        self.prime = 2147483647 # 2^31 - 1 (Mersenne prime)
+
+    def _get_shingle_hashes(self, text: str, k: int = 5) -&gt; np.ndarray:
+        words = text.lower().split()
+        shingles = [&quot; &quot;.join(words[i:i+k]) for i in range(max(1, len(words) - k + 1))]
+        hashes = np.array([int(hashlib.md5(s.encode('utf-8')).hexdigest()[:8], 16) for s in shingles], dtype=np.int64)
+        return hashes
+
+    def compute_minhash(self, text: str) -&gt; np.ndarray:
+        shingle_hashes = self._get_shingle_hashes(text)
+        if len(shingle_hashes) == 0:
+            return np.zeros(self.num_hashes, dtype=np.int64)
+
+        # Matrix multiply: (num_hashes, len(shingles))
+        all_hashes = (np.outer(self.a, shingle_hashes) + self.b[:, None]) % self.prime
+        return np.min(all_hashes, axis=1)
+
+    def get_band_buckets(self, signature: np.ndarray) -&gt; list:
+        buckets = []
+        for i in range(self.num_bands):
+            start = i * self.rows_per_band
+            end = start + self.rows_per_band
+            band_slice = signature[start:end]
+            band_hash = hash(tuple(band_slice))
+            buckets.append((i, band_hash))
+        return buckets
+
+if __name__ == &quot;__main__&quot;:
+    lsh = MinHashLSH(num_hashes=100, num_bands=20)
+    doc1 = &quot;The Transformer attention mechanism uses scaled dot product attention for language modeling.&quot;
+    doc2 = &quot;The Transformer attention mechanism uses scaled dot product attention for sequence modeling.&quot;
+    doc3 = &quot;Convolutional neural networks apply kernel filters over spatial image grids for computer vision.&quot;
+
+    sig1 = lsh.compute_minhash(doc1)
+    sig2 = lsh.compute_minhash(doc2)
+    sig3 = lsh.compute_minhash(doc3)
+
+    jaccard_1_2 = np.mean(sig1 == sig2)
+    jaccard_1_3 = np.mean(sig1 == sig3)
+
+    print(f&quot;Estimated Jaccard(Doc1, Doc2): {jaccard_1_2:.2f} (Near Duplicate)&quot;)
+    print(f&quot;Estimated Jaccard(Doc1, Doc3): {jaccard_1_3:.2f} (Dissimilar)&quot;)
+</code></pre>
+<hr />
+<h2 id="heading-10">5. Deep Interview Interrogation Ladder</h2>
+<ul>
+<li><strong>Level 1 (Concept)</strong>: What is the Jaccard similarity between two sets of text shingles?</li>
+<li><strong>Level 3 (Proof)</strong>: Prove mathematically why the probability of two documents having identical MinHash values equals their exact Jaccard similarity.</li>
+<li><strong>Level 5 (LSH Derivation)</strong>: Derive the characteristic S-curve threshold <span class="katex-inline">$s^* = (1/b)^{1/r}$</span> in Locality Sensitive Hashing.</li>
+<li><strong>Level 7 (Model Collapse)</strong>: Explain mathematically why recursive training on synthetic data causes the variance of the learned distribution to converge to zero.</li>
+<li><strong>Level 9 (Decontamination)</strong>: Design a petabyte-scale deduplication and benchmark decontamination pipeline using PySpark, MinHash LSH, and Bloom Filters for a 15-trillion token pre-training run.</li>
+<li><strong>Level 10 (Principal Engineering)</strong>: You observe that after 3 iterations of fine-tuning an agent on its own tool-use trajectories, the model's tool error recovery rate drops from 85% to 20%. Diagnose the mathematical root cause and architect a closed-loop data flywheel that fixes it.</li>
+</ul>
         
         <!-- Navigation Footer -->
         <div class="doc-nav-footer">
-          <div></div>
           
-        <a href="01_MATHEMATICAL_FOUNDATIONS.html" class="doc-nav-btn" style="text-align: right;">
+        <a href="05_POST_TRAINING.html" class="doc-nav-btn">
+          <span class="label">← Previous</span>
+          <span class="title">05_POST_TRAINING</span>
+        </a>
+        
+          
+        <a href="08_GPU_AND_PERFORMANCE.html" class="doc-nav-btn" style="text-align: right;">
           <span class="label">Next →</span>
-          <span class="title">01_MATHEMATICAL_FOUNDATIONS</span>
+          <span class="title">08_GPU_AND_PERFORMANCE</span>
         </a>
         
         </div>
@@ -864,35 +892,47 @@
         <ul class="toc-list">
           
         <li class="toc-item">
-          <a href="#heading-0" class="toc-link">Role Context &amp; Core Hypothesis</a>
-        </li>
-        
-        <li class="toc-item">
-          <a href="#heading-1" class="toc-link">Role Decomposition</a>
+          <a href="#heading-0" class="toc-link">Deduplication Mathematics: MinHash &amp; Locality Sensitive Hashing (LSH)</a>
         </li>
         
         <li class="toc-item h3">
-          <a href="#heading-2" class="toc-link">Explicit Technical Requirements</a>
+          <a href="#heading-1" class="toc-link">Jaccard Similarity on $k$-Shingles</a>
         </li>
         
         <li class="toc-item h3">
-          <a href="#heading-3" class="toc-link">Implicit Technical Requirements</a>
+          <a href="#heading-2" class="toc-link">The MinHash Theorem</a>
         </li>
         
         <li class="toc-item h3">
-          <a href="#heading-4" class="toc-link">Staff/Principal-Level Requirements</a>
+          <a href="#heading-3" class="toc-link">Locality Sensitive Hashing (LSH) S-Curve Analysis</a>
         </li>
         
         <li class="toc-item">
-          <a href="#heading-5" class="toc-link">Role Competency Model &amp; Priority Matrix</a>
+          <a href="#heading-4" class="toc-link">Model Collapse: The Information-Theoretic Hazard</a>
+        </li>
+        
+        <li class="toc-item h3">
+          <a href="#heading-5" class="toc-link">Mathematical Formulation of Model Collapse (Shumailov et al., 2024)</a>
+        </li>
+        
+        <li class="toc-item h3">
+          <a href="#heading-6" class="toc-link">Mitigation: Anchored Synthetic Flywheels</a>
         </li>
         
         <li class="toc-item">
-          <a href="#heading-6" class="toc-link">Internal Dependency Graph</a>
+          <a href="#heading-7" class="toc-link">Benchmark Decontamination Mathematics</a>
+        </li>
+        
+        <li class="toc-item h3">
+          <a href="#heading-8" class="toc-link">$N$-Gram Bloom Filter Decontamination</a>
         </li>
         
         <li class="toc-item">
-          <a href="#heading-7" class="toc-link">Depth Philosophy &amp; Technical Bridge</a>
+          <a href="#heading-9" class="toc-link">PyTorch &amp; Python Implementation: MinHash LSH and Bloom Filter</a>
+        </li>
+        
+        <li class="toc-item">
+          <a href="#heading-10" class="toc-link">Deep Interview Interrogation Ladder</a>
         </li>
         
         </ul>

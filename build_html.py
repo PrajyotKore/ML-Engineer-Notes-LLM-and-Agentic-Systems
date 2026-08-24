@@ -5,42 +5,39 @@ import html
 import markdown
 from markdown.extensions.tables import TableExtension
 from markdown.extensions.fenced_code import FencedCodeExtension
-from markdown.extensions.codehilite import CodeHiliteExtension
 
 ROOT_DIR = os.path.dirname(os.path.abspath(__file__))
-HTML_DIR = os.path.join(ROOT_DIR, "html")
-os.makedirs(HTML_DIR, exist_ok=True)
 
-# List of all markdown documentation files in logical order
+# Complete curriculum definition in strict pedagogical order
 DOC_FILES = [
-    {"id": "00_ROLE_ANALYSIS", "file": "00_ROLE_ANALYSIS.md", "title": "Role Analysis & Competency Map", "priority": "P1", "phase": "Phase 0: Architecture"},
-    {"id": "01_MATHEMATICAL_FOUNDATIONS", "file": "01_MATHEMATICAL_FOUNDATIONS.md", "title": "Mathematical Foundations (SVD, Low-Rank, AdamW)", "priority": "P1", "phase": "Phase 1: Foundations"},
-    {"id": "02_03_ML_AND_DL_FOUNDATIONS", "file": "02_03_ML_AND_DL_FOUNDATIONS.md", "title": "ML & Deep Learning Foundations (Backprop, RMSNorm)", "priority": "P1", "phase": "Phase 1: Foundations"},
-    {"id": "04_TRANSFORMERS_AND_LLMS", "file": "04_TRANSFORMERS_AND_LLMS.md", "title": "Transformers & Modern LLMs (MLA, RoPE, SwiGLU, MoE)", "priority": "P0", "phase": "Phase 2: Core LLM"},
-    {"id": "05_POST_TRAINING", "file": "05_POST_TRAINING.md", "title": "Post-Training & Alignment (LoRA, DPO, GRPO)", "priority": "P0", "phase": "Phase 3: Alignment & Reasoning"},
-    {"id": "06_DATA_AND_SYNTHETIC_DATA", "file": "06_DATA_AND_SYNTHETIC_DATA.md", "title": "Data Engineering & Synthetic Flywheels (MinHash LSH)", "priority": "P1", "phase": "Phase 3: Alignment & Reasoning"},
-    {"id": "08_GPU_AND_PERFORMANCE", "file": "08_GPU_AND_PERFORMANCE.md", "title": "GPU Architecture & FlashAttention-1/2/3", "priority": "P0", "phase": "Phase 4: Hardware & Inference"},
-    {"id": "09_INFERENCE_SYSTEMS", "file": "09_INFERENCE_SYSTEMS.md", "title": "Inference Systems (PagedAttention, SGLang, PD Split)", "priority": "P0", "phase": "Phase 4: Hardware & Inference"},
-    {"id": "07_TRAINING_SYSTEMS", "file": "07_TRAINING_SYSTEMS.md", "title": "Training Systems (FSDP-2, 3D Parallelism, Bubbles)", "priority": "P1", "phase": "Phase 5: Distributed Scaling"},
-    {"id": "18_DISTRIBUTED_SYSTEMS", "file": "18_DISTRIBUTED_SYSTEMS.md", "title": "Distributed Systems (Ring All-Reduce, RDMA)", "priority": "P1", "phase": "Phase 5: Distributed Scaling"},
-    {"id": "10_AGENTIC_ML_SYSTEMS", "file": "10_AGENTIC_ML_SYSTEMS.md", "title": "Agentic ML Systems (FSM JSON, MCP, Hybrid RAG)", "priority": "P0", "phase": "Phase 6: Agentic Systems"},
-    {"id": "11_LONG_RUNNING_WORKFLOW_RELIABILITY", "file": "11_LONG_RUNNING_WORKFLOW_RELIABILITY.md", "title": "Long-Running Workflow Reliability (Temporal, Sagas)", "priority": "P0", "phase": "Phase 6: Agentic Systems"},
-    {"id": "15_SAFETY_AND_ROBUSTNESS", "file": "15_SAFETY_AND_ROBUSTNESS.md", "title": "Safety & Robustness (Firecracker, Injections, IAM)", "priority": "P0", "phase": "Phase 6: Agentic Systems"},
-    {"id": "12_EVALUATION", "file": "12_EVALUATION.md", "title": "Evaluation Systems (Z-Tests, ELO, SWE-bench)", "priority": "P0", "phase": "Phase 7: Production & MLOps"},
-    {"id": "13_PRODUCTION_ML", "file": "13_PRODUCTION_ML.md", "title": "Production MLOps (PSI Drift, Canary, Pinning)", "priority": "P1", "phase": "Phase 7: Production & MLOps"},
-    {"id": "14_OBSERVABILITY_AND_DEBUGGING", "file": "14_OBSERVABILITY_AND_DEBUGGING.md", "title": "Observability & Debugging (Little's Law, MFU, Traces)", "priority": "P1", "phase": "Phase 7: Production & MLOps"},
-    {"id": "16_SYSTEM_DESIGN", "file": "16_SYSTEM_DESIGN.md", "title": "System Design Blueprints (100k QPS Serving, Agents)", "priority": "P1", "phase": "Phase 8: Synthesis & Interview Prep"},
-    {"id": "17_PYTHON_AND_CODING", "file": "17_PYTHON_AND_CODING.md", "title": "Production Code Implementations (MLA, FSM, Batcher)", "priority": "P2", "phase": "Phase 8: Synthesis & Interview Prep"},
-    {"id": "19_LEADERSHIP_AND_TECHNICAL_JUDGMENT", "file": "19_LEADERSHIP_AND_TECHNICAL_JUDGMENT.md", "title": "Leadership & Technical Judgment Frameworks", "priority": "P1", "phase": "Phase 8: Synthesis & Interview Prep"},
-    {"id": "20_INTERVIEW_QUESTION_BANK", "file": "20_INTERVIEW_QUESTION_BANK.md", "title": "Interview Question Bank (50+ Graded L1-L10 Questions)", "priority": "P0", "phase": "Phase 8: Synthesis & Interview Prep"},
-    {"id": "21_CASE_STUDIES", "file": "21_CASE_STUDIES.md", "title": "Production Incident Case Studies & RCAs", "priority": "P0", "phase": "Phase 8: Synthesis & Interview Prep"},
-    {"id": "22_FINAL_SYNTHESIS_PLAYBOOKS", "file": "22_FINAL_SYNTHESIS_PLAYBOOKS.md", "title": "The 2-Hour Final Synthesis Playbooks & Formulas", "priority": "P0", "phase": "Phase 8: Synthesis & Interview Prep"},
-    {"id": "README", "file": "README.md", "title": "README & Master Curriculum", "priority": "P0", "phase": "Overview"}
+    {"id": "00_ROLE_ANALYSIS", "file": "00_ROLE_ANALYSIS.md", "title": "00_ROLE_ANALYSIS", "label": "Role Analysis & Competency Map", "priority": "P1", "phase": "Phase 0: Architecture"},
+    {"id": "01_MATHEMATICAL_FOUNDATIONS", "file": "01_MATHEMATICAL_FOUNDATIONS.md", "title": "01_MATHEMATICAL_FOUNDATIONS", "label": "Mathematical Foundations (SVD, Low-Rank, AdamW)", "priority": "P1", "phase": "Phase 1: Foundations"},
+    {"id": "02_03_ML_AND_DL_FOUNDATIONS", "file": "02_03_ML_AND_DL_FOUNDATIONS.md", "title": "02_03_ML_AND_DL_FOUNDATIONS", "label": "ML & Deep Learning (Backprop, RMSNorm)", "priority": "P1", "phase": "Phase 1: Foundations"},
+    {"id": "04_TRANSFORMERS_AND_LLMS", "file": "04_TRANSFORMERS_AND_LLMS.md", "title": "04_TRANSFORMERS_AND_LLMS", "label": "Transformers & Modern LLMs (MLA, RoPE, MoE)", "priority": "P0", "phase": "Phase 2: Core LLM"},
+    {"id": "05_POST_TRAINING", "file": "05_POST_TRAINING.md", "title": "05_POST_TRAINING", "label": "Post-Training & Alignment (LoRA, DPO, GRPO)", "priority": "P0", "phase": "Phase 3: Alignment & Reasoning"},
+    {"id": "06_DATA_AND_SYNTHETIC_DATA", "file": "06_DATA_AND_SYNTHETIC_DATA.md", "title": "06_DATA_AND_SYNTHETIC_DATA", "label": "Data Engineering & Synthetic Flywheels (MinHash)", "priority": "P1", "phase": "Phase 3: Alignment & Reasoning"},
+    {"id": "08_GPU_AND_PERFORMANCE", "file": "08_GPU_AND_PERFORMANCE.md", "title": "08_GPU_AND_PERFORMANCE", "label": "GPU Architecture & FlashAttention-1/2/3", "priority": "P0", "phase": "Phase 4: Hardware & Inference"},
+    {"id": "09_INFERENCE_SYSTEMS", "file": "09_INFERENCE_SYSTEMS.md", "title": "09_INFERENCE_SYSTEMS", "label": "Inference Systems (PagedAttention, SGLang, PD Split)", "priority": "P0", "phase": "Phase 4: Hardware & Inference"},
+    {"id": "07_TRAINING_SYSTEMS", "file": "07_TRAINING_SYSTEMS.md", "title": "07_TRAINING_SYSTEMS", "label": "Training Systems (FSDP-2, 3D Parallelism)", "priority": "P1", "phase": "Phase 5: Distributed Scaling"},
+    {"id": "18_DISTRIBUTED_SYSTEMS", "file": "18_DISTRIBUTED_SYSTEMS.md", "title": "18_DISTRIBUTED_SYSTEMS", "label": "Distributed Systems (Ring All-Reduce, RDMA)", "priority": "P1", "phase": "Phase 5: Distributed Scaling"},
+    {"id": "10_AGENTIC_ML_SYSTEMS", "file": "10_AGENTIC_ML_SYSTEMS.md", "title": "10_AGENTIC_ML_SYSTEMS", "label": "Agentic ML Systems (FSM JSON, MCP, Hybrid RAG)", "priority": "P0", "phase": "Phase 6: Agentic Systems"},
+    {"id": "11_LONG_RUNNING_WORKFLOW_RELIABILITY", "file": "11_LONG_RUNNING_WORKFLOW_RELIABILITY.md", "title": "11_LONG_RUNNING_WORKFLOW_RELIABILITY", "label": "Workflow Reliability (Temporal, Sagas, Jitter)", "priority": "P0", "phase": "Phase 6: Agentic Systems"},
+    {"id": "15_SAFETY_AND_ROBUSTNESS", "file": "15_SAFETY_AND_ROBUSTNESS.md", "title": "15_SAFETY_AND_ROBUSTNESS", "label": "Safety & Robustness (Firecracker, Injections)", "priority": "P0", "phase": "Phase 6: Agentic Systems"},
+    {"id": "12_EVALUATION", "file": "12_EVALUATION.md", "title": "12_EVALUATION", "label": "Evaluation Systems (Z-Tests, ELO, SWE-bench)", "priority": "P0", "phase": "Phase 7: Production & MLOps"},
+    {"id": "13_PRODUCTION_ML", "file": "13_PRODUCTION_ML.md", "title": "13_PRODUCTION_ML", "label": "Production MLOps (PSI Drift, Canary, Pinning)", "priority": "P1", "phase": "Phase 7: Production & MLOps"},
+    {"id": "14_OBSERVABILITY_AND_DEBUGGING", "file": "14_OBSERVABILITY_AND_DEBUGGING.md", "title": "14_OBSERVABILITY_AND_DEBUGGING", "label": "Observability & Debugging (Little's Law, MFU)", "priority": "P1", "phase": "Phase 7: Production & MLOps"},
+    {"id": "16_SYSTEM_DESIGN", "file": "16_SYSTEM_DESIGN.md", "title": "16_SYSTEM_DESIGN", "label": "System Design Blueprints (100k QPS Serving)", "priority": "P1", "phase": "Phase 8: Synthesis & Interview Prep"},
+    {"id": "17_PYTHON_AND_CODING", "file": "17_PYTHON_AND_CODING.md", "title": "17_PYTHON_AND_CODING", "label": "Production Code (MLA, FSM, Batcher)", "priority": "P2", "phase": "Phase 8: Synthesis & Interview Prep"},
+    {"id": "19_LEADERSHIP_AND_TECHNICAL_JUDGMENT", "file": "19_LEADERSHIP_AND_TECHNICAL_JUDGMENT.md", "title": "19_LEADERSHIP_AND_TECHNICAL_JUDGMENT", "label": "Leadership & Technical Judgment Frameworks", "priority": "P1", "phase": "Phase 8: Synthesis & Interview Prep"},
+    {"id": "20_INTERVIEW_QUESTION_BANK", "file": "20_INTERVIEW_QUESTION_BANK.md", "title": "20_INTERVIEW_QUESTION_BANK", "label": "Interview Question Bank (50+ Graded L1-L10)", "priority": "P0", "phase": "Phase 8: Synthesis & Interview Prep"},
+    {"id": "21_CASE_STUDIES", "file": "21_CASE_STUDIES.md", "title": "21_CASE_STUDIES", "label": "Production Incident Case Studies & RCAs", "priority": "P0", "phase": "Phase 8: Synthesis & Interview Prep"},
+    {"id": "22_FINAL_SYNTHESIS_PLAYBOOKS", "file": "22_FINAL_SYNTHESIS_PLAYBOOKS.md", "title": "22_FINAL_SYNTHESIS_PLAYBOOKS", "label": "2-Hour Final Synthesis Playbooks & Formulas", "priority": "P0", "phase": "Phase 8: Synthesis & Interview Prep"},
+    {"id": "README", "file": "README.md", "title": "README", "label": "README & Master Curriculum", "priority": "P0", "phase": "Overview"}
 ]
 
-def convert_md_to_html(raw_md: str) -> str:
+def convert_md_to_html(raw_md: str) -> tuple[str, list]:
     """
-    Robust server-side pre-rendering of Markdown with KaTeX math protection and Mermaid detection.
+    Converts raw Markdown to clean HTML with KaTeX math markers and extracts TOC headings.
     """
     # 1. Protect block math $$...$$
     block_math_list = []
@@ -58,7 +55,7 @@ def convert_md_to_html(raw_md: str) -> str:
     
     text = re.sub(r'\$([^\$\n]+?)\$', save_inline_math, text)
 
-    # 3. Handle Mermaid blocks before standard code blocks
+    # 3. Handle Mermaid blocks
     mermaid_blocks = []
     def save_mermaid(match):
         mermaid_blocks.append(match.group(1).strip())
@@ -85,35 +82,35 @@ def convert_md_to_html(raw_md: str) -> str:
         escaped_math = html.escape(in_math)
         rendered_html = rendered_html.replace(f"<!--INLINE_MATH_{i}-->", f'<span class="katex-inline">${escaped_math}$</span>')
 
-    return rendered_html
+    # 8. Inject IDs into <h2> and <h3> for Table of Contents
+    toc_items = []
+    heading_counter = 0
 
-# Read and pre-compile all markdown contents
-docs_data = []
-for item in DOC_FILES:
-    file_path = os.path.join(ROOT_DIR, item["file"])
-    if os.path.exists(file_path):
-        with open(file_path, "r", encoding="utf-8") as f:
-            content = f.read()
+    def add_heading_id(match):
+        nonlocal heading_counter
+        tag = match.group(1)
+        content = match.group(2)
+        h_id = f"heading-{heading_counter}"
+        heading_counter += 1
         
-        pre_rendered_html = convert_md_to_html(content)
+        # Clean text for TOC label
+        clean_label = re.sub(r'<[^>]+>', '', content).strip()
+        clean_label = re.sub(r'^[0-9.]+\s*', '', clean_label)
+        toc_items.append({"id": h_id, "tag": tag, "label": clean_label})
         
-        docs_data.append({
-            **item,
-            "content": content,
-            "html": pre_rendered_html
-        })
-    else:
-        print(f"Warning: {item['file']} not found.")
+        return f'<{tag} id="{h_id}">{content}</{tag}>'
 
-print(f"Pre-rendered {len(docs_data)} markdown files.")
+    rendered_html = re.sub(r'<(h[23])>(.*?)</\1>', add_heading_id, rendered_html, flags=re.DOTALL)
 
-# Generate Master Interactive Single-Page App (index.html)
-INDEX_HTML = r"""<!DOCTYPE html>
+    return rendered_html, toc_items
+
+# Master Page Template for Static Site
+PAGE_TEMPLATE = r"""<!DOCTYPE html>
 <html lang="en" class="dark">
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>ML Engineer (LLM & Agentic Systems) — Master Reference Hub</title>
+  <title>{{PAGE_TITLE}} — ML Engineer (SSK)</title>
   
   <!-- Fonts -->
   <link rel="preconnect" href="https://fonts.googleapis.com">
@@ -134,7 +131,7 @@ INDEX_HTML = r"""<!DOCTYPE html>
   <script src="https://cdnjs.cloudflare.com/ajax/libs/prism/1.29.0/components/prism-c.min.js"></script>
   <script src="https://cdnjs.cloudflare.com/ajax/libs/prism/1.29.0/components/prism-cpp.min.js"></script>
 
-  <!-- Mermaid.js for Diagrams -->
+  <!-- Mermaid.js for Architecture Diagrams -->
   <script src="https://cdn.jsdelivr.net/npm/mermaid@10.8.0/dist/mermaid.min.js"></script>
 
   <style>
@@ -173,13 +170,13 @@ INDEX_HTML = r"""<!DOCTYPE html>
       height: 100vh;
     }
 
-    /* Scrollbar */
+    /* Scrollbars */
     ::-webkit-scrollbar { width: 6px; height: 6px; }
     ::-webkit-scrollbar-track { background: transparent; }
     ::-webkit-scrollbar-thumb { background: rgba(255, 255, 255, 0.15); border-radius: 4px; }
     ::-webkit-scrollbar-thumb:hover { background: rgba(255, 255, 255, 0.3); }
 
-    /* Left Sidebar */
+    /* Left Sidebar Navigation */
     aside.sidebar {
       width: var(--sidebar-width);
       min-width: var(--sidebar-width);
@@ -208,6 +205,7 @@ INDEX_HTML = r"""<!DOCTYPE html>
       display: flex;
       align-items: center;
       gap: 8px;
+      text-decoration: none;
     }
 
     .brand-subtitle {
@@ -264,7 +262,6 @@ INDEX_HTML = r"""<!DOCTYPE html>
       color: var(--text-secondary);
       font-size: 0.82rem;
       text-decoration: none;
-      cursor: pointer;
       transition: all 0.15s ease;
       margin-bottom: 2px;
       border: 1px solid transparent;
@@ -321,6 +318,13 @@ INDEX_HTML = r"""<!DOCTYPE html>
       align-items: center;
       gap: 8px;
     }
+    .breadcrumbs a {
+      color: var(--text-secondary);
+      text-decoration: none;
+    }
+    .breadcrumbs a:hover {
+      color: #818cf8;
+    }
     .breadcrumbs span.current {
       color: var(--text-primary);
       font-weight: 600;
@@ -344,6 +348,7 @@ INDEX_HTML = r"""<!DOCTYPE html>
       display: flex;
       align-items: center;
       gap: 6px;
+      text-decoration: none;
       transition: all 0.2s;
     }
     .btn:hover {
@@ -492,13 +497,13 @@ INDEX_HTML = r"""<!DOCTYPE html>
       overflow-y: hidden;
     }
 
-    /* Mermaid diagrams container */
+    /* Mermaid diagrams */
     .mermaid {
       background: rgba(15, 20, 31, 0.9);
       border: 1px solid var(--border-color);
       border-radius: 8px;
       padding: 20px;
-      margin: 24px 0;
+      margin-bottom: 24px;
       display: flex;
       justify-content: center;
     }
@@ -520,7 +525,6 @@ INDEX_HTML = r"""<!DOCTYPE html>
       border: 1px solid var(--border-color);
       border-radius: 8px;
       transition: all 0.2s;
-      cursor: pointer;
     }
     .doc-nav-btn:hover {
       border-color: var(--accent-primary);
@@ -570,6 +574,9 @@ INDEX_HTML = r"""<!DOCTYPE html>
     .toc-item {
       padding-left: 14px;
     }
+    .toc-item.h3 {
+      padding-left: 24px;
+    }
     .toc-link {
       color: var(--text-secondary);
       font-size: 0.8rem;
@@ -600,9 +607,9 @@ INDEX_HTML = r"""<!DOCTYPE html>
   <!-- Left Sidebar Navigation -->
   <aside class="sidebar">
     <div class="brand-header">
-      <div class="brand-title">
+      <a href="index.html" class="brand-title">
         <span>⚡</span> ML Engineer (SSK)
-      </div>
+      </a>
       <div class="brand-subtitle">LLM & Agentic Systems</div>
     </div>
     
@@ -611,7 +618,7 @@ INDEX_HTML = r"""<!DOCTYPE html>
     </div>
 
     <ul class="nav-list" id="navList">
-      <!-- Generated dynamically by JS -->
+      {{NAV_LIST_HTML}}
     </ul>
   </aside>
 
@@ -619,11 +626,11 @@ INDEX_HTML = r"""<!DOCTYPE html>
   <main class="main-viewport">
     <div class="top-toolbar">
       <div class="breadcrumbs">
-        <span>Curriculum</span>
+        <a href="index.html">Curriculum</a>
         <span>/</span>
-        <span id="breadcrumbPhase">Phase 0</span>
+        <span>{{PHASE_NAME}}</span>
         <span>/</span>
-        <span id="breadcrumbDoc" class="current">00_ROLE_ANALYSIS</span>
+        <span class="current">{{PAGE_TITLE}}</span>
       </div>
       <div class="tool-actions">
         <button class="btn" onclick="window.print()">🖨️ Print / PDF</button>
@@ -631,144 +638,41 @@ INDEX_HTML = r"""<!DOCTYPE html>
     </div>
 
     <div class="content-container">
-      <div class="markdown-body" id="docContent">
-        <!-- Rendered HTML content -->
-      </div>
+      <article class="markdown-body" id="docContent">
+        {{DOCUMENT_HTML}}
+        
+        <!-- Navigation Footer -->
+        <div class="doc-nav-footer">
+          {{PREV_BUTTON_HTML}}
+          {{NEXT_BUTTON_HTML}}
+        </div>
+      </article>
 
       <aside class="toc-sidebar">
         <div class="toc-title">On This Page</div>
-        <ul class="toc-list" id="tocList">
-          <!-- Dynamic TOC -->
+        <ul class="toc-list">
+          {{TOC_LIST_HTML}}
         </ul>
       </aside>
     </div>
   </main>
 
   <script>
-    // Pre-rendered HTML Knowledge Base
-    const DOCS = __DOCS_DATA_PLACEHOLDER__;
-
-    let currentDocIndex = 0;
-
-    // Check URL Hash on Load
-    function getDocIndexFromHash() {
-      const hash = window.location.hash.replace('#', '');
-      if (!hash) return 0;
-      const foundIdx = DOCS.findIndex(d => d.id === hash || d.file.replace('.md', '') === hash);
-      return foundIdx !== -1 ? foundIdx : 0;
-    }
-
-    // Initialize Navigation List
-    function initNav() {
-      const navList = document.getElementById('navList');
-      navList.innerHTML = '';
-
-      let currentPhase = '';
-
-      DOCS.forEach((doc, idx) => {
-        if (doc.phase !== currentPhase) {
-          currentPhase = doc.phase;
-          const phaseHeader = document.createElement('li');
-          phaseHeader.className = 'nav-phase-header';
-          phaseHeader.textContent = currentPhase;
-          navList.appendChild(phaseHeader);
-        }
-
-        const li = document.createElement('li');
-        const a = document.createElement('a');
-        a.className = `nav-item ${idx === currentDocIndex ? 'active' : ''}`;
-        a.href = `#${doc.id}`;
-        a.onclick = (e) => {
-          e.preventDefault();
-          window.location.hash = doc.id;
-          loadDoc(idx);
-        };
-
-        const titleSpan = document.createElement('span');
-        titleSpan.textContent = doc.file.replace('.md', '');
-
-        const badge = document.createElement('span');
-        badge.className = `priority-badge priority-${doc.priority.toLowerCase()}`;
-        badge.textContent = doc.priority;
-
-        a.appendChild(titleSpan);
-        a.appendChild(badge);
-        li.appendChild(a);
-        navList.appendChild(li);
-      });
-    }
-
-    // Search filter
+    // Search filter for sidebar
     document.getElementById('searchInput').addEventListener('input', (e) => {
       const query = e.target.value.toLowerCase();
-      const items = document.querySelectorAll('.nav-item');
-      items.forEach((item, idx) => {
-        const doc = DOCS[idx];
-        const match = doc.title.toLowerCase().includes(query) || 
-                      doc.file.toLowerCase().includes(query) || 
-                      doc.content.toLowerCase().includes(query);
-        item.style.display = match ? 'flex' : 'none';
+      document.querySelectorAll('.nav-item').forEach(item => {
+        const text = item.textContent.toLowerCase();
+        item.style.display = text.includes(query) ? 'flex' : 'none';
       });
     });
 
-    function generateTOC() {
-      const tocList = document.getElementById('tocList');
-      tocList.innerHTML = '';
-      const headers = document.querySelectorAll('#docContent h2, #docContent h3');
-      
-      headers.forEach((h, i) => {
-        const id = `heading-${i}`;
-        h.id = id;
-
-        const li = document.createElement('li');
-        li.className = 'toc-item';
-        if (h.tagName === 'H3') li.style.paddingLeft = '18px';
-
-        const a = document.createElement('a');
-        a.className = 'toc-link';
-        a.href = `#${id}`;
-        a.textContent = h.textContent.replace(/^[0-9.]+\s*/, '');
-        a.onclick = (e) => {
-          e.preventDefault();
-          h.scrollIntoView({ behavior: 'smooth' });
-        };
-        li.appendChild(a);
-        tocList.appendChild(li);
-      });
-    }
-
-    function loadDoc(idx) {
-      currentDocIndex = idx;
-      initNav();
-
-      const doc = DOCS[idx];
-      document.getElementById('breadcrumbPhase').textContent = doc.phase;
-      document.getElementById('breadcrumbDoc').textContent = doc.file.replace('.md', '');
-
-      const contentDiv = document.getElementById('docContent');
-      // Direct insertion of pre-compiled HTML (fast & 100% reliable)
-      contentDiv.innerHTML = doc.html;
-
-      // Add Next / Previous navigation footer
-      const prevDoc = idx > 0 ? DOCS[idx - 1] : null;
-      const nextDoc = idx < DOCS.length - 1 ? DOCS[idx + 1] : null;
-      
-      let navFooterHtml = '<div class="doc-nav-footer">';
-      if (prevDoc) {
-        navFooterHtml += `<div class="doc-nav-btn" onclick="window.location.hash='${prevDoc.id}'; loadDoc(${idx - 1})"><span class="label">← Previous</span><span class="title">${prevDoc.file.replace('.md', '')}</span></div>`;
-      } else {
-        navFooterHtml += '<div></div>';
-      }
-      if (nextDoc) {
-        navFooterHtml += `<div class="doc-nav-btn" onclick="window.location.hash='${nextDoc.id}'; loadDoc(${idx + 1})" style="text-align: right;"><span class="label">Next →</span><span class="title">${nextDoc.file.replace('.md', '')}</span></div>`;
-      }
-      navFooterHtml += '</div>';
-      contentDiv.insertAdjacentHTML('beforeend', navFooterHtml);
-
-      // Render KaTeX Math safely
+    // Initialize KaTeX, Prism, and Mermaid on static DOM
+    document.addEventListener('DOMContentLoaded', () => {
+      // 1. KaTeX Math Render
       try {
         if (typeof renderMathInElement !== 'undefined') {
-          renderMathInElement(contentDiv, {
+          renderMathInElement(document.getElementById('docContent'), {
             delimiters: [
               { left: '$$', right: '$$', display: true },
               { left: '$', right: '$', display: false }
@@ -776,134 +680,135 @@ INDEX_HTML = r"""<!DOCTYPE html>
             throwOnError: false
           });
         }
-      } catch (err) {
-        console.warn('KaTeX render error:', err);
+      } catch (e) {
+        console.warn('KaTeX render error:', e);
       }
 
-      // Syntax Highlight safely
+      // 2. Prism Code Highlight
       try {
         if (typeof Prism !== 'undefined') {
-          Prism.highlightAllUnder(contentDiv);
+          Prism.highlightAll();
         }
-      } catch (err) {
-        console.warn('Prism highlight error:', err);
+      } catch (e) {
+        console.warn('Prism highlight error:', e);
       }
 
-      // Render Mermaid safely
+      // 3. Mermaid Diagrams Render
       try {
         if (typeof mermaid !== 'undefined') {
-          mermaid.initialize({ startOnLoad: false, theme: 'dark', securityLevel: 'loose' });
-          mermaid.run({ nodes: contentDiv.querySelectorAll('.mermaid') });
+          mermaid.initialize({ startOnLoad: true, theme: 'dark', securityLevel: 'loose' });
         }
-      } catch (err) {
-        console.warn('Mermaid render error:', err);
+      } catch (e) {
+        console.warn('Mermaid render error:', e);
       }
-
-      // Generate TOC
-      generateTOC();
-
-      // Scroll top
-      document.querySelector('.main-viewport').scrollTop = 0;
-    }
-
-    // Hash change handler
-    window.addEventListener('hashchange', () => {
-      const idx = getDocIndexFromHash();
-      if (idx !== currentDocIndex) {
-        loadDoc(idx);
-      }
-    });
-
-    // Initialize
-    window.addEventListener('DOMContentLoaded', () => {
-      const initialIdx = getDocIndexFromHash();
-      loadDoc(initialIdx);
     });
   </script>
 </body>
 </html>
 """
 
-# Replace placeholder with serialized JSON data
-rendered_index = INDEX_HTML.replace("__DOCS_DATA_PLACEHOLDER__", json.dumps(docs_data))
+# Build all pages
+print("Reading and pre-compiling all Markdown files...")
 
-with open(os.path.join(ROOT_DIR, "index.html"), "w", encoding="utf-8") as f:
-    f.write(rendered_index)
+processed_docs = []
+for item in DOC_FILES:
+    file_path = os.path.join(ROOT_DIR, item["file"])
+    if os.path.exists(file_path):
+        with open(file_path, "r", encoding="utf-8") as f:
+            raw_content = f.read()
+        
+        html_content, toc_items = convert_md_to_html(raw_content)
+        processed_docs.append({
+            **item,
+            "html": html_content,
+            "toc": toc_items
+        })
+    else:
+        print(f"Warning: {item['file']} not found.")
 
-print("Generated master interactive portal: index.html")
+print(f"Compiled {len(processed_docs)} documents.")
 
-# Also generate standalone HTML files in html/ folder
-STANDALONE_TEMPLATE = r"""<!DOCTYPE html>
-<html lang="en" class="dark">
-<head>
-  <meta charset="UTF-8">
-  <title>{{TITLE}}</title>
-  <link rel="preconnect" href="https://fonts.googleapis.com">
-  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-  <link href="https://fonts.googleapis.com/css2?family=Fira+Code:wght@400;500;600&family=Inter:wght@300;400;500;600;700;800&family=Outfit:wght@500;600;700;800&display=swap" rel="stylesheet">
-  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/katex@0.16.9/dist/katex.min.css">
-  <script defer src="https://cdn.jsdelivr.net/npm/katex@0.16.9/dist/katex.min.js"></script>
-  <script defer src="https://cdn.jsdelivr.net/npm/katex@0.16.9/dist/contrib/auto-render.min.js"></script>
-  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/prism/1.29.0/themes/prism-tomorrow.min.css">
-  <script src="https://cdnjs.cloudflare.com/ajax/libs/prism/1.29.0/prism.min.js"></script>
-  <script src="https://cdnjs.cloudflare.com/ajax/libs/prism/1.29.0/components/prism-python.min.js"></script>
-  <script src="https://cdnjs.cloudflare.com/ajax/libs/prism/1.29.0/components/prism-json.min.js"></script>
-  <script src="https://cdn.jsdelivr.net/npm/mermaid@10.8.0/dist/mermaid.min.js"></script>
-  <style>
-    body { font-family: 'Inter', sans-serif; background: #0a0d14; color: #f1f5f9; line-height: 1.7; padding: 40px 20px; }
-    .container { max-width: 960px; margin: 0 auto; background: #111622; padding: 48px; border-radius: 12px; border: 1px solid rgba(255,255,255,0.08); }
-    h1 { font-family: 'Outfit', sans-serif; font-size: 2.2rem; border-bottom: 1px solid rgba(255,255,255,0.1); padding-bottom: 12px; color: #fff; margin-bottom: 24px; }
-    h2 { font-family: 'Outfit', sans-serif; font-size: 1.5rem; margin-top: 36px; color: #e2e8f0; border-bottom: 1px solid rgba(255,255,255,0.05); padding-bottom: 8px; }
-    h3 { font-size: 1.2rem; margin-top: 24px; color: #cbd5e1; }
-    p, li { color: #cbd5e1; margin-bottom: 12px; }
-    code { font-family: 'Fira Code', monospace; background: rgba(255,255,255,0.08); color: #f472b6; padding: 2px 6px; border-radius: 4px; }
-    pre { background: #0f141f !important; padding: 18px !important; border-radius: 8px; overflow-x: auto; margin-bottom: 20px; border: 1px solid rgba(255,255,255,0.08); }
-    pre code { background: transparent !important; color: #e2e8f0; }
-    table { width: 100%; border-collapse: collapse; margin: 24px 0; background: rgba(0,0,0,0.2); border: 1px solid rgba(255,255,255,0.08); }
-    th, td { border: 1px solid rgba(255,255,255,0.08); padding: 12px 14px; text-align: left; }
-    th { background: rgba(255,255,255,0.05); color: #fff; }
-    blockquote { border-left: 4px solid #6366f1; background: rgba(99,102,241,0.08); padding: 14px 18px; border-radius: 0 8px 8px 0; margin-bottom: 20px; }
-    .nav-back { display: inline-block; margin-bottom: 24px; color: #818cf8; text-decoration: none; font-size: 0.9rem; font-weight: 500; }
-    .nav-back:hover { text-decoration: underline; }
-    .mermaid { background: rgba(15,20,31,0.9); padding: 20px; border-radius: 8px; margin: 20px 0; display: flex; justify-content: center; }
-  </style>
-</head>
-<body>
-  <div class="container">
-    <a href="../index.html#{{DOC_ID}}" class="nav-back">← Back to Master Knowledge Hub</a>
-    <div id="content">{{PRE_COMPILED_HTML}}</div>
-  </div>
-  <script>
-    document.addEventListener('DOMContentLoaded', () => {
-      try {
-        if (typeof renderMathInElement !== 'undefined') {
-          renderMathInElement(document.getElementById('content'), {
-            delimiters: [
-              { left: '$$', right: '$$', display: true },
-              { left: '$', right: '$', display: false }
-            ],
-            throwOnError: false
-          });
-        }
-      } catch(e){}
-      try { Prism.highlightAll(); } catch(e){}
-      try {
-        mermaid.initialize({ startOnLoad: true, theme: 'dark' });
-      } catch(e){}
-    });
-  </script>
-</body>
-</html>
-"""
+# Generate each standalone root HTML page
+for idx, doc in enumerate(processed_docs):
+    # 1. Build Navigation Sidebar HTML with active class
+    nav_html = []
+    current_phase = ""
+    for nav_doc in processed_docs:
+        if nav_doc["phase"] != current_phase:
+            current_phase = nav_doc["phase"]
+            nav_html.append(f'<li class="nav-phase-header">{current_phase}</li>')
+        
+        is_active = (nav_doc["id"] == doc["id"])
+        active_class = " active" if is_active else ""
+        priority_class = f"priority-{nav_doc['priority'].lower()}"
+        target_file = f"{nav_doc['id']}.html"
+        
+        nav_html.append(f'''
+        <li>
+          <a href="{target_file}" class="nav-item{active_class}">
+            <span>{nav_doc["title"]}</span>
+            <span class="priority-badge {priority_class}">{nav_doc["priority"]}</span>
+          </a>
+        </li>
+        ''')
+    
+    # 2. Build TOC List HTML
+    toc_html = []
+    for toc in doc["toc"]:
+        h3_class = " h3" if toc["tag"] == "h3" else ""
+        toc_html.append(f'''
+        <li class="toc-item{h3_class}">
+          <a href="#{toc["id"]}" class="toc-link">{toc["label"]}</a>
+        </li>
+        ''')
+    if not toc_html:
+        toc_html.append('<li class="toc-item"><span style="color: var(--text-muted); font-size: 0.8rem;">No subsections</span></li>')
 
-for doc in docs_data:
-    file_name = doc["file"].replace(".md", ".html")
-    out_path = os.path.join(HTML_DIR, file_name)
-    html_content = (STANDALONE_TEMPLATE
-                    .replace("{{TITLE}}", doc["title"])
-                    .replace("{{DOC_ID}}", doc["id"])
-                    .replace("{{PRE_COMPILED_HTML}}", doc["html"]))
-    with open(out_path, "w", encoding="utf-8") as f:
-        f.write(html_content)
+    # 3. Build Previous / Next buttons
+    prev_doc = processed_docs[idx - 1] if idx > 0 else None
+    next_doc = processed_docs[idx + 1] if idx < len(processed_docs) - 1 else None
 
-print(f"Generated {len(docs_data)} standalone HTML files in {HTML_DIR}")
+    prev_btn = ""
+    if prev_doc:
+        prev_btn = f'''
+        <a href="{prev_doc['id']}.html" class="doc-nav-btn">
+          <span class="label">← Previous</span>
+          <span class="title">{prev_doc['title']}</span>
+        </a>
+        '''
+    else:
+        prev_btn = '<div></div>'
+
+    next_btn = ""
+    if next_doc:
+        next_btn = f'''
+        <a href="{next_doc['id']}.html" class="doc-nav-btn" style="text-align: right;">
+          <span class="label">Next →</span>
+          <span class="title">{next_doc['title']}</span>
+        </a>
+        '''
+    else:
+        next_btn = '<div></div>'
+
+    # 4. Render Page Template
+    page_html = (PAGE_TEMPLATE
+                 .replace("{{PAGE_TITLE}}", doc["title"])
+                 .replace("{{PHASE_NAME}}", doc["phase"])
+                 .replace("{{NAV_LIST_HTML}}", "".join(nav_html))
+                 .replace("{{DOCUMENT_HTML}}", doc["html"])
+                 .replace("{{TOC_LIST_HTML}}", "".join(toc_html))
+                 .replace("{{PREV_BUTTON_HTML}}", prev_btn)
+                 .replace("{{NEXT_BUTTON_HTML}}", next_btn))
+
+    # Write out DOC_ID.html in root
+    out_file = os.path.join(ROOT_DIR, f"{doc['id']}.html")
+    with open(out_file, "w", encoding="utf-8") as f:
+        f.write(page_html)
+
+    # If this is 00_ROLE_ANALYSIS, also write it out as index.html
+    if doc["id"] == "00_ROLE_ANALYSIS":
+        index_file = os.path.join(ROOT_DIR, "index.html")
+        with open(index_file, "w", encoding="utf-8") as f:
+            f.write(page_html)
+
+print(f"Successfully generated all {len(processed_docs)} static HTML pages + index.html at root.")

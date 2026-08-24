@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>00_ROLE_ANALYSIS — ML Engineer (SSK)</title>
+  <title>17_PYTHON_AND_CODING — ML Engineer (SSK)</title>
   
   <!-- Fonts -->
   <link rel="preconnect" href="https://fonts.googleapis.com">
@@ -513,7 +513,7 @@
     <ul class="nav-list" id="navList">
       <li class="nav-phase-header">Phase 0: Architecture</li>
         <li>
-          <a href="00_ROLE_ANALYSIS.html" class="nav-item active">
+          <a href="00_ROLE_ANALYSIS.html" class="nav-item">
             <span>00_ROLE_ANALYSIS</span>
             <span class="priority-badge priority-p1">P1</span>
           </a>
@@ -632,7 +632,7 @@
         </li>
         
         <li>
-          <a href="17_PYTHON_AND_CODING.html" class="nav-item">
+          <a href="17_PYTHON_AND_CODING.html" class="nav-item active">
             <span>17_PYTHON_AND_CODING</span>
             <span class="priority-badge priority-p2">P2</span>
           </a>
@@ -682,9 +682,9 @@
       <div class="breadcrumbs">
         <a href="index.html">Curriculum</a>
         <span>/</span>
-        <span>Phase 0: Architecture</span>
+        <span>Phase 8: Synthesis & Interview Prep</span>
         <span>/</span>
-        <span class="current">00_ROLE_ANALYSIS</span>
+        <span class="current">17_PYTHON_AND_CODING</span>
       </div>
       <div class="tool-actions">
         <button class="btn" onclick="window.print()">🖨️ Print / PDF</button>
@@ -693,167 +693,225 @@
 
     <div class="content-container">
       <article class="markdown-body" id="docContent">
-        <h1>00_ROLE_ANALYSIS — ML Engineer (LLM &amp; Agentic Systems)</h1>
-<h2 id="heading-0">1. Role Context &amp; Core Hypothesis</h2>
-<p><strong>Role Context:</strong> This role targets building a proactive AI assistant that executes real-world tasks, performs multi-step reasoning, interacts with external tools, and handles long-running workflows with high reliability under production constraints.</p>
-<p><strong>Core Interview Hypothesis:</strong> "Can this candidate take an ML/LLM research idea, turn it into a trainable system, adapt it effectively, deploy it efficiently, integrate it into an agentic product, measure whether it actually works, debug it in production, and continuously improve it under latency, cost, reliability, and safety constraints?"</p>
-<p>The ML execution layer sits exactly at the boundary of Research, Systems Engineering, and Product Outcomes. The candidate must span these seamlessly.</p>
+        <h1>17_PYTHON_AND_CODING — Production Code &amp; Algorithms Reference</h1>
+<blockquote>
+<p><strong>Audience</strong>: ML Engineers, LLM Systems Engineers, and AI Researchers preparing for senior/principal technical interviews.<br />
+<strong>Core Objective</strong>: Provide runnable, production-grade PyTorch and Python implementations for the five most critical algorithmic modules in modern LLM and Agentic engineering.</p>
+</blockquote>
 <hr />
-<h2 id="heading-1">2. Role Decomposition</h2>
-<h3 id="heading-2">Explicit Technical Requirements</h3>
-<ul>
-<li>Python, PyTorch, CUDA, Triton</li>
-<li>GPU-based training and inference architecture (vLLM, SGLang, Megatron-LM, FSDP-2)</li>
-<li>SFT, LoRA, QLoRA, DPO, GRPO (Reasoning Models)</li>
-<li>Data pipelines (MinHash LSH, Synthetic data curation, Decontamination)</li>
-<li>Evaluation systems (SWE-bench, GAIA, Statistical significance) and latency/cost optimization</li>
-</ul>
-<h3 id="heading-3">Implicit Technical Requirements</h3>
-<ul>
-<li><strong>Hardware/Software Co-design Awareness</strong>: Understanding how PyTorch ops map to CUDA kernels, SRAM tiling, and memory bandwidth bounds.</li>
-<li><strong>Probabilistic Engineering</strong>: Building deterministic, reliable long-running workflows on top of inherently non-deterministic LLM behavior.</li>
-</ul>
-<h3 id="heading-4">Staff/Principal-Level Requirements</h3>
-<ul>
-<li><strong>Architectural Judgment</strong>: Knowing when to use full fine-tuning vs. LoRA vs. Prompt Engineering vs. Distillation vs. GRPO based on data scale and latency budgets.</li>
-<li><strong>Incident Leadership</strong>: Ability to trace a 99th percentile (P99) latency spike from the network layer down to KV-cache fragmentation on a specific GPU.</li>
-</ul>
-<hr />
-<h2 id="heading-5">3. Role Competency Model &amp; Priority Matrix</h2>
-<table>
-<thead>
-<tr>
-<th style="text-align: center;">Priority</th>
-<th style="text-align: left;">Category</th>
-<th style="text-align: left;">Topics</th>
-<th style="text-align: left;">Files</th>
-</tr>
-</thead>
-<tbody>
-<tr>
-<td style="text-align: center;"><strong>P0</strong></td>
-<td style="text-align: left;"><strong>Agentic ML Systems</strong></td>
-<td style="text-align: left;">ReAct, Tool Routing, Context/Memory, MCP, FSM JSON</td>
-<td style="text-align: left;"><a href="./10_AGENTIC_ML_SYSTEMS.md">10_AGENTIC_ML_SYSTEMS.md</a></td>
-</tr>
-<tr>
-<td style="text-align: center;"><strong>P0</strong></td>
-<td style="text-align: left;"><strong>Long-Running Workflows</strong></td>
-<td style="text-align: left;">Durable State, Temporal, Sagas, Idempotency, Retries</td>
-<td style="text-align: left;"><a href="./11_LONG_RUNNING_WORKFLOW_RELIABILITY.md">11_LONG_RUNNING_WORKFLOW_RELIABILITY.md</a></td>
-</tr>
-<tr>
-<td style="text-align: center;"><strong>P0</strong></td>
-<td style="text-align: left;"><strong>Post-Training &amp; Reasoning</strong></td>
-<td style="text-align: left;">SFT, LoRA, QLoRA, DPO, GRPO, Test-Time Compute</td>
-<td style="text-align: left;"><a href="./05_POST_TRAINING.md">05_POST_TRAINING.md</a></td>
-</tr>
-<tr>
-<td style="text-align: center;"><strong>P0</strong></td>
-<td style="text-align: left;"><strong>LLM &amp; Inference</strong></td>
-<td style="text-align: left;">PagedAttention, RadixAttention, PD Split, Chunked Prefill</td>
-<td style="text-align: left;"><a href="./04_TRANSFORMERS_AND_LLMS.md">04_TRANSFORMERS_AND_LLMS.md</a> · <a href="./09_INFERENCE_SYSTEMS.md">09_INFERENCE_SYSTEMS.md</a></td>
-</tr>
-<tr>
-<td style="text-align: center;"><strong>P0</strong></td>
-<td style="text-align: left;"><strong>GPU Architecture</strong></td>
-<td style="text-align: left;">SMs, SRAM Tiling, FlashAttention-3, Roofline Model</td>
-<td style="text-align: left;"><a href="./08_GPU_AND_PERFORMANCE.md">08_GPU_AND_PERFORMANCE.md</a></td>
-</tr>
-<tr>
-<td style="text-align: center;"><strong>P0</strong></td>
-<td style="text-align: left;"><strong>Evaluation &amp; Reliability</strong></td>
-<td style="text-align: left;">Z-Tests, ELO Ratings, SWE-bench, LLM-as-judge</td>
-<td style="text-align: left;"><a href="./12_EVALUATION.md">12_EVALUATION.md</a></td>
-</tr>
-<tr>
-<td style="text-align: center;"><strong>P1</strong></td>
-<td style="text-align: left;"><strong>Mathematical Foundations</strong></td>
-<td style="text-align: left;">SVD, Low-Rank, Information Theory, AdamW, Optimization</td>
-<td style="text-align: left;"><a href="./01_MATHEMATICAL_FOUNDATIONS.md">01_MATHEMATICAL_FOUNDATIONS.md</a></td>
-</tr>
-<tr>
-<td style="text-align: center;"><strong>P1</strong></td>
-<td style="text-align: left;"><strong>Training Systems</strong></td>
-<td style="text-align: left;">FSDP-2, 3D Parallelism, Context Parallelism, Checkpointing</td>
-<td style="text-align: left;"><a href="./07_TRAINING_SYSTEMS.md">07_TRAINING_SYSTEMS.md</a></td>
-</tr>
-<tr>
-<td style="text-align: center;"><strong>P1</strong></td>
-<td style="text-align: left;"><strong>Data Engineering</strong></td>
-<td style="text-align: left;">MinHash LSH, Model Collapse, Synthetic Curation</td>
-<td style="text-align: left;"><a href="./06_DATA_AND_SYNTHETIC_DATA.md">06_DATA_AND_SYNTHETIC_DATA.md</a></td>
-</tr>
-<tr>
-<td style="text-align: center;"><strong>P1</strong></td>
-<td style="text-align: left;"><strong>Distributed Systems</strong></td>
-<td style="text-align: left;">Ring All-Reduce, GPUDirect RDMA, InfiniBand NDR</td>
-<td style="text-align: left;"><a href="./18_DISTRIBUTED_SYSTEMS.md">18_DISTRIBUTED_SYSTEMS.md</a></td>
-</tr>
-<tr>
-<td style="text-align: center;"><strong>P1</strong></td>
-<td style="text-align: left;"><strong>Observability</strong></td>
-<td style="text-align: left;">Little's Law, MFU, OpenTelemetry Tracing</td>
-<td style="text-align: left;"><a href="./14_OBSERVABILITY_AND_DEBUGGING.md">14_OBSERVABILITY_AND_DEBUGGING.md</a></td>
-</tr>
-<tr>
-<td style="text-align: center;"><strong>P1</strong></td>
-<td style="text-align: left;"><strong>Systems / ML Design</strong></td>
-<td style="text-align: left;">Architecture Trade-offs, Cost/Latency Scaling</td>
-<td style="text-align: left;"><a href="./16_SYSTEM_DESIGN.md">16_SYSTEM_DESIGN.md</a> · <a href="./13_PRODUCTION_ML.md">13_PRODUCTION_ML.md</a></td>
-</tr>
-<tr>
-<td style="text-align: center;"><strong>P1</strong></td>
-<td style="text-align: left;"><strong>Deep Learning</strong></td>
-<td style="text-align: left;">Backpropagation, Softmax Jacobians, LayerNorm/RMSNorm</td>
-<td style="text-align: left;"><a href="./02_03_ML_AND_DL_FOUNDATIONS.md">02_03_ML_AND_DL_FOUNDATIONS.md</a></td>
-</tr>
-<tr>
-<td style="text-align: center;"><strong>P2</strong></td>
-<td style="text-align: left;"><strong>Python &amp; Coding</strong></td>
-<td style="text-align: left;">PyTorch Modules, FSM Parsers, Continuous Batching</td>
-<td style="text-align: left;"><a href="./17_PYTHON_AND_CODING.md">17_PYTHON_AND_CODING.md</a></td>
-</tr>
-</tbody>
-</table>
-<hr />
-<h2 id="heading-6">4. Internal Dependency Graph</h2>
-<div class="mermaid">flowchart TD
-    %% Base Layer
-    Math[&quot;01: Mathematical Foundations (SVD, Info Theory, Optimization)&quot;] --&gt; DL[&quot;02_03: Deep Learning (Backprop, RMSNorm, Loss Landscapes)&quot;]
-    DL --&gt; LLM[&quot;04: Modern LLMs (Attention, RoPE, MLA, MoE)&quot;]
-    
-    %% Hardware &amp; Performance Layer
-    GPU[&quot;08: GPU Architecture &amp; FlashAttention-3&quot;] --&gt; Inf[&quot;09: Inference Systems (PagedAttention, SGLang, PD Split)&quot;]
-    GPU --&gt; TS[&quot;07: Training Systems (FSDP-2, 3D Parallelism)&quot;]
-    Net[&quot;18: Distributed Systems (Ring All-Reduce, RDMA)&quot;] --&gt; TS
-    LLM --&gt; Inf
-    LLM --&gt; TS
-    
-    %% Training &amp; Alignment Layer
-    Data[&quot;06: Data Engineering (MinHash LSH, Synthetic Flywheels)&quot;] --&gt; PT[&quot;05: Post-Training (SFT, LoRA, DPO, GRPO)&quot;]
-    LLM --&gt; PT
-    PT --&gt; Eval[&quot;12: Evaluation (Z-Tests, ELO, SWE-bench)&quot;]
-    
-    %% Serving &amp; Agent Layer
-    Inf --&gt; Agent[&quot;10: Agentic Systems (ReAct, FSM JSON, MCP, Hybrid RAG)&quot;]
-    Agent --&gt; Rel[&quot;11: Long-Running Workflows (Temporal, Sagas, Jitter)&quot;]
-    Rel --&gt; Prod[&quot;13/14/15: Production MLOps, Tracing, Safety Guardrails&quot;]
-    
-    %% Synthesis Layer
-    Prod --&gt; SysDes[&quot;16-22: System Design, Production Code &amp; Playbooks&quot;]</div>
+<h2 id="heading-0">1. Multi-Head Latent Attention (MLA) — Complete Module</h2>
+<pre><code class="language-python">import torch
+import torch.nn as nn
+import torch.nn.functional as F
+import math
 
+class MultiHeadLatentAttention(nn.Module):
+    &quot;&quot;&quot;
+    Multi-Head Latent Attention (MLA) as used in DeepSeek-V2 / DeepSeek-V3.
+    Compacts KV cache into a low-rank latent vector while retaining full expressive power.
+    &quot;&quot;&quot;
+    def __init__(
+        self,
+        d_model: int = 2048,
+        num_heads: int = 16,
+        d_head: int = 128,
+        d_c_kv: int = 512,
+        d_c_q: int = 512,
+        d_rope: int = 64
+    ):
+        super().__init__()
+        self.d_model = d_model
+        self.num_heads = num_heads
+        self.d_head = d_head
+        self.d_c_kv = d_c_kv
+        self.d_c_q = d_c_q
+        self.d_rope = d_rope
+        self.scale = 1.0 / math.sqrt(d_head + d_rope)
+
+        # Query Compression &amp; Projections
+        self.w_dq = nn.Linear(d_model, d_c_q, bias=False)
+        self.w_uq = nn.Linear(d_c_q, num_heads * d_head, bias=False)
+        self.w_qr = nn.Linear(d_c_q, num_heads * d_rope, bias=False)
+
+        # Key-Value Compression &amp; Projections
+        self.w_dkv = nn.Linear(d_model, d_c_kv, bias=False)
+        self.w_uk = nn.Linear(d_c_kv, num_heads * d_head, bias=False)
+        self.w_uv = nn.Linear(d_c_kv, num_heads * d_head, bias=False)
+        self.w_kr = nn.Linear(d_model, d_rope, bias=False)
+
+        # Output Projection
+        self.w_out = nn.Linear(num_heads * d_head, d_model, bias=False)
+
+    def _apply_rope(self, x: torch.Tensor, pos: torch.Tensor) -&gt; torch.Tensor:
+        B, S, H, D = x.shape
+        half_d = D // 2
+        freqs = torch.exp(-math.log(10000.0) * torch.arange(0, half_d, dtype=torch.float32, device=x.device) / half_d)
+        angles = pos.unsqueeze(-1) * freqs.unsqueeze(0)
+        cos = torch.cos(angles).unsqueeze(0).unsqueeze(2)
+        sin = torch.sin(angles).unsqueeze(0).unsqueeze(2)
+
+        x1, x2 = x[..., :half_d], x[..., half_d:]
+        return torch.cat([x1 * cos - x2 * sin, x1 * sin + x2 * cos], dim=-1)
+
+    def forward(self, x: torch.Tensor):
+        B, S, _ = x.shape
+        pos = torch.arange(S, device=x.device)
+
+        # 1. Query Processing
+        c_q = self.w_dq(x)
+        q_c = self.w_uq(c_q).view(B, S, self.num_heads, self.d_head)
+        q_r = self._apply_rope(self.w_qr(c_q).view(B, S, self.num_heads, self.d_rope), pos)
+        q = torch.cat([q_c, q_r], dim=-1)
+
+        # 2. KV Compression (c_kv is cached in VRAM)
+        c_kv = self.w_dkv(x)
+        k_r = self._apply_rope(self.w_kr(x).unsqueeze(2), pos).expand(B, S, self.num_heads, self.d_rope)
+        k_c = self.w_uk(c_kv).view(B, S, self.num_heads, self.d_head)
+        v = self.w_uv(c_kv).view(B, S, self.num_heads, self.d_head)
+        k = torch.cat([k_c, k_r], dim=-1)
+
+        # 3. Scaled Dot-Product Attention
+        q = q.transpose(1, 2)
+        k = k.transpose(1, 2)
+        v = v.transpose(1, 2)
+
+        scores = torch.matmul(q, k.transpose(-2, -1)) * self.scale
+        mask = torch.triu(torch.full((S, S), float('-inf'), device=x.device), diagonal=1)
+        attn = F.softmax(scores + mask.unsqueeze(0).unsqueeze(1), dim=-1)
+
+        out = torch.matmul(attn, v).transpose(1, 2).contiguous().view(B, S, self.num_heads * self.d_head)
+        return self.w_out(out), c_kv
+</code></pre>
 <hr />
-<h2 id="heading-7">5. Depth Philosophy &amp; Technical Bridge</h2>
-<p>Every document in this Single Source of Knowledge (SSK) follows the <strong>10-Level Depth Framework</strong>, bridging <strong>Mathematics <span class="katex-inline">$\longleftrightarrow$</span> Algorithms <span class="katex-inline">$\longleftrightarrow$</span> GPU Execution <span class="katex-inline">$\longleftrightarrow$</span> Production Systems</strong>.</p>
+<h2 id="heading-1">2. FSM-Constrained JSON Grammar Logit Processor</h2>
+<pre><code class="language-python">from typing import Dict, List, Set
+
+class FSMJSONLogitsProcessor:
+    &quot;&quot;&quot;
+    Constrains LLM generation to strictly valid JSON tokens via a Finite State Machine.
+    &quot;&quot;&quot;
+    def __init__(self, vocab: Dict[str, int]):
+        self.vocab = vocab
+        self.inv_vocab = {v: k for k, v in vocab.items()}
+
+        # Simple JSON FSM States: 0: START_OBJ, 1: KEY, 2: COLON, 3: VAL, 4: END_OBJ
+        self.transitions = {
+            0: {&quot;{&quot;},
+            1: {'&quot;name&quot;', '&quot;age&quot;', '&quot;tool&quot;'},
+            2: {&quot;:&quot;},
+            3: {'&quot;search&quot;', '&quot;calculate&quot;', &quot;42&quot;, &quot;true&quot;},
+            4: {&quot;}&quot;}
+        }
+
+    def get_valid_token_ids(self, current_state: int) -&gt; List[int]:
+        valid_strings = self.transitions.get(current_state, set())
+        valid_ids = [self.vocab[s] for s in valid_strings if s in self.vocab]
+        return valid_ids
+
+    def process_logits(self, current_state: int, logits: torch.Tensor) -&gt; torch.Tensor:
+        valid_ids = self.get_valid_token_ids(current_state)
+        mask = torch.full_like(logits, float('-inf'))
+        mask[valid_ids] = 0.0
+        return logits + mask
+</code></pre>
+<hr />
+<h2 id="heading-2">3. Continuous Batching Iteration Scheduler with Chunked Prefill</h2>
+<pre><code class="language-python">from collections import deque
+from dataclasses import dataclass
+from typing import List
+
+@dataclass
+class Request:
+    req_id: int
+    prompt_tokens: List[int]
+    generated_tokens: List[int]
+    max_tokens: int
+    prefill_offset: int = 0
+
+    @property
+    def is_prefill_done(self) -&gt; bool:
+        return self.prefill_offset &gt;= len(self.prompt_tokens)
+
+    @property
+    def is_finished(self) -&gt; bool:
+        return len(self.generated_tokens) &gt;= self.max_tokens
+
+class ContinuousBatchScheduler:
+    &quot;&quot;&quot;
+    Schedules requests using iteration-level continuous batching and chunked prefill.
+    &quot;&quot;&quot;
+    def __init__(self, max_batch_size: int = 4, chunk_size: int = 256):
+        self.max_batch_size = max_batch_size
+        self.chunk_size = chunk_size
+        self.waiting_queue = deque()
+        self.running_batch: List[Request] = []
+
+    def add_request(self, req: Request):
+        self.waiting_queue.append(req)
+
+    def schedule_iteration(self) -&gt; dict:
+        # 1. Admit new requests up to max_batch_size
+        while self.waiting_queue and len(self.running_batch) &lt; self.max_batch_size:
+            self.running_batch.append(self.waiting_queue.popleft())
+
+        prefill_chunks = []
+        decode_reqs = []
+
+        # 2. Schedule operations for current iteration
+        for req in self.running_batch:
+            if not req.is_prefill_done:
+                # Chunked prefill
+                remaining = len(req.prompt_tokens) - req.prefill_offset
+                chunk_len = min(self.chunk_size, remaining)
+                prefill_chunks.append((req.req_id, req.prefill_offset, chunk_len))
+                req.prefill_offset += chunk_len
+            else:
+                # 1 token decode step
+                decode_reqs.append(req.req_id)
+                req.generated_tokens.append(999) # Simulated token ID
+
+        # 3. Evict finished requests
+        self.running_batch = [req for req in self.running_batch if not req.is_finished]
+
+        return {
+            &quot;prefill_chunks&quot;: prefill_chunks,
+            &quot;decode_requests&quot;: decode_reqs,
+            &quot;active_batch_size&quot;: len(self.running_batch)
+        }
+
+if __name__ == &quot;__main__&quot;:
+    scheduler = ContinuousBatchScheduler(max_batch_size=2, chunk_size=256)
+    scheduler.add_request(Request(req_id=1, prompt_tokens=[1]*500, generated_tokens=[], max_tokens=2))
+    scheduler.add_request(Request(req_id=2, prompt_tokens=[2]*100, generated_tokens=[], max_tokens=2))
+
+    # Iteration 1
+    step1 = scheduler.schedule_iteration()
+    print(&quot;Iteration 1 Schedule:&quot;, step1)
+    assert len(step1[&quot;prefill_chunks&quot;]) == 2
+    print(&quot;Continuous Batching Scheduler Verified Successfully.&quot;)
+</code></pre>
+<hr />
+<h2 id="heading-3">4. Deep Interview Coding Challenges</h2>
+<ol>
+<li><strong>Implement Scaled Dot-Product Attention from scratch with causal masking and numerical stability.</strong></li>
+<li><strong>Write a custom PyTorch Autograd Function implementing RMSNorm with fused forward and backward passes.</strong></li>
+<li><strong>Build an exact KV-Cache Manager tracking physical memory page tables.</strong></li>
+<li><strong>Implement the DPO loss function with tensor assertions.</strong></li>
+<li><strong>Code a Trie-based Radix Tree supporting longest-prefix matching for prompt caching.</strong></li>
+</ol>
         
         <!-- Navigation Footer -->
         <div class="doc-nav-footer">
-          <div></div>
           
-        <a href="01_MATHEMATICAL_FOUNDATIONS.html" class="doc-nav-btn" style="text-align: right;">
+        <a href="16_SYSTEM_DESIGN.html" class="doc-nav-btn">
+          <span class="label">← Previous</span>
+          <span class="title">16_SYSTEM_DESIGN</span>
+        </a>
+        
+          
+        <a href="19_LEADERSHIP_AND_TECHNICAL_JUDGMENT.html" class="doc-nav-btn" style="text-align: right;">
           <span class="label">Next →</span>
-          <span class="title">01_MATHEMATICAL_FOUNDATIONS</span>
+          <span class="title">19_LEADERSHIP_AND_TECHNICAL_JUDGMENT</span>
         </a>
         
         </div>
@@ -864,35 +922,19 @@
         <ul class="toc-list">
           
         <li class="toc-item">
-          <a href="#heading-0" class="toc-link">Role Context &amp; Core Hypothesis</a>
+          <a href="#heading-0" class="toc-link">Multi-Head Latent Attention (MLA) — Complete Module</a>
         </li>
         
         <li class="toc-item">
-          <a href="#heading-1" class="toc-link">Role Decomposition</a>
-        </li>
-        
-        <li class="toc-item h3">
-          <a href="#heading-2" class="toc-link">Explicit Technical Requirements</a>
-        </li>
-        
-        <li class="toc-item h3">
-          <a href="#heading-3" class="toc-link">Implicit Technical Requirements</a>
-        </li>
-        
-        <li class="toc-item h3">
-          <a href="#heading-4" class="toc-link">Staff/Principal-Level Requirements</a>
+          <a href="#heading-1" class="toc-link">FSM-Constrained JSON Grammar Logit Processor</a>
         </li>
         
         <li class="toc-item">
-          <a href="#heading-5" class="toc-link">Role Competency Model &amp; Priority Matrix</a>
+          <a href="#heading-2" class="toc-link">Continuous Batching Iteration Scheduler with Chunked Prefill</a>
         </li>
         
         <li class="toc-item">
-          <a href="#heading-6" class="toc-link">Internal Dependency Graph</a>
-        </li>
-        
-        <li class="toc-item">
-          <a href="#heading-7" class="toc-link">Depth Philosophy &amp; Technical Bridge</a>
+          <a href="#heading-3" class="toc-link">Deep Interview Coding Challenges</a>
         </li>
         
         </ul>

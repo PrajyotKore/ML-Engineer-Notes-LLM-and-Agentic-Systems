@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>00_ROLE_ANALYSIS — ML Engineer (SSK)</title>
+  <title>12_EVALUATION — ML Engineer (SSK)</title>
   
   <!-- Fonts -->
   <link rel="preconnect" href="https://fonts.googleapis.com">
@@ -513,7 +513,7 @@
     <ul class="nav-list" id="navList">
       <li class="nav-phase-header">Phase 0: Architecture</li>
         <li>
-          <a href="00_ROLE_ANALYSIS.html" class="nav-item active">
+          <a href="00_ROLE_ANALYSIS.html" class="nav-item">
             <span>00_ROLE_ANALYSIS</span>
             <span class="priority-badge priority-p1">P1</span>
           </a>
@@ -604,7 +604,7 @@
         </li>
         <li class="nav-phase-header">Phase 7: Production & MLOps</li>
         <li>
-          <a href="12_EVALUATION.html" class="nav-item">
+          <a href="12_EVALUATION.html" class="nav-item active">
             <span>12_EVALUATION</span>
             <span class="priority-badge priority-p0">P0</span>
           </a>
@@ -682,9 +682,9 @@
       <div class="breadcrumbs">
         <a href="index.html">Curriculum</a>
         <span>/</span>
-        <span>Phase 0: Architecture</span>
+        <span>Phase 7: Production & MLOps</span>
         <span>/</span>
-        <span class="current">00_ROLE_ANALYSIS</span>
+        <span class="current">12_EVALUATION</span>
       </div>
       <div class="tool-actions">
         <button class="btn" onclick="window.print()">🖨️ Print / PDF</button>
@@ -693,167 +693,173 @@
 
     <div class="content-container">
       <article class="markdown-body" id="docContent">
-        <h1>00_ROLE_ANALYSIS — ML Engineer (LLM &amp; Agentic Systems)</h1>
-<h2 id="heading-0">1. Role Context &amp; Core Hypothesis</h2>
-<p><strong>Role Context:</strong> This role targets building a proactive AI assistant that executes real-world tasks, performs multi-step reasoning, interacts with external tools, and handles long-running workflows with high reliability under production constraints.</p>
-<p><strong>Core Interview Hypothesis:</strong> "Can this candidate take an ML/LLM research idea, turn it into a trainable system, adapt it effectively, deploy it efficiently, integrate it into an agentic product, measure whether it actually works, debug it in production, and continuously improve it under latency, cost, reliability, and safety constraints?"</p>
-<p>The ML execution layer sits exactly at the boundary of Research, Systems Engineering, and Product Outcomes. The candidate must span these seamlessly.</p>
+        <h1>12_EVALUATION — Mathematical &amp; Statistical Reference</h1>
+<blockquote>
+<p><strong>Audience</strong>: ML Engineers, LLM Systems Engineers, and AI Researchers preparing for senior/principal technical interviews.<br />
+<strong>Core Objective</strong>: Provide an exhaustive mathematical and statistical reference on evaluating LLMs and Agentic systems — covering Two-Proportion Z-Tests, Sample Size calculations, Bradley-Terry ELO rating derivations, LLM-as-a-Judge debiasing, and benchmark harnesses (SWE-bench / GAIA).</p>
+</blockquote>
 <hr />
-<h2 id="heading-1">2. Role Decomposition</h2>
-<h3 id="heading-2">Explicit Technical Requirements</h3>
+<h2 id="heading-0">1. The Three Tiers of ML Evaluation</h2>
+<pre><code>┌─────────────────────────────────────────────────────────────────────────────┐
+│                 1. Model Evaluation (Offline Static Weights)                │
+│  Perplexity, MMLU-Pro, HumanEval, GSM8K, MATH                               │
+└──────────────────────────────────────┬──────────────────────────────────────┘
+                                       │
+┌──────────────────────────────────────┴──────────────────────────────────────┐
+│                 2. System / Agent Evaluation (Offline Dynamics)              │
+│  SWE-bench, GAIA, Tool-Calling Precision/Recall, Context Retrieval Precision│
+└──────────────────────────────────────┬──────────────────────────────────────┘
+                                       │
+┌──────────────────────────────────────┴──────────────────────────────────────┐
+│                 3. Product Evaluation (Online Live Traffic)                 │
+│  Task Completion Rate, User Retention, Inter-Token Latency, Cost per Task   │
+└─────────────────────────────────────────────────────────────────────────────┘
+</code></pre>
+<hr />
+<h2 id="heading-1">2. Statistical Significance in A/B Testing: Mathematics &amp; Sample Sizing</h2>
+<p>When testing if Model <span class="katex-inline">$B$</span> improves agent success rate over Model <span class="katex-inline">$A$</span> (<span class="katex-inline">$p_B &gt; p_A$</span>):</p>
+<h3 id="heading-2">2.1 The Two-Proportion <span class="katex-inline">$Z$</span>-Test Formulation</h3>
+<p>Let:<br />
+- <span class="katex-inline">$n_A, n_B$</span>: Sample size of evaluated trajectories for Model <span class="katex-inline">$A$</span> and Model <span class="katex-inline">$B$</span>.<br />
+- <span class="katex-inline">$X_A, X_B$</span>: Number of successfully completed tasks.<br />
+- <span class="katex-inline">$\hat{p}_A = \frac{X_A}{n_A}$</span>, <span class="katex-inline">$\hat{p}_B = \frac{X_B}{n_B}$</span>: Sample proportions.<br />
+- <span class="katex-inline">$\hat{p} = \frac{X_A + X_B}{n_A + n_B}$</span>: Pooled proportion under the null hypothesis <span class="katex-inline">$H_0: p_A = p_B$</span>.</p>
+<p>The standard error of the difference is:</p>
+<div class="katex-display">$$\text{SE} = \sqrt{\hat{p}(1 - \hat{p}) \left( \frac{1}{n_A} + \frac{1}{n_B} \right)}$$</div>
+
+<p>The test statistic <span class="katex-inline">$Z$</span> is:</p>
+<div class="katex-display">$$\mathbf{Z = \frac{\hat{p}_B - \hat{p}_A}{\text{SE}} = \frac{\hat{p}_B - \hat{p}_A}{\sqrt{\hat{p}(1 - \hat{p}) \left( \frac{1}{n_A} + \frac{1}{n_B} \right)}}}$$</div>
+
 <ul>
-<li>Python, PyTorch, CUDA, Triton</li>
-<li>GPU-based training and inference architecture (vLLM, SGLang, Megatron-LM, FSDP-2)</li>
-<li>SFT, LoRA, QLoRA, DPO, GRPO (Reasoning Models)</li>
-<li>Data pipelines (MinHash LSH, Synthetic data curation, Decontamination)</li>
-<li>Evaluation systems (SWE-bench, GAIA, Statistical significance) and latency/cost optimization</li>
-</ul>
-<h3 id="heading-3">Implicit Technical Requirements</h3>
-<ul>
-<li><strong>Hardware/Software Co-design Awareness</strong>: Understanding how PyTorch ops map to CUDA kernels, SRAM tiling, and memory bandwidth bounds.</li>
-<li><strong>Probabilistic Engineering</strong>: Building deterministic, reliable long-running workflows on top of inherently non-deterministic LLM behavior.</li>
-</ul>
-<h3 id="heading-4">Staff/Principal-Level Requirements</h3>
-<ul>
-<li><strong>Architectural Judgment</strong>: Knowing when to use full fine-tuning vs. LoRA vs. Prompt Engineering vs. Distillation vs. GRPO based on data scale and latency budgets.</li>
-<li><strong>Incident Leadership</strong>: Ability to trace a 99th percentile (P99) latency spike from the network layer down to KV-cache fragmentation on a specific GPU.</li>
+<li>For significance level <span class="katex-inline">$\alpha = 0.05$</span> (two-tailed), reject <span class="katex-inline">$H_0$</span> if <span class="katex-inline">$|Z| \geq 1.96$</span> (<span class="katex-inline">$p\text{-value} \leq 0.05$</span>).</li>
 </ul>
 <hr />
-<h2 id="heading-5">3. Role Competency Model &amp; Priority Matrix</h2>
-<table>
-<thead>
-<tr>
-<th style="text-align: center;">Priority</th>
-<th style="text-align: left;">Category</th>
-<th style="text-align: left;">Topics</th>
-<th style="text-align: left;">Files</th>
-</tr>
-</thead>
-<tbody>
-<tr>
-<td style="text-align: center;"><strong>P0</strong></td>
-<td style="text-align: left;"><strong>Agentic ML Systems</strong></td>
-<td style="text-align: left;">ReAct, Tool Routing, Context/Memory, MCP, FSM JSON</td>
-<td style="text-align: left;"><a href="./10_AGENTIC_ML_SYSTEMS.md">10_AGENTIC_ML_SYSTEMS.md</a></td>
-</tr>
-<tr>
-<td style="text-align: center;"><strong>P0</strong></td>
-<td style="text-align: left;"><strong>Long-Running Workflows</strong></td>
-<td style="text-align: left;">Durable State, Temporal, Sagas, Idempotency, Retries</td>
-<td style="text-align: left;"><a href="./11_LONG_RUNNING_WORKFLOW_RELIABILITY.md">11_LONG_RUNNING_WORKFLOW_RELIABILITY.md</a></td>
-</tr>
-<tr>
-<td style="text-align: center;"><strong>P0</strong></td>
-<td style="text-align: left;"><strong>Post-Training &amp; Reasoning</strong></td>
-<td style="text-align: left;">SFT, LoRA, QLoRA, DPO, GRPO, Test-Time Compute</td>
-<td style="text-align: left;"><a href="./05_POST_TRAINING.md">05_POST_TRAINING.md</a></td>
-</tr>
-<tr>
-<td style="text-align: center;"><strong>P0</strong></td>
-<td style="text-align: left;"><strong>LLM &amp; Inference</strong></td>
-<td style="text-align: left;">PagedAttention, RadixAttention, PD Split, Chunked Prefill</td>
-<td style="text-align: left;"><a href="./04_TRANSFORMERS_AND_LLMS.md">04_TRANSFORMERS_AND_LLMS.md</a> · <a href="./09_INFERENCE_SYSTEMS.md">09_INFERENCE_SYSTEMS.md</a></td>
-</tr>
-<tr>
-<td style="text-align: center;"><strong>P0</strong></td>
-<td style="text-align: left;"><strong>GPU Architecture</strong></td>
-<td style="text-align: left;">SMs, SRAM Tiling, FlashAttention-3, Roofline Model</td>
-<td style="text-align: left;"><a href="./08_GPU_AND_PERFORMANCE.md">08_GPU_AND_PERFORMANCE.md</a></td>
-</tr>
-<tr>
-<td style="text-align: center;"><strong>P0</strong></td>
-<td style="text-align: left;"><strong>Evaluation &amp; Reliability</strong></td>
-<td style="text-align: left;">Z-Tests, ELO Ratings, SWE-bench, LLM-as-judge</td>
-<td style="text-align: left;"><a href="./12_EVALUATION.md">12_EVALUATION.md</a></td>
-</tr>
-<tr>
-<td style="text-align: center;"><strong>P1</strong></td>
-<td style="text-align: left;"><strong>Mathematical Foundations</strong></td>
-<td style="text-align: left;">SVD, Low-Rank, Information Theory, AdamW, Optimization</td>
-<td style="text-align: left;"><a href="./01_MATHEMATICAL_FOUNDATIONS.md">01_MATHEMATICAL_FOUNDATIONS.md</a></td>
-</tr>
-<tr>
-<td style="text-align: center;"><strong>P1</strong></td>
-<td style="text-align: left;"><strong>Training Systems</strong></td>
-<td style="text-align: left;">FSDP-2, 3D Parallelism, Context Parallelism, Checkpointing</td>
-<td style="text-align: left;"><a href="./07_TRAINING_SYSTEMS.md">07_TRAINING_SYSTEMS.md</a></td>
-</tr>
-<tr>
-<td style="text-align: center;"><strong>P1</strong></td>
-<td style="text-align: left;"><strong>Data Engineering</strong></td>
-<td style="text-align: left;">MinHash LSH, Model Collapse, Synthetic Curation</td>
-<td style="text-align: left;"><a href="./06_DATA_AND_SYNTHETIC_DATA.md">06_DATA_AND_SYNTHETIC_DATA.md</a></td>
-</tr>
-<tr>
-<td style="text-align: center;"><strong>P1</strong></td>
-<td style="text-align: left;"><strong>Distributed Systems</strong></td>
-<td style="text-align: left;">Ring All-Reduce, GPUDirect RDMA, InfiniBand NDR</td>
-<td style="text-align: left;"><a href="./18_DISTRIBUTED_SYSTEMS.md">18_DISTRIBUTED_SYSTEMS.md</a></td>
-</tr>
-<tr>
-<td style="text-align: center;"><strong>P1</strong></td>
-<td style="text-align: left;"><strong>Observability</strong></td>
-<td style="text-align: left;">Little's Law, MFU, OpenTelemetry Tracing</td>
-<td style="text-align: left;"><a href="./14_OBSERVABILITY_AND_DEBUGGING.md">14_OBSERVABILITY_AND_DEBUGGING.md</a></td>
-</tr>
-<tr>
-<td style="text-align: center;"><strong>P1</strong></td>
-<td style="text-align: left;"><strong>Systems / ML Design</strong></td>
-<td style="text-align: left;">Architecture Trade-offs, Cost/Latency Scaling</td>
-<td style="text-align: left;"><a href="./16_SYSTEM_DESIGN.md">16_SYSTEM_DESIGN.md</a> · <a href="./13_PRODUCTION_ML.md">13_PRODUCTION_ML.md</a></td>
-</tr>
-<tr>
-<td style="text-align: center;"><strong>P1</strong></td>
-<td style="text-align: left;"><strong>Deep Learning</strong></td>
-<td style="text-align: left;">Backpropagation, Softmax Jacobians, LayerNorm/RMSNorm</td>
-<td style="text-align: left;"><a href="./02_03_ML_AND_DL_FOUNDATIONS.md">02_03_ML_AND_DL_FOUNDATIONS.md</a></td>
-</tr>
-<tr>
-<td style="text-align: center;"><strong>P2</strong></td>
-<td style="text-align: left;"><strong>Python &amp; Coding</strong></td>
-<td style="text-align: left;">PyTorch Modules, FSM Parsers, Continuous Batching</td>
-<td style="text-align: left;"><a href="./17_PYTHON_AND_CODING.md">17_PYTHON_AND_CODING.md</a></td>
-</tr>
-</tbody>
-</table>
+<h3 id="heading-3">2.2 Sample Size Estimation for Minimum Detectable Effect (MDE)</h3>
+<p>To detect an absolute improvement <span class="katex-inline">$\delta = p_B - p_A$</span> with statistical power <span class="katex-inline">$1 - \beta = 0.80$</span> and significance <span class="katex-inline">$\alpha = 0.05$</span>:</p>
+<div class="katex-display">$$\mathbf{N = \frac{\left( Z_{\alpha/2} \sqrt{2 \bar{p}(1 - \bar{p})} + Z_\beta \sqrt{p_A(1 - p_A) + p_B(1 - p_B)} \right)^2}{\delta^2}}$$</div>
+
+<p>Where <span class="katex-inline">$Z_{\alpha/2} = 1.96$</span> and <span class="katex-inline">$Z_\beta = 0.8416$</span>.</p>
+<h4>Concrete Production Sizing Example:</h4>
+<ul>
+<li>Baseline agent success rate: <span class="katex-inline">$p_A = 0.80$</span>.</li>
+<li>We want to detect a <span class="katex-inline">$+2\%$</span> improvement (<span class="katex-inline">$p_B = 0.82 \implies \delta = 0.02$</span>).</li>
+</ul>
+<div class="katex-display">$$N \approx \frac{(1.96 + 0.84)^2 \cdot 2 \cdot (0.80 \cdot 0.20)}{(0.02)^2} = \frac{7.84 \cdot 0.32}{0.0004} \approx \mathbf{6,272 \text{ trajectories per model}}$$</div>
+
+<p><em>Insight</em>: You <strong>cannot</strong> declare model victory by testing on 50 or 100 prompts. You mathematically need over <span class="katex-inline">$6,000$</span> trials to distinguish a true <span class="katex-inline">$2\%$</span> gain from random noise.</p>
 <hr />
-<h2 id="heading-6">4. Internal Dependency Graph</h2>
-<div class="mermaid">flowchart TD
-    %% Base Layer
-    Math[&quot;01: Mathematical Foundations (SVD, Info Theory, Optimization)&quot;] --&gt; DL[&quot;02_03: Deep Learning (Backprop, RMSNorm, Loss Landscapes)&quot;]
-    DL --&gt; LLM[&quot;04: Modern LLMs (Attention, RoPE, MLA, MoE)&quot;]
-    
-    %% Hardware &amp; Performance Layer
-    GPU[&quot;08: GPU Architecture &amp; FlashAttention-3&quot;] --&gt; Inf[&quot;09: Inference Systems (PagedAttention, SGLang, PD Split)&quot;]
-    GPU --&gt; TS[&quot;07: Training Systems (FSDP-2, 3D Parallelism)&quot;]
-    Net[&quot;18: Distributed Systems (Ring All-Reduce, RDMA)&quot;] --&gt; TS
-    LLM --&gt; Inf
-    LLM --&gt; TS
-    
-    %% Training &amp; Alignment Layer
-    Data[&quot;06: Data Engineering (MinHash LSH, Synthetic Flywheels)&quot;] --&gt; PT[&quot;05: Post-Training (SFT, LoRA, DPO, GRPO)&quot;]
-    LLM --&gt; PT
-    PT --&gt; Eval[&quot;12: Evaluation (Z-Tests, ELO, SWE-bench)&quot;]
-    
-    %% Serving &amp; Agent Layer
-    Inf --&gt; Agent[&quot;10: Agentic Systems (ReAct, FSM JSON, MCP, Hybrid RAG)&quot;]
-    Agent --&gt; Rel[&quot;11: Long-Running Workflows (Temporal, Sagas, Jitter)&quot;]
-    Rel --&gt; Prod[&quot;13/14/15: Production MLOps, Tracing, Safety Guardrails&quot;]
-    
-    %% Synthesis Layer
-    Prod --&gt; SysDes[&quot;16-22: System Design, Production Code &amp; Playbooks&quot;]</div>
+<h2 id="heading-4">3. Bradley-Terry ELO Rating Mechanics (LMSYS Chatbot Arena)</h2>
+<p>In pairwise blind evaluation, model strength is represented on an ELO scale <span class="katex-inline">$R \in \mathbb{R}$</span>.</p>
+<h3 id="heading-5">3.1 Expected Win Probability</h3>
+<p>The expected probability that Model <span class="katex-inline">$A$</span> defeats Model <span class="katex-inline">$B$</span> is governed by the logistic curve:</p>
+<div class="katex-display">$$\mathbf{E_A = \mathbb{P}(A \succ B) = \frac{1}{1 + 10^{(R_B - R_A)/400}} = \frac{1}{1 + e^{(R_B - R_A) / \xi}}} \quad \left(\xi = \frac{400}{\ln 10} \approx 173.7\right)$$</div>
+
+<pre><code>  Expected Win Probability E_A
+  1.0 ┼                                        ┌─────────────
+      │                                       /
+  0.5 ┼───────────────────┼───────────────────
+      │                  / (Equal Rating: E_A = 0.5)
+  0.0 ┼─────────────────┘
+      └───────────────────┼───────────────────► Rating Difference (R_A - R_B)
+                        R_A = R_B
+</code></pre>
+<h3 id="heading-6">3.2 Online ELO Update Rule</h3>
+<p>After observing the actual match outcome <span class="katex-inline">$S_A \in \{1.0 \text{ (Win)}, 0.5 \text{ (Tie)}, 0.0 \text{ (Loss)}\}$</span>:</p>
+<div class="katex-display">$$\mathbf{R_A \leftarrow R_A + K \cdot (S_A - E_A)}$$</div>
+<div class="katex-display">$$\mathbf{R_B \leftarrow R_B + K \cdot (S_B - E_B)}$$</div>
+
+<p>Where <span class="katex-inline">$K$</span> is the update step size factor (typically <span class="katex-inline">$K = 32$</span>).</p>
+<hr />
+<h2 id="heading-7">4. LLM-as-a-Judge: Systematic Biases &amp; Debiasing Mathematics</h2>
+<p>Using an LLM (e.g. GPT-4) to grade model responses is fast and scalable, but prone to systematic biases.</p>
+<h3 id="heading-8">4.1 Taxonomy of Judge Biases</h3>
+<ol>
+<li><strong>Position Bias (First-Order Favoritism)</strong>: The judge strongly prefers whichever candidate response appears first in the prompt.</li>
+<li><strong>Verbosity Bias</strong>: The judge consistently awards higher scores to verbose, lengthy responses, even when concise answers are requested.</li>
+<li><strong>Self-Preference Bias</strong>: Models evaluate responses generated by their own family higher than competitors.</li>
+</ol>
+<h3 id="heading-9">4.2 Position Debiasing: Permuted Pairwise Scoring</h3>
+<p>For every evaluation pair <span class="katex-inline">$(y_A, y_B)$</span>, evaluate the judge under <strong>both orderings</strong>:</p>
+<div class="katex-display">$$\text{Trial 1}: \text{Judge}(x, y_A, y_B) \to S_1 \in \{A, B, \text{Tie}\}$$</div>
+<div class="katex-display">$$\text{Trial 2}: \text{Judge}(x, y_B, y_A) \to S_2 \in \{B, A, \text{Tie}\}$$</div>
+
+<h4>Symmetrized Score Matrix:</h4>
+<div class="katex-display">$$S(A, B) = \begin{cases} 1.0 &amp; \text{if } S_1 = A \text{ and } S_2 = A \text{ (True Win)} \\ 0.0 &amp; \text{if } S_1 = B \text{ and } S_2 = B \text{ (True Loss)} \\ 0.5 &amp; \text{if } S_1 \neq S_2 \text{ (Position Inconsistency / Tie)} \end{cases}$$</div>
 
 <hr />
-<h2 id="heading-7">5. Depth Philosophy &amp; Technical Bridge</h2>
-<p>Every document in this Single Source of Knowledge (SSK) follows the <strong>10-Level Depth Framework</strong>, bridging <strong>Mathematics <span class="katex-inline">$\longleftrightarrow$</span> Algorithms <span class="katex-inline">$\longleftrightarrow$</span> GPU Execution <span class="katex-inline">$\longleftrightarrow$</span> Production Systems</strong>.</p>
+<h2 id="heading-10">5. Python Implementation: Statistical A/B Significance &amp; ELO Calculator</h2>
+<pre><code class="language-python">import numpy as np
+from scipy import stats
+
+def two_proportion_z_test(success_a: int, n_a: int, success_b: int, n_b: int) -&gt; dict:
+    &quot;&quot;&quot;
+    Computes Two-Proportion Z-Test for A/B testing evaluation.
+    &quot;&quot;&quot;
+    p_a = success_a / n_a
+    p_b = success_b / n_b
+    p_pooled = (success_a + success_b) / (n_a + n_b)
+
+    se = np.sqrt(p_pooled * (1 - p_pooled) * (1/n_a + 1/n_b))
+    z_stat = (p_b - p_a) / se
+    p_val = 2 * (1 - stats.norm.cdf(abs(z_stat)))
+
+    return {
+        &quot;p_A&quot;: p_a,
+        &quot;p_B&quot;: p_b,
+        &quot;absolute_delta&quot;: p_b - p_a,
+        &quot;z_statistic&quot;: z_stat,
+        &quot;p_value&quot;: p_val,
+        &quot;is_significant_95&quot;: p_val &lt; 0.05
+    }
+
+def update_elo(rating_a: float, rating_b: float, outcome_a: float, k: float = 32.0) -&gt; tuple:
+    &quot;&quot;&quot;
+    Computes Bradley-Terry ELO rating updates.
+    outcome_a: 1.0 for A win, 0.5 for tie, 0.0 for B win.
+    &quot;&quot;&quot;
+    e_a = 1.0 / (1.0 + 10.0 ** ((rating_b - rating_a) / 400.0))
+    e_b = 1.0 - e_a
+
+    new_rating_a = rating_a + k * (outcome_a - e_a)
+    new_rating_b = rating_b + k * ((1.0 - outcome_a) - e_b)
+    return new_rating_a, new_rating_b
+
+if __name__ == &quot;__main__&quot;:
+    # A/B Test Validation: 820/1000 vs 860/1000
+    res = two_proportion_z_test(success_a=820, n_a=1000, success_b=860, n_b=1000)
+    print(f&quot;A/B Test Results: Delta = +{res['absolute_delta']*100:.1f}%, Z = {res['z_statistic']:.3f}, p = {res['p_value']:.4f}&quot;)
+    assert res['is_significant_95'], &quot;Expected statistically significant result!&quot;
+
+    # ELO Validation
+    r_a, r_b = 1500.0, 1500.0
+    r_a, r_b = update_elo(r_a, r_b, outcome_a=1.0)
+    print(f&quot;Post-Match ELO: Model A = {r_a:.1f}, Model B = {r_b:.1f}&quot;)
+    assert r_a &gt; 1500.0 and r_b &lt; 1500.0
+    print(&quot;Statistical Evaluation Modules Verified Successfully.&quot;)
+</code></pre>
+<hr />
+<h2 id="heading-11">6. Deep Interview Interrogation Ladder</h2>
+<ul>
+<li><strong>Level 1 (Concept)</strong>: What is the difference between an offline benchmark and an online A/B test?</li>
+<li><strong>Level 3 (Math)</strong>: Write the formula for the Two-Proportion Z-Test and explain how to calculate the minimum sample size needed to detect a <span class="katex-inline">$1\%$</span> improvement.</li>
+<li><strong>Level 5 (Mechanics)</strong>: How does the Bradley-Terry ELO model update ratings after a blind pairwise evaluation match?</li>
+<li><strong>Level 7 (Debiasing)</strong>: Why do LLM judges suffer from position bias, and how does order permutation mathematically eliminate it?</li>
+<li><strong>Level 9 (Harness Design)</strong>: Design an end-to-end evaluation harness for SWE-bench (code editing in real GitHub repos). How do you isolate execution environments and prevent metric contamination?</li>
+<li><strong>Level 10 (Principal Engineering)</strong>: Your offline LLM-as-a-judge reports a <span class="katex-inline">$15\%$</span> improvement in agent task completion, but the online canary deployment shows a <span class="katex-inline">$3\%$</span> drop in user satisfaction. Walk through your statistical and systems investigation step-by-step.</li>
+</ul>
         
         <!-- Navigation Footer -->
         <div class="doc-nav-footer">
-          <div></div>
           
-        <a href="01_MATHEMATICAL_FOUNDATIONS.html" class="doc-nav-btn" style="text-align: right;">
+        <a href="15_SAFETY_AND_ROBUSTNESS.html" class="doc-nav-btn">
+          <span class="label">← Previous</span>
+          <span class="title">15_SAFETY_AND_ROBUSTNESS</span>
+        </a>
+        
+          
+        <a href="13_PRODUCTION_ML.html" class="doc-nav-btn" style="text-align: right;">
           <span class="label">Next →</span>
-          <span class="title">01_MATHEMATICAL_FOUNDATIONS</span>
+          <span class="title">13_PRODUCTION_ML</span>
         </a>
         
         </div>
@@ -864,35 +870,51 @@
         <ul class="toc-list">
           
         <li class="toc-item">
-          <a href="#heading-0" class="toc-link">Role Context &amp; Core Hypothesis</a>
+          <a href="#heading-0" class="toc-link">The Three Tiers of ML Evaluation</a>
         </li>
         
         <li class="toc-item">
-          <a href="#heading-1" class="toc-link">Role Decomposition</a>
+          <a href="#heading-1" class="toc-link">Statistical Significance in A/B Testing: Mathematics &amp; Sample Sizing</a>
         </li>
         
         <li class="toc-item h3">
-          <a href="#heading-2" class="toc-link">Explicit Technical Requirements</a>
+          <a href="#heading-2" class="toc-link">The Two-Proportion $Z$-Test Formulation</a>
         </li>
         
         <li class="toc-item h3">
-          <a href="#heading-3" class="toc-link">Implicit Technical Requirements</a>
+          <a href="#heading-3" class="toc-link">Sample Size Estimation for Minimum Detectable Effect (MDE)</a>
+        </li>
+        
+        <li class="toc-item">
+          <a href="#heading-4" class="toc-link">Bradley-Terry ELO Rating Mechanics (LMSYS Chatbot Arena)</a>
         </li>
         
         <li class="toc-item h3">
-          <a href="#heading-4" class="toc-link">Staff/Principal-Level Requirements</a>
+          <a href="#heading-5" class="toc-link">Expected Win Probability</a>
+        </li>
+        
+        <li class="toc-item h3">
+          <a href="#heading-6" class="toc-link">Online ELO Update Rule</a>
         </li>
         
         <li class="toc-item">
-          <a href="#heading-5" class="toc-link">Role Competency Model &amp; Priority Matrix</a>
+          <a href="#heading-7" class="toc-link">LLM-as-a-Judge: Systematic Biases &amp; Debiasing Mathematics</a>
+        </li>
+        
+        <li class="toc-item h3">
+          <a href="#heading-8" class="toc-link">Taxonomy of Judge Biases</a>
+        </li>
+        
+        <li class="toc-item h3">
+          <a href="#heading-9" class="toc-link">Position Debiasing: Permuted Pairwise Scoring</a>
         </li>
         
         <li class="toc-item">
-          <a href="#heading-6" class="toc-link">Internal Dependency Graph</a>
+          <a href="#heading-10" class="toc-link">Python Implementation: Statistical A/B Significance &amp; ELO Calculator</a>
         </li>
         
         <li class="toc-item">
-          <a href="#heading-7" class="toc-link">Depth Philosophy &amp; Technical Bridge</a>
+          <a href="#heading-11" class="toc-link">Deep Interview Interrogation Ladder</a>
         </li>
         
         </ul>

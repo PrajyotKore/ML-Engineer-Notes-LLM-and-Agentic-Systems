@@ -1,0 +1,1195 @@
+<!DOCTYPE html>
+<html lang="en" class="dark">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>04_TRANSFORMERS_AND_LLMS — ML Engineer (SSK)</title>
+  
+  <!-- Fonts -->
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Fira+Code:wght@400;500;600&family=Inter:wght@300;400;500;600;700;800&family=Outfit:wght@500;600;700;800&display=swap" rel="stylesheet">
+  
+  <!-- KaTeX for LaTeX Math -->
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/katex@0.16.9/dist/katex.min.css">
+  <script defer src="https://cdn.jsdelivr.net/npm/katex@0.16.9/dist/katex.min.js"></script>
+  <script defer src="https://cdn.jsdelivr.net/npm/katex@0.16.9/dist/contrib/auto-render.min.js"></script>
+
+  <!-- Prism.js for Syntax Highlighting -->
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/prism/1.29.0/themes/prism-tomorrow.min.css">
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/prism/1.29.0/prism.min.js"></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/prism/1.29.0/components/prism-python.min.js"></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/prism/1.29.0/components/prism-bash.min.js"></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/prism/1.29.0/components/prism-json.min.js"></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/prism/1.29.0/components/prism-c.min.js"></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/prism/1.29.0/components/prism-cpp.min.js"></script>
+
+  <!-- Mermaid.js for Architecture Diagrams -->
+  <script src="https://cdn.jsdelivr.net/npm/mermaid@10.8.0/dist/mermaid.min.js"></script>
+
+  <style>
+    :root {
+      --bg-primary: #0a0d14;
+      --bg-secondary: #111622;
+      --bg-card: rgba(22, 28, 42, 0.75);
+      --bg-hover: #1c2436;
+      --border-color: rgba(255, 255, 255, 0.08);
+      --border-focus: rgba(99, 102, 241, 0.5);
+      --text-primary: #f1f5f9;
+      --text-secondary: #94a3b8;
+      --text-muted: #64748b;
+      --accent-primary: #6366f1;
+      --accent-gradient: linear-gradient(135deg, #6366f1 0%, #a855f7 50%, #ec4899 100%);
+      --accent-glow: rgba(99, 102, 241, 0.25);
+      --p0-color: #ef4444;
+      --p0-bg: rgba(239, 68, 68, 0.15);
+      --p1-color: #3b82f6;
+      --p1-bg: rgba(59, 130, 246, 0.15);
+      --p2-color: #10b981;
+      --p2-bg: rgba(16, 185, 129, 0.15);
+      --sidebar-width: 320px;
+      --toc-width: 260px;
+    }
+
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+
+    body {
+      font-family: 'Inter', -apple-system, BlinkMacSystemFont, sans-serif;
+      background-color: var(--bg-primary);
+      color: var(--text-primary);
+      line-height: 1.65;
+      overflow-x: hidden;
+      display: flex;
+      height: 100vh;
+    }
+
+    /* Scrollbars */
+    ::-webkit-scrollbar { width: 6px; height: 6px; }
+    ::-webkit-scrollbar-track { background: transparent; }
+    ::-webkit-scrollbar-thumb { background: rgba(255, 255, 255, 0.15); border-radius: 4px; }
+    ::-webkit-scrollbar-thumb:hover { background: rgba(255, 255, 255, 0.3); }
+
+    /* Left Sidebar Navigation */
+    aside.sidebar {
+      width: var(--sidebar-width);
+      min-width: var(--sidebar-width);
+      background: var(--bg-secondary);
+      border-right: 1px solid var(--border-color);
+      display: flex;
+      flex-direction: column;
+      height: 100vh;
+      z-index: 50;
+    }
+
+    .brand-header {
+      padding: 20px 24px;
+      border-bottom: 1px solid var(--border-color);
+      background: rgba(10, 13, 20, 0.5);
+      backdrop-filter: blur(10px);
+    }
+
+    .brand-title {
+      font-family: 'Outfit', sans-serif;
+      font-size: 1.15rem;
+      font-weight: 700;
+      background: var(--accent-gradient);
+      -webkit-background-clip: text;
+      -webkit-text-fill-color: transparent;
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      text-decoration: none;
+    }
+
+    .brand-subtitle {
+      font-size: 0.75rem;
+      color: var(--text-muted);
+      margin-top: 4px;
+      text-transform: uppercase;
+      letter-spacing: 0.05em;
+    }
+
+    .search-box {
+      padding: 14px 20px;
+      border-bottom: 1px solid var(--border-color);
+    }
+
+    .search-input {
+      width: 100%;
+      background: rgba(0, 0, 0, 0.3);
+      border: 1px solid var(--border-color);
+      border-radius: 8px;
+      padding: 10px 14px;
+      color: var(--text-primary);
+      font-size: 0.85rem;
+      outline: none;
+      transition: all 0.2s;
+    }
+    .search-input:focus {
+      border-color: var(--accent-primary);
+      box-shadow: 0 0 0 3px var(--accent-glow);
+    }
+
+    .nav-list {
+      flex: 1;
+      overflow-y: auto;
+      padding: 12px 14px;
+      list-style: none;
+    }
+
+    .nav-phase-header {
+      font-size: 0.7rem;
+      font-weight: 700;
+      text-transform: uppercase;
+      color: var(--text-muted);
+      letter-spacing: 0.08em;
+      padding: 14px 10px 6px 10px;
+    }
+
+    .nav-item {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      padding: 8px 12px;
+      border-radius: 6px;
+      color: var(--text-secondary);
+      font-size: 0.82rem;
+      text-decoration: none;
+      transition: all 0.15s ease;
+      margin-bottom: 2px;
+      border: 1px solid transparent;
+    }
+    .nav-item:hover {
+      background: var(--bg-hover);
+      color: var(--text-primary);
+    }
+    .nav-item.active {
+      background: rgba(99, 102, 241, 0.15);
+      color: #818cf8;
+      border-color: rgba(99, 102, 241, 0.3);
+      font-weight: 600;
+    }
+
+    .priority-badge {
+      font-size: 0.65rem;
+      font-weight: 700;
+      padding: 2px 6px;
+      border-radius: 4px;
+      text-transform: uppercase;
+    }
+    .priority-p0 { color: var(--p0-color); background: var(--p0-bg); }
+    .priority-p1 { color: var(--p1-color); background: var(--p1-bg); }
+    .priority-p2 { color: var(--p2-color); background: var(--p2-bg); }
+
+    /* Main Content Area */
+    main.main-viewport {
+      flex: 1;
+      height: 100vh;
+      overflow-y: auto;
+      display: flex;
+      flex-direction: column;
+      position: relative;
+    }
+
+    .top-toolbar {
+      position: sticky;
+      top: 0;
+      background: rgba(10, 13, 20, 0.85);
+      backdrop-filter: blur(12px);
+      border-bottom: 1px solid var(--border-color);
+      padding: 12px 36px;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      z-index: 40;
+    }
+
+    .breadcrumbs {
+      font-size: 0.85rem;
+      color: var(--text-secondary);
+      display: flex;
+      align-items: center;
+      gap: 8px;
+    }
+    .breadcrumbs a {
+      color: var(--text-secondary);
+      text-decoration: none;
+    }
+    .breadcrumbs a:hover {
+      color: #818cf8;
+    }
+    .breadcrumbs span.current {
+      color: var(--text-primary);
+      font-weight: 600;
+    }
+
+    .tool-actions {
+      display: flex;
+      gap: 12px;
+      align-items: center;
+    }
+
+    .btn {
+      background: rgba(255, 255, 255, 0.05);
+      border: 1px solid var(--border-color);
+      color: var(--text-primary);
+      padding: 6px 14px;
+      border-radius: 6px;
+      font-size: 0.8rem;
+      font-weight: 500;
+      cursor: pointer;
+      display: flex;
+      align-items: center;
+      gap: 6px;
+      text-decoration: none;
+      transition: all 0.2s;
+    }
+    .btn:hover {
+      background: rgba(255, 255, 255, 0.1);
+      border-color: rgba(255, 255, 255, 0.2);
+    }
+
+    .content-container {
+      display: flex;
+      flex: 1;
+      max-width: 1600px;
+      margin: 0 auto;
+      width: 100%;
+    }
+
+    .markdown-body {
+      flex: 1;
+      padding: 40px 48px 100px 48px;
+      max-width: 960px;
+    }
+
+    /* Markdown Styling */
+    .markdown-body h1 {
+      font-family: 'Outfit', sans-serif;
+      font-size: 2.2rem;
+      font-weight: 800;
+      margin-bottom: 24px;
+      padding-bottom: 12px;
+      border-bottom: 1px solid var(--border-color);
+      letter-spacing: -0.02em;
+      color: #fff;
+    }
+
+    .markdown-body h2 {
+      font-family: 'Outfit', sans-serif;
+      font-size: 1.5rem;
+      font-weight: 700;
+      margin-top: 40px;
+      margin-bottom: 16px;
+      color: #e2e8f0;
+      border-bottom: 1px solid rgba(255, 255, 255, 0.05);
+      padding-bottom: 8px;
+    }
+
+    .markdown-body h3 {
+      font-size: 1.15rem;
+      font-weight: 600;
+      margin-top: 28px;
+      margin-bottom: 12px;
+      color: #cbd5e1;
+    }
+
+    .markdown-body h4 {
+      font-size: 1.0rem;
+      font-weight: 600;
+      margin-top: 20px;
+      margin-bottom: 8px;
+      color: #94a3b8;
+    }
+
+    .markdown-body p {
+      margin-bottom: 16px;
+      color: #cbd5e1;
+      font-size: 0.96rem;
+    }
+
+    .markdown-body ul, .markdown-body ol {
+      margin-bottom: 18px;
+      padding-left: 24px;
+      color: #cbd5e1;
+    }
+    .markdown-body li {
+      margin-bottom: 6px;
+    }
+
+    .markdown-body blockquote {
+      border-left: 4px solid var(--accent-primary);
+      background: rgba(99, 102, 241, 0.08);
+      padding: 14px 20px;
+      border-radius: 0 8px 8px 0;
+      margin-bottom: 20px;
+      color: #e2e8f0;
+      font-size: 0.92rem;
+    }
+
+    .markdown-body table {
+      width: 100%;
+      border-collapse: collapse;
+      margin-bottom: 24px;
+      font-size: 0.88rem;
+      background: rgba(17, 22, 34, 0.6);
+      border-radius: 8px;
+      overflow: hidden;
+      border: 1px solid var(--border-color);
+    }
+    .markdown-body th {
+      background: rgba(30, 41, 59, 0.8);
+      padding: 12px 16px;
+      text-align: left;
+      font-weight: 600;
+      color: #f1f5f9;
+      border-bottom: 1px solid var(--border-color);
+    }
+    .markdown-body td {
+      padding: 10px 16px;
+      border-bottom: 1px solid rgba(255, 255, 255, 0.04);
+      color: #cbd5e1;
+    }
+    .markdown-body tr:hover td {
+      background: rgba(255, 255, 255, 0.02);
+    }
+
+    .markdown-body code {
+      font-family: 'Fira Code', monospace;
+      font-size: 0.85em;
+      background: rgba(255, 255, 255, 0.08);
+      color: #f472b6;
+      padding: 2px 6px;
+      border-radius: 4px;
+    }
+
+    .markdown-body pre {
+      background: #0f141f !important;
+      border: 1px solid var(--border-color);
+      border-radius: 8px;
+      padding: 18px !important;
+      margin-bottom: 24px;
+      overflow-x: auto;
+      position: relative;
+    }
+    .markdown-body pre code {
+      background: transparent !important;
+      color: #e2e8f0;
+      padding: 0;
+      font-size: 0.88rem;
+    }
+
+    /* Math Formulas */
+    .katex-display {
+      margin: 20px 0;
+      padding: 14px 20px;
+      background: rgba(17, 22, 34, 0.5);
+      border-radius: 8px;
+      border: 1px solid rgba(255, 255, 255, 0.05);
+      overflow-x: auto;
+      overflow-y: hidden;
+    }
+
+    /* Mermaid diagrams */
+    .mermaid {
+      background: rgba(15, 20, 31, 0.9);
+      border: 1px solid var(--border-color);
+      border-radius: 8px;
+      padding: 20px;
+      margin-bottom: 24px;
+      display: flex;
+      justify-content: center;
+    }
+
+    /* Navigation Footer */
+    .doc-nav-footer {
+      display: flex;
+      justify-content: space-between;
+      margin-top: 60px;
+      padding-top: 24px;
+      border-top: 1px solid var(--border-color);
+    }
+    .doc-nav-btn {
+      display: flex;
+      flex-direction: column;
+      text-decoration: none;
+      padding: 12px 20px;
+      background: var(--bg-secondary);
+      border: 1px solid var(--border-color);
+      border-radius: 8px;
+      transition: all 0.2s;
+    }
+    .doc-nav-btn:hover {
+      border-color: var(--accent-primary);
+      background: var(--bg-hover);
+    }
+    .doc-nav-btn .label {
+      font-size: 0.72rem;
+      color: var(--text-muted);
+      text-transform: uppercase;
+      letter-spacing: 0.05em;
+    }
+    .doc-nav-btn .title {
+      font-size: 0.9rem;
+      color: #818cf8;
+      font-weight: 600;
+      margin-top: 2px;
+    }
+
+    /* Right TOC Sidebar */
+    aside.toc-sidebar {
+      width: var(--toc-width);
+      padding: 40px 24px 40px 12px;
+      position: sticky;
+      top: 60px;
+      height: calc(100vh - 60px);
+      overflow-y: auto;
+      display: flex;
+      flex-direction: column;
+    }
+
+    .toc-title {
+      font-size: 0.75rem;
+      font-weight: 700;
+      text-transform: uppercase;
+      letter-spacing: 0.08em;
+      color: var(--text-muted);
+      margin-bottom: 14px;
+    }
+
+    .toc-list {
+      list-style: none;
+      display: flex;
+      flex-direction: column;
+      gap: 6px;
+      border-left: 1px solid var(--border-color);
+    }
+    .toc-item {
+      padding-left: 14px;
+    }
+    .toc-item.h3 {
+      padding-left: 24px;
+    }
+    .toc-link {
+      color: var(--text-secondary);
+      font-size: 0.8rem;
+      text-decoration: none;
+      display: block;
+      transition: color 0.15s;
+      white-space: nowrap;
+      overflow: hidden;
+      text-overflow: ellipsis;
+    }
+    .toc-link:hover {
+      color: #818cf8;
+    }
+
+    /* Responsive */
+    @media (max-width: 1200px) {
+      aside.toc-sidebar { display: none; }
+    }
+    @media (max-width: 768px) {
+      aside.sidebar { position: fixed; transform: translateX(-100%); transition: transform 0.3s; }
+      aside.sidebar.open { transform: translateX(0); }
+      .markdown-body { padding: 24px 20px; }
+    }
+  </style>
+</head>
+<body>
+
+  <!-- Left Sidebar Navigation -->
+  <aside class="sidebar">
+    <div class="brand-header">
+      <a href="index.html" class="brand-title">
+        <span>⚡</span> ML Engineer (SSK)
+      </a>
+      <div class="brand-subtitle">LLM & Agentic Systems</div>
+    </div>
+    
+    <div class="search-box">
+      <input type="text" id="searchInput" class="search-input" placeholder="Quick search topics & math...">
+    </div>
+
+    <ul class="nav-list" id="navList">
+      <li class="nav-phase-header">Phase 0: Architecture</li>
+        <li>
+          <a href="00_ROLE_ANALYSIS.html" class="nav-item">
+            <span>00_ROLE_ANALYSIS</span>
+            <span class="priority-badge priority-p1">P1</span>
+          </a>
+        </li>
+        <li class="nav-phase-header">Phase 1: Foundations</li>
+        <li>
+          <a href="01_MATHEMATICAL_FOUNDATIONS.html" class="nav-item">
+            <span>01_MATHEMATICAL_FOUNDATIONS</span>
+            <span class="priority-badge priority-p1">P1</span>
+          </a>
+        </li>
+        
+        <li>
+          <a href="02_03_ML_AND_DL_FOUNDATIONS.html" class="nav-item">
+            <span>02_03_ML_AND_DL_FOUNDATIONS</span>
+            <span class="priority-badge priority-p1">P1</span>
+          </a>
+        </li>
+        <li class="nav-phase-header">Phase 2: Core LLM</li>
+        <li>
+          <a href="04_TRANSFORMERS_AND_LLMS.html" class="nav-item active">
+            <span>04_TRANSFORMERS_AND_LLMS</span>
+            <span class="priority-badge priority-p0">P0</span>
+          </a>
+        </li>
+        <li class="nav-phase-header">Phase 3: Alignment & Reasoning</li>
+        <li>
+          <a href="05_POST_TRAINING.html" class="nav-item">
+            <span>05_POST_TRAINING</span>
+            <span class="priority-badge priority-p0">P0</span>
+          </a>
+        </li>
+        
+        <li>
+          <a href="06_DATA_AND_SYNTHETIC_DATA.html" class="nav-item">
+            <span>06_DATA_AND_SYNTHETIC_DATA</span>
+            <span class="priority-badge priority-p1">P1</span>
+          </a>
+        </li>
+        <li class="nav-phase-header">Phase 4: Hardware & Inference</li>
+        <li>
+          <a href="08_GPU_AND_PERFORMANCE.html" class="nav-item">
+            <span>08_GPU_AND_PERFORMANCE</span>
+            <span class="priority-badge priority-p0">P0</span>
+          </a>
+        </li>
+        
+        <li>
+          <a href="09_INFERENCE_SYSTEMS.html" class="nav-item">
+            <span>09_INFERENCE_SYSTEMS</span>
+            <span class="priority-badge priority-p0">P0</span>
+          </a>
+        </li>
+        <li class="nav-phase-header">Phase 5: Distributed Scaling</li>
+        <li>
+          <a href="07_TRAINING_SYSTEMS.html" class="nav-item">
+            <span>07_TRAINING_SYSTEMS</span>
+            <span class="priority-badge priority-p1">P1</span>
+          </a>
+        </li>
+        
+        <li>
+          <a href="18_DISTRIBUTED_SYSTEMS.html" class="nav-item">
+            <span>18_DISTRIBUTED_SYSTEMS</span>
+            <span class="priority-badge priority-p1">P1</span>
+          </a>
+        </li>
+        <li class="nav-phase-header">Phase 6: Agentic Systems</li>
+        <li>
+          <a href="10_AGENTIC_ML_SYSTEMS.html" class="nav-item">
+            <span>10_AGENTIC_ML_SYSTEMS</span>
+            <span class="priority-badge priority-p0">P0</span>
+          </a>
+        </li>
+        
+        <li>
+          <a href="11_LONG_RUNNING_WORKFLOW_RELIABILITY.html" class="nav-item">
+            <span>11_LONG_RUNNING_WORKFLOW_RELIABILITY</span>
+            <span class="priority-badge priority-p0">P0</span>
+          </a>
+        </li>
+        
+        <li>
+          <a href="15_SAFETY_AND_ROBUSTNESS.html" class="nav-item">
+            <span>15_SAFETY_AND_ROBUSTNESS</span>
+            <span class="priority-badge priority-p0">P0</span>
+          </a>
+        </li>
+        <li class="nav-phase-header">Phase 7: Production & MLOps</li>
+        <li>
+          <a href="12_EVALUATION.html" class="nav-item">
+            <span>12_EVALUATION</span>
+            <span class="priority-badge priority-p0">P0</span>
+          </a>
+        </li>
+        
+        <li>
+          <a href="13_PRODUCTION_ML.html" class="nav-item">
+            <span>13_PRODUCTION_ML</span>
+            <span class="priority-badge priority-p1">P1</span>
+          </a>
+        </li>
+        
+        <li>
+          <a href="14_OBSERVABILITY_AND_DEBUGGING.html" class="nav-item">
+            <span>14_OBSERVABILITY_AND_DEBUGGING</span>
+            <span class="priority-badge priority-p1">P1</span>
+          </a>
+        </li>
+        <li class="nav-phase-header">Phase 8: Synthesis & Interview Prep</li>
+        <li>
+          <a href="16_SYSTEM_DESIGN.html" class="nav-item">
+            <span>16_SYSTEM_DESIGN</span>
+            <span class="priority-badge priority-p1">P1</span>
+          </a>
+        </li>
+        
+        <li>
+          <a href="17_PYTHON_AND_CODING.html" class="nav-item">
+            <span>17_PYTHON_AND_CODING</span>
+            <span class="priority-badge priority-p2">P2</span>
+          </a>
+        </li>
+        
+        <li>
+          <a href="19_LEADERSHIP_AND_TECHNICAL_JUDGMENT.html" class="nav-item">
+            <span>19_LEADERSHIP_AND_TECHNICAL_JUDGMENT</span>
+            <span class="priority-badge priority-p1">P1</span>
+          </a>
+        </li>
+        
+        <li>
+          <a href="20_INTERVIEW_QUESTION_BANK.html" class="nav-item">
+            <span>20_INTERVIEW_QUESTION_BANK</span>
+            <span class="priority-badge priority-p0">P0</span>
+          </a>
+        </li>
+        
+        <li>
+          <a href="21_CASE_STUDIES.html" class="nav-item">
+            <span>21_CASE_STUDIES</span>
+            <span class="priority-badge priority-p0">P0</span>
+          </a>
+        </li>
+        
+        <li>
+          <a href="22_FINAL_SYNTHESIS_PLAYBOOKS.html" class="nav-item">
+            <span>22_FINAL_SYNTHESIS_PLAYBOOKS</span>
+            <span class="priority-badge priority-p0">P0</span>
+          </a>
+        </li>
+        <li class="nav-phase-header">Overview</li>
+        <li>
+          <a href="README.html" class="nav-item">
+            <span>README</span>
+            <span class="priority-badge priority-p0">P0</span>
+          </a>
+        </li>
+        
+    </ul>
+  </aside>
+
+  <!-- Main Viewport -->
+  <main class="main-viewport">
+    <div class="top-toolbar">
+      <div class="breadcrumbs">
+        <a href="index.html">Curriculum</a>
+        <span>/</span>
+        <span>Phase 2: Core LLM</span>
+        <span>/</span>
+        <span class="current">04_TRANSFORMERS_AND_LLMS</span>
+      </div>
+      <div class="tool-actions">
+        <button class="btn" onclick="window.print()">🖨️ Print / PDF</button>
+      </div>
+    </div>
+
+    <div class="content-container">
+      <article class="markdown-body" id="docContent">
+        <h1>04_TRANSFORMERS_AND_LLMS — Mathematical &amp; Architectural Reference</h1>
+<blockquote>
+<p><strong>Audience</strong>: ML Engineers, LLM Systems Engineers, and AI Researchers preparing for senior/principal technical interviews.<br />
+<strong>Core Objective</strong>: Provide an exhaustive, mathematically rigorous masterclass on Transformer mechanics — covering Scaled Dot-Product Attention, Multi-Head Latent Attention (MLA), RoPE/YaRN mathematical proofs, SwiGLU gating, Mixture of Experts (MoE) load balancing, and long-context scaling.</p>
+</blockquote>
+<hr />
+<h2 id="heading-0">1. The Core Attention Machinery</h2>
+<h3 id="heading-1">1.1 Scaled Dot-Product Attention: Variance Preservation Derivation</h3>
+<p>Let <span class="katex-inline">$Q \in \mathbb{R}^{B \times S_q \times d_k}$</span>, <span class="katex-inline">$K \in \mathbb{R}^{B \times S_{kv} \times d_k}$</span>, and <span class="katex-inline">$V \in \mathbb{R}^{B \times S_{kv} \times d_v}$</span> denote Query, Key, and Value tensors.</p>
+<div class="katex-display">$$\text{Attention}(Q, K, V) = \text{Softmax}\left( \frac{Q K^T}{\sqrt{d_k}} + M \right) V$$</div>
+
+<p>Where <span class="katex-inline">$M \in \mathbb{R}^{S_q \times S_{kv}}$</span> is the causal attention mask:</p>
+<div class="katex-display">$$M_{ij} = \begin{cases} 0 &amp; \text{if } i \geq j \\ -\infty &amp; \text{if } i &lt; j \end{cases}$$</div>
+
+<h4>Mathematical Proof: Why the <span class="katex-inline">$\frac{1}{\sqrt{d_k}}$</span> Scaling Factor is Mandatory</h4>
+<p>Consider a single query vector <span class="katex-inline">$q \in \mathbb{R}^{d_k}$</span> and key vector <span class="katex-inline">$k \in \mathbb{R}^{d_k}$</span>. Assume components <span class="katex-inline">$q_i, k_i$</span> are independent random variables with zero mean and unit variance:</p>
+<div class="katex-display">$$\mathbb{E}[q_i] = \mathbb{E}[k_i] = 0, \quad \text{Var}(q_i) = \text{Var}(k_i) = 1$$</div>
+
+<p>The dot product is <span class="katex-inline">$S = q^T k = \sum_{i=1}^{d_k} q_i k_i$</span>.<br />
+1. <strong>Expected Value</strong>:<br />
+   <div class="katex-display">$$\mathbb{E}[S] = \mathbb{E}\left[\sum_{i=1}^{d_k} q_i k_i\right] = \sum_{i=1}^{d_k} \mathbb{E}[q_i] \mathbb{E}[k_i] = 0$$</div></p>
+<ol start="2">
+<li><strong>Variance</strong>:<br />
+   <div class="katex-display">$$\text{Var}(S) = \text{Var}\left(\sum_{i=1}^{d_k} q_i k_i\right) = \sum_{i=1}^{d_k} \text{Var}(q_i k_i)$$</div></li>
+</ol>
+<p>Since <span class="katex-inline">$q_i, k_i$</span> are independent:<br />
+   <div class="katex-display">$$\text{Var}(q_i k_i) = \mathbb{E}[(q_i k_i)^2] - (\mathbb{E}[q_i k_i])^2 = \mathbb{E}[q_i^2]\mathbb{E}[k_i^2] - 0 = \text{Var}(q_i)\text{Var}(k_i) = 1 \cdot 1 = 1$$</div></p>
+<p>Therefore:<br />
+   <div class="katex-display">$$\mathbf{\text{Var}(S) = \sum_{i=1}^{d_k} 1 = d_k \implies \text{Std}(S) = \sqrt{d_k}}$$</div>
+</p>
+<h4>The Failure Mode without Scaling:</h4>
+<p>For modern head dimensions <span class="katex-inline">$d_k = 128$</span>, <span class="katex-inline">$\text{Std}(S) = \sqrt{128} \approx 11.31$</span>.<br />
+When logits have standard deviation <span class="katex-inline">$\sim 11.3$</span>, the Softmax function pushes outputs to extreme values (<span class="katex-inline">$p_{\max} \approx 1, p_i \approx 0$</span>).<br />
+Recall the Softmax Jacobian: <span class="katex-inline">$\frac{\partial p_i}{\partial z_j} = p_i(\delta_{ij} - p_j)$</span>.<br />
+When <span class="katex-inline">$p_i \in \{0, 1\}$</span>, <span class="katex-inline">$p_i(1 - p_i) \to 0$</span>, causing <strong>vanishing gradients</strong> across the entire attention layer during backpropagation.<br />
+Scaling by <span class="katex-inline">$\frac{1}{\sqrt{d_k}}$</span> normalizes <span class="katex-inline">$\text{Var}\left(\frac{q^T k}{\sqrt{d_k}}\right) = 1$</span>, keeping gradients within the optimal non-saturating zone.</p>
+<hr />
+<h3 id="heading-2">1.2 Attention Taxonomy: MHA, MQA, GQA, and MLA</h3>
+<pre><code>┌────────────────────────┐  ┌────────────────────────┐  ┌────────────────────────┐  ┌────────────────────────┐
+│ MHA (Vaswani et al.)   │  │ MQA (Shazeer 2019)     │  │ GQA (Ainslie et al.)   │  │ MLA (DeepSeek-V2/V3)   │
+│ N_q = 64, N_kv = 64    │  │ N_q = 64, N_kv = 1     │  │ N_q = 64, N_kv = 8     │  │ Low-Rank Latent Vector │
+│ KV Cache: 100% (High)  │  │ KV Cache: 1.56% (Lossy)│  │ KV Cache: 12.5% (Ideal)│  │ KV Cache: ~10% (Exact) │
+└────────────────────────┘  └────────────────────────┘  └────────────────────────┘  └────────────────────────┘
+</code></pre>
+<h4>Mathematical Comparison Table:</h4>
+<table>
+<thead>
+<tr>
+<th style="text-align: left;">Architecture</th>
+<th style="text-align: left;">Query Heads (<span class="katex-inline">$N_q$</span>)</th>
+<th style="text-align: left;">Key/Value Heads (<span class="katex-inline">$N_{kv}$</span>)</th>
+<th style="text-align: left;">KV Cache Memory per Token/Layer</th>
+<th style="text-align: left;">Quality / Accuracy Retention</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td style="text-align: left;"><strong>Multi-Head Attention (MHA)</strong></td>
+<td style="text-align: left;"><span class="katex-inline">$H$</span></td>
+<td style="text-align: left;"><span class="katex-inline">$H$</span></td>
+<td style="text-align: left;"><span class="katex-inline">$2 \cdot H \cdot d_k \cdot 2 \text{ bytes}$</span></td>
+<td style="text-align: left;">100% (Baseline)</td>
+</tr>
+<tr>
+<td style="text-align: left;"><strong>Multi-Query Attention (MQA)</strong></td>
+<td style="text-align: left;"><span class="katex-inline">$H$</span></td>
+<td style="text-align: left;"><span class="katex-inline">$1$</span></td>
+<td style="text-align: left;"><span class="katex-inline">$2 \cdot 1 \cdot d_k \cdot 2 \text{ bytes}$</span></td>
+<td style="text-align: left;">Noticeable quality degradation on complex retrieval</td>
+</tr>
+<tr>
+<td style="text-align: left;"><strong>Grouped-Query Attention (GQA)</strong></td>
+<td style="text-align: left;"><span class="katex-inline">$H$</span></td>
+<td style="text-align: left;"><span class="katex-inline">$G = \frac{H}{\text{group\_size}}$</span></td>
+<td style="text-align: left;"><span class="katex-inline">$2 \cdot G \cdot d_k \cdot 2 \text{ bytes}$</span></td>
+<td style="text-align: left;"><span class="katex-inline">$\sim 99\%$</span> of MHA quality with <span class="katex-inline">$\frac{H}{G}\times$</span> memory savings</td>
+</tr>
+<tr>
+<td style="text-align: left;"><strong>Multi-Head Latent Attention (MLA)</strong></td>
+<td style="text-align: left;"><span class="katex-inline">$H$</span></td>
+<td style="text-align: left;">Compressed Latent <span class="katex-inline">$d_c$</span></td>
+<td style="text-align: left;"><span class="katex-inline">$(d_c + d_R) \cdot 2 \text{ bytes}$</span></td>
+<td style="text-align: left;">Matches or exceeds MHA quality with lower footprint</td>
+</tr>
+</tbody>
+</table>
+<hr />
+<h2 id="heading-3">2. Multi-Head Latent Attention (MLA) — DeepSeek Architecture</h2>
+<h3 id="heading-4">2.1 Theoretical Motivation</h3>
+<p>In standard GQA (e.g. LLaMA-3 70B with <span class="katex-inline">$N_{kv}=8, d_k=128$</span>), the KV cache at 128k context still occupies hundreds of gigabytes across the cluster, severely bounding inference throughput. DeepSeek introduced <strong>Multi-Head Latent Attention (MLA)</strong> to compress Key and Value representations into a low-rank latent space while preserving full expressive power.</p>
+<h3 id="heading-5">2.2 Mathematical Formulation of MLA</h3>
+<p>Let <span class="katex-inline">$h_t \in \mathbb{R}^{d_{\text{model}}}$</span> be the hidden state at token <span class="katex-inline">$t$</span>.</p>
+<pre><code>Hidden State h_t (dim d_model)
+   │
+   ├───► Down-Projection: c_t^{KV} = W^{DKV} · h_t   [Compressed KV Latent: dim d_c &lt;&lt; H · d_h]
+   │        │
+   │        ├──► Up-Projection Keys:   k_{t, i}^C = W_i^{UK} · c_t^{KV}
+   │        └──► Up-Projection Values: v_{t, i}^C = W_i^{UV} · c_t^{KV}
+   │
+   └───► Decoupled RoPE Key:           k_t^R = RoPE(W^{KR} · h_t)  [dim d_R]
+</code></pre>
+<h4>Step 1: Low-Rank KV Compression (For Cache Storage)</h4>
+<p>Instead of caching full high-dimensional <span class="katex-inline">$K$</span> and <span class="katex-inline">$V$</span> tensors, MLA projects <span class="katex-inline">$h_t$</span> into a compressed latent vector <span class="katex-inline">$c_t^{KV} \in \mathbb{R}^{d_c}$</span> (<span class="katex-inline">$d_c \ll N_h \cdot d_h$</span>):</p>
+<div class="katex-display">$$c_t^{KV} = W^{DKV} h_t \quad \text{where } W^{DKV} \in \mathbb{R}^{d_c \times d_{\text{model}}}$$</div>
+
+<h4>Step 2: Decoupled Key Generation</h4>
+<p>Because Rotary Positional Embeddings (RoPE) are position-dependent and cannot be directly multiplied into static low-rank matrices, MLA decouples Keys into <strong>content</strong> and <strong>rotary position</strong> components:</p>
+<div class="katex-display">$$k_{t, i}^C = W_i^{UK} c_t^{KV} \in \mathbb{R}^{d_h} \quad \text{(Content Key for head } i \text{)}$$</div>
+<div class="katex-display">$$k_t^R = \text{RoPE}(W^{KR} h_t, t) \in \mathbb{R}^{d_R} \quad \text{(Decoupled Shared RoPE Key, } d_R \ll d_h \text{)}$$</div>
+<div class="katex-display">$$k_{t, i} = \begin{bmatrix} k_{t, i}^C \\ k_t^R \end{bmatrix} \in \mathbb{R}^{d_h + d_R}$$</div>
+
+<h4>Step 3: Low-Rank Query Projection &amp; Decoupled RoPE Query</h4>
+<p>Queries are similarly compressed and decoupled:</p>
+<div class="katex-display">$$c_t^Q = W^{DQ} h_t \in \mathbb{R}^{d_c&#x27;} \quad (d_c&#x27; \text{ is query compression dimension})$$</div>
+<div class="katex-display">$$q_{t, i}^C = W_i^{UQ} c_t^Q \in \mathbb{R}^{d_h}, \quad q_{t, i}^R = \text{RoPE}(W_i^{QR} c_t^Q, t) \in \mathbb{R}^{d_R}$$</div>
+<div class="katex-display">$$q_{t, i} = \begin{bmatrix} q_{t, i}^C \\ q_{t, i}^R \end{bmatrix} \in \mathbb{R}^{d_h + d_R}$$</div>
+
+<h4>Step 4: Value Generation &amp; Attention Computation</h4>
+<div class="katex-display">$$v_{t, i}^C = W_i^{UV} c_t^{KV} \in \mathbb{R}^{d_v}$$</div>
+<div class="katex-display">$$A_{ij} = \text{Softmax}\left( \frac{q_i^T k_j}{\sqrt{d_h + d_R}} \right) = \text{Softmax}\left( \frac{(q_i^C)^T k_j^C + (q_i^R)^T k_j^R}{\sqrt{d_h + d_R}} \right)$$</div>
+<div class="katex-display">$$u_{t, i} = \sum_j A_{ij} v_{j, i}^C$$</div>
+<div class="katex-display">$$o_t = W^O \begin{bmatrix} u_{t, 1} \\ \vdots \\ u_{t, N_h} \end{bmatrix}$$</div>
+
+<h3 id="heading-6">2.3 Concrete KV Cache Memory Savings in Production</h3>
+<p>In DeepSeek-V3 (<span class="katex-inline">$d_c = 512, d_R = 64, N_h = 128, d_h = 128$</span>):<br />
+- <strong>Standard MHA Cache per Token/Layer</strong>: <span class="katex-inline">$2 \times N_h \times d_h \times 2 \text{ bytes} = 2 \times 128 \times 128 \times 2 = \mathbf{65,536 \text{ bytes}}$</span><br />
+- <strong>Standard GQA (<span class="katex-inline">$N_{kv}=8$</span>)</strong>: <span class="katex-inline">$2 \times 8 \times 128 \times 2 = \mathbf{4,096 \text{ bytes}}$</span><br />
+- <strong>MLA Cache per Token/Layer</strong>: <span class="katex-inline">$(d_c + d_R) \times 2 \text{ bytes} = (512 + 64) \times 2 = \mathbf{1,152 \text{ bytes}}$</span></p>
+<div class="katex-display">$$\text{Memory Compression vs MHA} = \frac{65536}{1152} \approx \mathbf{56.9\times}, \quad \text{vs GQA} = \frac{4096}{1152} \approx \mathbf{3.55\times}$$</div>
+
+<hr />
+<h2 id="heading-7">3. Rotary Position Embedding (RoPE) &amp; YaRN Scaling</h2>
+<h3 id="heading-8">3.1 Mathematical Derivation of RoPE (Su et al., 2021)</h3>
+<p>Given vector <span class="katex-inline">$x \in \mathbb{R}^d$</span> at sequence position <span class="katex-inline">$m$</span>, RoPE partitions <span class="katex-inline">$x$</span> into <span class="katex-inline">$\frac{d}{2}$</span> two-dimensional pairs <span class="katex-inline">$[x_{2i-1}, x_{2i}]$</span> and applies a 2D Givens rotation matrix:</p>
+<div class="katex-display">$$R_{\Theta, m}^{(i)} = \begin{bmatrix} \cos(m \theta_i) &amp; -\sin(m \theta_i) \\ \sin(m \theta_i) &amp; \cos(m \theta_i) \end{bmatrix} \quad \text{where } \theta_i = \Theta^{-2(i-1)/d}, \quad \Theta = 10000 \text{ (or } 500000 \text{)}$$</div>
+
+<p>In complex notation, let <span class="katex-inline">$z_i = x_{2i-1} + i x_{2i} \in \mathbb{C}$</span>:</p>
+<div class="katex-display">$$R_{\Theta, m}(z_i) = z_i \cdot e^{i m \theta_i}$$</div>
+
+<h4>Inner Product Relative Position Preservation Proof:</h4>
+<p>Let <span class="katex-inline">$q$</span> be at position <span class="katex-inline">$m$</span> and <span class="katex-inline">$k$</span> be at position <span class="katex-inline">$n$</span>:</p>
+<div class="katex-display">$$\tilde{q}_m = q e^{i m \theta}, \quad \tilde{k}_n = k e^{i n \theta}$$</div>
+<p>The inner product in the complex plane is given by <span class="katex-inline">$\langle \tilde{q}_m, \tilde{k}_n \rangle = \text{Re}(\tilde{q}_m \tilde{k}_n^*)$</span> (where <span class="katex-inline">$*$</span> denotes the complex conjugate):</p>
+<div class="katex-display">$$\langle \tilde{q}_m, \tilde{k}_n \rangle = \text{Re}\left( (q e^{i m \theta}) (k e^{i n \theta})^* \right) = \text{Re}\left( q k^* e^{i m \theta} e^{-i n \theta} \right) = \text{Re}\left( q k^* e^{i (m - n) \theta} \right)$$</div>
+
+<div class="katex-display">$$\mathbf{\langle R_{\Theta, m} q, R_{\Theta, n} k \rangle = g(q, k, m - n)}$$</div>
+
+<p><strong>Conclusion</strong>: The attention score between <span class="katex-inline">$q$</span> and <span class="katex-inline">$k$</span> depends <strong>strictly on their relative distance <span class="katex-inline">$(m - n)$</span></strong>, preserving translation invariance across arbitrary sequence lengths.</p>
+<hr />
+<h3 id="heading-9">3.2 Long-Context RoPE Scaling: YaRN (Yet another RoPE extensioN)</h3>
+<p>When extending context from <span class="katex-inline">$L_{\text{train}} = 4\text{k}$</span> to <span class="katex-inline">$L_{\text{test}} = 128\text{k}$</span>, naive linear interpolation divides frequencies by <span class="katex-inline">$s = \frac{L_{\text{test}}}{L_{\text{train}}} = 32$</span>: <span class="katex-inline">$\theta_i&#x27; = \frac{\theta_i}{s}$</span>.<br />
+<em>The Flaw</em>: High-frequency components (small <span class="katex-inline">$i$</span>, capturing local grammar) lose resolution, destroying the model's short-context capabilities.</p>
+<h4>The YaRN Solution (Peng et al., 2023):</h4>
+<p>Partitions frequency spectrum into three distinct regimes based on wavelength <span class="katex-inline">$\lambda_i = \frac{2\pi}{\theta_i}$</span>:<br />
+1. <strong>High Frequencies (<span class="katex-inline">$\lambda_i &lt; r_{\text{low}}$</span>)</strong>: No interpolation (<span class="katex-inline">$\theta_i&#x27; = \theta_i$</span>). Preserves local token relationships.<br />
+2. <strong>Low Frequencies (<span class="katex-inline">$\lambda_i &gt; r_{\text{high}}$</span>)</strong>: Full linear interpolation (<span class="katex-inline">$\theta_i&#x27; = \frac{\theta_i}{s}$</span>). Extrapolates long distances.<br />
+3. <strong>Mid Frequencies (<span class="katex-inline">$r_{\text{low}} \leq \lambda_i \leq r_{\text{high}}$</span>)</strong>: Smooth ramp interpolation via blending factor <span class="katex-inline">$\gamma_i = \frac{\lambda_i - r_{\text{low}}}{r_{\text{high}} - r_{\text{low}}}$</span>:<br />
+   <div class="katex-display">$$\theta_i&#x27; = (1 - \gamma_i) \theta_i + \gamma_i \frac{\theta_i}{s}$$</div>
+</p>
+<ul>
+<li><strong>Temperature / Entropy Correction Factor (<span class="katex-inline">$\sqrt{t}$</span>)</strong>:<br />
+  Because longer contexts increase attention entropy (<span class="katex-inline">$H(A) \propto \log L$</span>), YaRN scales the query-key dot product by temperature factor <span class="katex-inline">$t = 0.1 \ln(s) + 1$</span>:<br />
+  <div class="katex-display">$$\text{Attention} = \text{Softmax}\left( \frac{Q K^T}{\sqrt{t} \sqrt{d_k}} \right) V$$</div>
+</li>
+</ul>
+<hr />
+<h2 id="heading-10">4. Feed-Forward Networks (FFN): SwiGLU Mechanics</h2>
+<p>Standard Transformer FFN (ReLU):</p>
+<div class="katex-display">$$\text{FFN}_{\text{ReLU}}(x) = \max(0, x W_1 + b_1) W_2 + b_2$$</div>
+
+<p>Modern LLMs (LLaMA-3, Mistral, Gemma) replace ReLU with <strong>SwiGLU (Swish Gated Linear Unit)</strong> (Shazeer, 2020):</p>
+<div class="katex-display">$$\text{Swish}_\beta(z) = z \cdot \sigma(\beta z) = \frac{z}{1 + e^{-\beta z}} \quad (\text{with } \beta = 1 \implies \text{SiLU})$$</div>
+<div class="katex-display">$$\text{SwiGLU}(x) = \left( \text{SiLU}(x W_{\text{gate}}) \odot x W_{\text{up}} \right) W_{\text{down}}$$</div>
+
+<pre><code>                       ┌──────────────────────┐
+                       │   Hidden Vector x    │
+                       └──────────┬───────────┘
+                                  │
+                  ┌───────────────┴───────────────┐
+                  ▼                               ▼
+     ┌─────────────────────────┐     ┌─────────────────────────┐
+     │  Linear (W_gate) + SiLU │     │     Linear (W_up)       │
+     └────────────┬────────────┘     └────────────┬────────────┘
+                  │                               │
+                  └───────────────┬───────────────┘
+                                  ▼
+                        Element-wise Multiply ⊙
+                                  │
+                                  ▼
+                     ┌─────────────────────────┐
+                     │    Linear (W_down)      │
+                     └─────────────────────────┘
+</code></pre>
+<h4>Parameter Dimension Matching:</h4>
+<ul>
+<li>In standard FFN: <span class="katex-inline">$W_1 \in \mathbb{R}^{d \times 4d}, W_2 \in \mathbb{R}^{4d \times d} \implies 8 d^2 \text{ parameters}$</span>.</li>
+<li>In SwiGLU: Three matrices (<span class="katex-inline">$W_{\text{gate}}, W_{\text{up}} \in \mathbb{R}^{d \times d_{ff}}, W_{\text{down}} \in \mathbb{R}^{d_{ff} \times d}$</span>).</li>
+<li>To maintain exact parameter equivalence with standard <span class="katex-inline">$4d$</span> FFN:<br />
+  <div class="katex-display">$$3 \cdot d \cdot d_{ff} = 8 d^2 \implies d_{ff} = \frac{8}{3} d \approx 2.667 d$$</div></li>
+</ul>
+<p><em>Example</em>: In LLaMA-3 8B (<span class="katex-inline">$d_{\text{model}} = 4096$</span>), <span class="katex-inline">$d_{ff} = 14336 = 3.5 d_{\text{model}}$</span> (rounded to nearest multiple of 256 for GPU alignment).</p>
+<hr />
+<h2 id="heading-11">5. Mixture of Experts (MoE) &amp; DeepSeek-V3 Load Balancing</h2>
+<h3 id="heading-12">5.1 MoE Routing Formulation</h3>
+<p>An MoE layer replaces the standard dense FFN with <span class="katex-inline">$N$</span> independent expert networks <span class="katex-inline">$\{E_1, E_2, \dots, E_N\}$</span>, routing each token to the Top-<span class="katex-inline">$K$</span> experts via a gating network <span class="katex-inline">$G(x)$</span>:</p>
+<div class="katex-display">$$y = \sum_{i \in \text{Top}K} g_i(x) E_i(x)$$</div>
+
+<ul>
+<li><strong>Standard Top-<span class="katex-inline">$K$</span> Softmax Gating</strong>:<br />
+  <div class="katex-display">$$H(x) = x W_g \in \mathbb{R}^N$$</div></li>
+</ul>
+<div class="katex-display">$$\text{Top}K(H(x)) = \text{Indices of } K \text{ largest values in } H(x)$$</div>
+<div class="katex-display">$$g_i(x) = \begin{cases} \frac{\exp(H(x)_i)}{\sum_{j \in \text{Top}K} \exp(H(x)_j)} &amp; \text{if } i \in \text{Top}K(H(x)) \\ 0 &amp; \text{otherwise} \end{cases}$$</div>
+
+<hr />
+<h3 id="heading-13">5.2 The Routing Collapse Problem &amp; Auxiliary Losses</h3>
+<p>Without constraints, the gating network quickly suffers from <strong>Expert Routing Collapse</strong> — routing all tokens to 2 or 3 favorite experts while the remaining <span class="katex-inline">$N-K$</span> experts starve and receive zero gradient updates.</p>
+<h4>Classical Solution: Auxiliary Load Balancing Loss (Switch Transformer / Mixtral):</h4>
+<div class="katex-display">$$\mathcal{L}_{\text{aux}} = \alpha \cdot N \sum_{i=1}^N f_i P_i$$</div>
+<p>Where:<br />
+- <span class="katex-inline">$f_i = \frac{1}{T} \sum_{t=1}^T \mathbb{I}(\text{token } t \text{ routed to expert } i)$</span> (fraction of tokens dispatched)<br />
+- <span class="katex-inline">$P_i = \frac{1}{T} \sum_{t=1}^T g_i(x_t)$</span> (average routing probability)<br />
+- <span class="katex-inline">$\alpha \approx 0.01$</span> (hyperparameter).</p>
+<p><em>The Problem</em>: <span class="katex-inline">$\mathcal{L}_{\text{aux}}$</span> acts as a regularizer that penalizes routing specialization, degrading the overall model capability.</p>
+<hr />
+<h3 id="heading-14">5.3 DeepSeek-V3 Auxiliary-Loss-Free Load Balancing</h3>
+<p>DeepSeek-V3 introduces <strong>bias-driven load balancing</strong> without adding an auxiliary loss term to the objective:</p>
+<div class="katex-display">$$\text{Gating Score: } s_{i, t} = \text{Softmax}(x_t W_g)_i + b_i$$</div>
+<p>Where <span class="katex-inline">$b_i \in \mathbb{R}$</span> is a dynamic expert bias updated online during training:</p>
+<div class="katex-display">$$b_i \leftarrow b_i + \gamma \cdot \left( \frac{1}{N} - \frac{\text{Tokens Dispatched to Expert } i}{\text{Total Tokens in Batch}} \right)$$</div>
+
+<ul>
+<li>If Expert <span class="katex-inline">$i$</span> is overloaded (<span class="katex-inline">$f_i &gt; \frac{1}{N}$</span>), <span class="katex-inline">$b_i$</span> is decreased, shifting future tokens away.</li>
+<li>If Expert <span class="katex-inline">$i$</span> is starved (<span class="katex-inline">$f_i &lt; \frac{1}{N}$</span>), <span class="katex-inline">$b_i$</span> is increased, naturally pulling tokens in.</li>
+<li><strong>Advantage</strong>: Gradients directly optimize primary language modeling loss with zero interference from artificial auxiliary balance penalties.</li>
+</ul>
+<hr />
+<h2 id="heading-15">6. PyTorch Implementation: Multi-Head Latent Attention (MLA)</h2>
+<pre><code class="language-python">import torch
+import torch.nn as nn
+import torch.nn.functional as F
+import math
+
+class MultiHeadLatentAttention(nn.Module):
+    &quot;&quot;&quot;
+    Multi-Head Latent Attention (MLA) as introduced in DeepSeek-V2 / DeepSeek-V3.
+    Features:
+    - Low-rank KV compression into latent vector c_t^{KV}
+    - Decoupled Rotary Positional Embeddings (RoPE)
+    - Low-rank Query compression
+    &quot;&quot;&quot;
+    def __init__(
+        self,
+        d_model: int = 2048,
+        num_heads: int = 16,
+        d_head: int = 128,
+        d_c_kv: int = 512,    # KV compression dimension
+        d_c_q: int = 512,     # Query compression dimension
+        d_rope: int = 64      # Decoupled RoPE dimension
+    ):
+        super().__init__()
+        self.d_model = d_model
+        self.num_heads = num_heads
+        self.d_head = d_head
+        self.d_c_kv = d_c_kv
+        self.d_c_q = d_c_q
+        self.d_rope = d_rope
+        self.scale = 1.0 / math.sqrt(d_head + d_rope)
+
+        # 1. Query Compression &amp; Projections
+        self.w_dq = nn.Linear(d_model, d_c_q, bias=False)
+        self.w_uq = nn.Linear(d_c_q, num_heads * d_head, bias=False)
+        self.w_qr = nn.Linear(d_c_q, num_heads * d_rope, bias=False)
+
+        # 2. Key-Value Compression &amp; Projections
+        self.w_dkv = nn.Linear(d_model, d_c_kv, bias=False)
+        self.w_uk = nn.Linear(d_c_kv, num_heads * d_head, bias=False)
+        self.w_uv = nn.Linear(d_c_kv, num_heads * d_head, bias=False)
+        self.w_kr = nn.Linear(d_model, d_rope, bias=False) # Shared RoPE key
+
+        # 3. Output Projection
+        self.w_out = nn.Linear(num_heads * d_head, d_model, bias=False)
+
+    def apply_rope(self, x: torch.Tensor, pos: torch.Tensor) -&gt; torch.Tensor:
+        # Simple 2D rotary embedding for illustration
+        B, S, H, D = x.shape
+        half_d = D // 2
+        freqs = torch.exp(
+            -math.log(10000.0) * torch.arange(0, half_d, dtype=torch.float32, device=x.device) / half_d
+        )
+        angles = pos.unsqueeze(-1) * freqs.unsqueeze(0) # [S, half_d]
+        cos = torch.cos(angles).unsqueeze(0).unsqueeze(2) # [1, S, 1, half_d]
+        sin = torch.sin(angles).unsqueeze(0).unsqueeze(2) # [1, S, 1, half_d]
+
+        x1, x2 = x[..., :half_d], x[..., half_d:]
+        rotated = torch.cat([x1 * cos - x2 * sin, x1 * sin + x2 * cos], dim=-1)
+        return rotated
+
+    def forward(self, x: torch.Tensor, kv_cache_latent=None, kv_cache_rope=None):
+        B, S, _ = x.shape
+        pos = torch.arange(S, device=x.device)
+
+        # --- Query Processing ---
+        c_q = self.w_dq(x) # [B, S, d_c_q]
+        q_c = self.w_uq(c_q).view(B, S, self.num_heads, self.d_head)
+        q_r = self.w_qr(c_q).view(B, S, self.num_heads, self.d_rope)
+        q_r = self.apply_rope(q_r, pos)
+        q = torch.cat([q_c, q_r], dim=-1) # [B, S, H, d_head + d_rope]
+
+        # --- KV Compression &amp; Latent Generation ---
+        c_kv = self.w_dkv(x) # [B, S, d_c_kv] (This is what gets stored in the KV cache!)
+        k_r = self.w_kr(x).unsqueeze(2) # [B, S, 1, d_rope]
+        k_r = self.apply_rope(k_r, pos).expand(B, S, self.num_heads, self.d_rope)
+
+        # Uncompress K and V on-the-fly
+        k_c = self.w_uk(c_kv).view(B, S, self.num_heads, self.d_head)
+        v = self.w_uv(c_kv).view(B, S, self.num_heads, self.d_head)
+        k = torch.cat([k_c, k_r], dim=-1) # [B, S, H, d_head + d_rope]
+
+        # --- Attention Computation ---
+        # Permute for batch matrix multiply: [B, H, S_q, S_k]
+        q = q.transpose(1, 2)
+        k = k.transpose(1, 2)
+        v = v.transpose(1, 2)
+
+        scores = torch.matmul(q, k.transpose(-2, -1)) * self.scale
+
+        # Apply Causal Mask
+        mask = torch.triu(torch.full((S, S), float('-inf'), device=x.device), diagonal=1)
+        scores = scores + mask.unsqueeze(0).unsqueeze(1)
+
+        attn_weights = F.softmax(scores, dim=-1)
+        out = torch.matmul(attn_weights, v) # [B, H, S, d_head]
+
+        # Concatenate heads and project output
+        out = out.transpose(1, 2).contiguous().view(B, S, self.num_heads * self.d_head)
+        return self.w_out(out), c_kv, k_r
+
+if __name__ == &quot;__main__&quot;:
+    B, S, D = 2, 64, 2048
+    x = torch.randn(B, S, D)
+    mla = MultiHeadLatentAttention(d_model=D, num_heads=16, d_head=128, d_c_kv=512, d_rope=64)
+    out, latent_kv, rope_k = mla(x)
+    assert out.shape == (B, S, D), &quot;MLA output shape mismatch!&quot;
+    assert latent_kv.shape == (B, S, 512), &quot;Latent KV shape mismatch!&quot;
+    print(&quot;Multi-Head Latent Attention (MLA) test passed successfully.&quot;)
+</code></pre>
+<hr />
+<h2 id="heading-16">7. Deep Interview Interrogation Ladder</h2>
+<ul>
+<li><strong>Level 1 (Concept)</strong>: What is the primary operational difference between MHA, GQA, and MLA?</li>
+<li><strong>Level 3 (Proof)</strong>: Prove mathematically why the variance of Query-Key dot products equals <span class="katex-inline">$d_k$</span>, and why Softmax temperature scaling <span class="katex-inline">$\frac{1}{\sqrt{d_k}}$</span> prevents vanishing gradients.</li>
+<li><strong>Level 5 (Mechanics)</strong>: Why does Rotary Position Embedding (RoPE) preserve translation invariance in the inner product? (Show the complex exponential proof).</li>
+<li><strong>Level 7 (Architectural Sizing)</strong>: Calculate the exact KV cache memory reduction when switching a 70B parameter model from GQA (<span class="katex-inline">$N_{kv}=8$</span>) to MLA (<span class="katex-inline">$d_c=512, d_R=64$</span>).</li>
+<li><strong>Level 9 (MoE Dynamics)</strong>: Explain why standard auxiliary load balancing losses degrade model capability in MoE training, and how DeepSeek-V3's dynamic expert bias term solves this without auxiliary losses.</li>
+<li><strong>Level 10 (Principal Engineering)</strong>: Walk through how you would optimize the kernel execution of Multi-Head Latent Attention (MLA) during decode. How does matrix associativity allow absorbing the up-projection matrix <span class="katex-inline">$W^{UK}$</span> into the Query vector before attending to the cached latent <span class="katex-inline">$c_t^{KV}$</span>?</li>
+</ul>
+        
+        <!-- Navigation Footer -->
+        <div class="doc-nav-footer">
+          
+        <a href="02_03_ML_AND_DL_FOUNDATIONS.html" class="doc-nav-btn">
+          <span class="label">← Previous</span>
+          <span class="title">02_03_ML_AND_DL_FOUNDATIONS</span>
+        </a>
+        
+          
+        <a href="05_POST_TRAINING.html" class="doc-nav-btn" style="text-align: right;">
+          <span class="label">Next →</span>
+          <span class="title">05_POST_TRAINING</span>
+        </a>
+        
+        </div>
+      </article>
+
+      <aside class="toc-sidebar">
+        <div class="toc-title">On This Page</div>
+        <ul class="toc-list">
+          
+        <li class="toc-item">
+          <a href="#heading-0" class="toc-link">The Core Attention Machinery</a>
+        </li>
+        
+        <li class="toc-item h3">
+          <a href="#heading-1" class="toc-link">Scaled Dot-Product Attention: Variance Preservation Derivation</a>
+        </li>
+        
+        <li class="toc-item h3">
+          <a href="#heading-2" class="toc-link">Attention Taxonomy: MHA, MQA, GQA, and MLA</a>
+        </li>
+        
+        <li class="toc-item">
+          <a href="#heading-3" class="toc-link">Multi-Head Latent Attention (MLA) — DeepSeek Architecture</a>
+        </li>
+        
+        <li class="toc-item h3">
+          <a href="#heading-4" class="toc-link">Theoretical Motivation</a>
+        </li>
+        
+        <li class="toc-item h3">
+          <a href="#heading-5" class="toc-link">Mathematical Formulation of MLA</a>
+        </li>
+        
+        <li class="toc-item h3">
+          <a href="#heading-6" class="toc-link">Concrete KV Cache Memory Savings in Production</a>
+        </li>
+        
+        <li class="toc-item">
+          <a href="#heading-7" class="toc-link">Rotary Position Embedding (RoPE) &amp; YaRN Scaling</a>
+        </li>
+        
+        <li class="toc-item h3">
+          <a href="#heading-8" class="toc-link">Mathematical Derivation of RoPE (Su et al., 2021)</a>
+        </li>
+        
+        <li class="toc-item h3">
+          <a href="#heading-9" class="toc-link">Long-Context RoPE Scaling: YaRN (Yet another RoPE extensioN)</a>
+        </li>
+        
+        <li class="toc-item">
+          <a href="#heading-10" class="toc-link">Feed-Forward Networks (FFN): SwiGLU Mechanics</a>
+        </li>
+        
+        <li class="toc-item">
+          <a href="#heading-11" class="toc-link">Mixture of Experts (MoE) &amp; DeepSeek-V3 Load Balancing</a>
+        </li>
+        
+        <li class="toc-item h3">
+          <a href="#heading-12" class="toc-link">MoE Routing Formulation</a>
+        </li>
+        
+        <li class="toc-item h3">
+          <a href="#heading-13" class="toc-link">The Routing Collapse Problem &amp; Auxiliary Losses</a>
+        </li>
+        
+        <li class="toc-item h3">
+          <a href="#heading-14" class="toc-link">DeepSeek-V3 Auxiliary-Loss-Free Load Balancing</a>
+        </li>
+        
+        <li class="toc-item">
+          <a href="#heading-15" class="toc-link">PyTorch Implementation: Multi-Head Latent Attention (MLA)</a>
+        </li>
+        
+        <li class="toc-item">
+          <a href="#heading-16" class="toc-link">Deep Interview Interrogation Ladder</a>
+        </li>
+        
+        </ul>
+      </aside>
+    </div>
+  </main>
+
+  <script>
+    // Search filter for sidebar
+    document.getElementById('searchInput').addEventListener('input', (e) => {
+      const query = e.target.value.toLowerCase();
+      document.querySelectorAll('.nav-item').forEach(item => {
+        const text = item.textContent.toLowerCase();
+        item.style.display = text.includes(query) ? 'flex' : 'none';
+      });
+    });
+
+    // Initialize KaTeX, Prism, and Mermaid on static DOM
+    document.addEventListener('DOMContentLoaded', () => {
+      // 1. KaTeX Math Render
+      try {
+        if (typeof renderMathInElement !== 'undefined') {
+          renderMathInElement(document.getElementById('docContent'), {
+            delimiters: [
+              { left: '$$', right: '$$', display: true },
+              { left: '$', right: '$', display: false }
+            ],
+            throwOnError: false
+          });
+        }
+      } catch (e) {
+        console.warn('KaTeX render error:', e);
+      }
+
+      // 2. Prism Code Highlight
+      try {
+        if (typeof Prism !== 'undefined') {
+          Prism.highlightAll();
+        }
+      } catch (e) {
+        console.warn('Prism highlight error:', e);
+      }
+
+      // 3. Mermaid Diagrams Render
+      try {
+        if (typeof mermaid !== 'undefined') {
+          mermaid.initialize({ startOnLoad: true, theme: 'dark', securityLevel: 'loose' });
+        }
+      } catch (e) {
+        console.warn('Mermaid render error:', e);
+      }
+    });
+  </script>
+</body>
+</html>

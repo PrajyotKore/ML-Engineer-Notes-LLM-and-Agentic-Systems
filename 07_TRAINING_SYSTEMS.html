@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>00_ROLE_ANALYSIS — ML Engineer (SSK)</title>
+  <title>07_TRAINING_SYSTEMS — ML Engineer (SSK)</title>
   
   <!-- Fonts -->
   <link rel="preconnect" href="https://fonts.googleapis.com">
@@ -513,7 +513,7 @@
     <ul class="nav-list" id="navList">
       <li class="nav-phase-header">Phase 0: Architecture</li>
         <li>
-          <a href="00_ROLE_ANALYSIS.html" class="nav-item active">
+          <a href="00_ROLE_ANALYSIS.html" class="nav-item">
             <span>00_ROLE_ANALYSIS</span>
             <span class="priority-badge priority-p1">P1</span>
           </a>
@@ -569,7 +569,7 @@
         </li>
         <li class="nav-phase-header">Phase 5: Distributed Scaling</li>
         <li>
-          <a href="07_TRAINING_SYSTEMS.html" class="nav-item">
+          <a href="07_TRAINING_SYSTEMS.html" class="nav-item active">
             <span>07_TRAINING_SYSTEMS</span>
             <span class="priority-badge priority-p1">P1</span>
           </a>
@@ -682,9 +682,9 @@
       <div class="breadcrumbs">
         <a href="index.html">Curriculum</a>
         <span>/</span>
-        <span>Phase 0: Architecture</span>
+        <span>Phase 5: Distributed Scaling</span>
         <span>/</span>
-        <span class="current">00_ROLE_ANALYSIS</span>
+        <span class="current">07_TRAINING_SYSTEMS</span>
       </div>
       <div class="tool-actions">
         <button class="btn" onclick="window.print()">🖨️ Print / PDF</button>
@@ -693,167 +693,246 @@
 
     <div class="content-container">
       <article class="markdown-body" id="docContent">
-        <h1>00_ROLE_ANALYSIS — ML Engineer (LLM &amp; Agentic Systems)</h1>
-<h2 id="heading-0">1. Role Context &amp; Core Hypothesis</h2>
-<p><strong>Role Context:</strong> This role targets building a proactive AI assistant that executes real-world tasks, performs multi-step reasoning, interacts with external tools, and handles long-running workflows with high reliability under production constraints.</p>
-<p><strong>Core Interview Hypothesis:</strong> "Can this candidate take an ML/LLM research idea, turn it into a trainable system, adapt it effectively, deploy it efficiently, integrate it into an agentic product, measure whether it actually works, debug it in production, and continuously improve it under latency, cost, reliability, and safety constraints?"</p>
-<p>The ML execution layer sits exactly at the boundary of Research, Systems Engineering, and Product Outcomes. The candidate must span these seamlessly.</p>
+        <h1>07_TRAINING_SYSTEMS — Mathematical &amp; Systems Engineering Reference</h1>
+<blockquote>
+<p><strong>Audience</strong>: ML Engineers, LLM Systems Engineers, and AI Researchers preparing for senior/principal technical interviews.<br />
+<strong>Core Objective</strong>: Provide an exhaustive mathematical and systems reference on Distributed LLM Training — covering training memory breakdowns, ZeRO-1/2/3 (FSDP-2) sharding proofs, Megatron 3D Parallelism (TP, PP, DP), Context Parallelism (Ring Attention vs Ulysses), and Pipeline Bubble calculus.</p>
+</blockquote>
 <hr />
-<h2 id="heading-1">2. Role Decomposition</h2>
-<h3 id="heading-2">Explicit Technical Requirements</h3>
+<h2 id="heading-0">1. Memory Anatomy of Large Language Model Training</h2>
+<p>Let a Transformer model contain <span class="katex-inline">$\Phi$</span> parameters trained with mixed precision (BF16/FP16 forward/backward, FP32 AdamW optimizer).</p>
+<pre><code>┌─────────────────────────────────────────────────────────────────────────────┐
+│             Static Training Memory Footprint (16 Bytes per Parameter)       │
+├───────────────────────────────┬───────────────────────────────┬─────────────┤
+│ Model Parameters (FP16/BF16)  │ Gradients (FP16/BF16)         │ Adam States │
+│ 2 Bytes × Φ                   │ 2 Bytes × Φ                   │ 12 Bytes × Φ│
+└───────────────────────────────┴───────────────────────────────┴─────────────┘
+                                                                       │
+                         ┌─────────────────────────────────────────────┤
+                         ▼                                             ▼
+          ┌─────────────────────────────┐               ┌─────────────────────────────┐
+          │ FP32 Master Weights (4B × Φ)│               │ FP32 First Moment m (4B × Φ)│
+          ├─────────────────────────────┤               ├─────────────────────────────┤
+          │ FP32 Second Moment v(4B × Φ)│               │ Total Adam = 12 Bytes × Φ   │
+          └─────────────────────────────┘               └─────────────────────────────┘
+</code></pre>
+<h3 id="heading-1">1.1 Exact Memory Formulations</h3>
+<ol>
+<li><strong>Parameters (<span class="katex-inline">$\Phi$</span>)</strong>: <span class="katex-inline">$2 \Phi \text{ Bytes}$</span> (in FP16/BF16).</li>
+<li><strong>Gradients (<span class="katex-inline">$G$</span>)</strong>: <span class="katex-inline">$2 \Phi \text{ Bytes}$</span> (in FP16/BF16).</li>
+<li><strong>AdamW Optimizer States (<span class="katex-inline">$O$</span>)</strong>:<br />
+   - FP32 Master Parameters: <span class="katex-inline">$4 \Phi \text{ Bytes}$</span> (prevents underflow during tiny updates).<br />
+   - FP32 First Moment (<span class="katex-inline">$m_t$</span>): <span class="katex-inline">$4 \Phi \text{ Bytes}$</span>.<br />
+   - FP32 Second Moment (<span class="katex-inline">$v_t$</span>): <span class="katex-inline">$4 \Phi \text{ Bytes}$</span>.<br />
+   - <strong>Total Optimizer State</strong>: <span class="katex-inline">$\mathbf{12 \Phi \text{ Bytes}}$</span>.</li>
+</ol>
+<div class="katex-display">$$\mathbf{\text{Total Static Memory} = 2\Phi + 2\Phi + 12\Phi = 16\Phi \quad [\text{Bytes}]}$$</div>
+
+<h4>Concrete Sizing Example (LLaMA-3 70B):</h4>
+<div class="katex-display">$$\Phi = 70 \times 10^9 \implies \text{Static Memory} = 16 \times (70 \times 10^9) = \mathbf{1,120 \text{ GB (1.12 TB)}}$$</div>
+<p><em>Conclusion</em>: Fitting a 70B model's static memory requires at least <strong>14 NVIDIA H100 (80GB) GPUs</strong> <em>before</em> allocating a single byte for activation memory!</p>
+<hr />
+<h3 id="heading-2">1.2 Activation Memory &amp; Gradient Checkpointing (Activation Recomputation)</h3>
+<p>Activation memory scales with sequence length <span class="katex-inline">$S$</span>, batch size <span class="katex-inline">$B$</span>, layers <span class="katex-inline">$L$</span>, hidden dimension <span class="katex-inline">$d$</span>, and attention heads <span class="katex-inline">$N_h$</span>.</p>
+<p>For a standard Transformer layer without checkpointing:</p>
+<div class="katex-display">$$\text{Memory}_{\text{act}} \approx B \cdot S \cdot d \cdot L \cdot \left( 34 + 5 \frac{N_h \cdot S}{d} \right) \quad [\text{Bytes}]$$</div>
+
+<h4>Activation Recomputation (Gradient Checkpointing):</h4>
 <ul>
-<li>Python, PyTorch, CUDA, Triton</li>
-<li>GPU-based training and inference architecture (vLLM, SGLang, Megatron-LM, FSDP-2)</li>
-<li>SFT, LoRA, QLoRA, DPO, GRPO (Reasoning Models)</li>
-<li>Data pipelines (MinHash LSH, Synthetic data curation, Decontamination)</li>
-<li>Evaluation systems (SWE-bench, GAIA, Statistical significance) and latency/cost optimization</li>
-</ul>
-<h3 id="heading-3">Implicit Technical Requirements</h3>
-<ul>
-<li><strong>Hardware/Software Co-design Awareness</strong>: Understanding how PyTorch ops map to CUDA kernels, SRAM tiling, and memory bandwidth bounds.</li>
-<li><strong>Probabilistic Engineering</strong>: Building deterministic, reliable long-running workflows on top of inherently non-deterministic LLM behavior.</li>
-</ul>
-<h3 id="heading-4">Staff/Principal-Level Requirements</h3>
-<ul>
-<li><strong>Architectural Judgment</strong>: Knowing when to use full fine-tuning vs. LoRA vs. Prompt Engineering vs. Distillation vs. GRPO based on data scale and latency budgets.</li>
-<li><strong>Incident Leadership</strong>: Ability to trace a 99th percentile (P99) latency spike from the network layer down to KV-cache fragmentation on a specific GPU.</li>
+<li><strong>Full Checkpointing</strong>: Discards all intermediate activations during the forward pass, retaining only layer input activations. During the backward pass, recomputes activations on-the-fly.</li>
+<li><em>Memory Savings</em>: Reduces activation memory from <span class="katex-inline">$O(L)$</span> to <span class="katex-inline">$O(1)$</span> per layer.</li>
+<li><em>Compute Overhead</em>: Adds exactly <strong>1 extra forward pass per layer</strong> (<span class="katex-inline">$\sim 33\%$</span> additional total FLOPs).</li>
+<li><strong>Selective Checkpointing</strong>: Discards only memory-intensive, low-compute activations (e.g. Attention Softmax and Dropout) while keeping GEMM activations, eliminating <span class="katex-inline">$70\%$</span> of activation memory with <span class="katex-inline">$&lt; 5\%$</span> FLOP overhead.</li>
 </ul>
 <hr />
-<h2 id="heading-5">3. Role Competency Model &amp; Priority Matrix</h2>
+<h2 id="heading-3">2. ZeRO Optimization &amp; PyTorch FSDP-2</h2>
+<p>The <strong>Zero Redundancy Optimizer (ZeRO)</strong> (Rajbhandari et al., 2020) eliminates memory redundancy across data-parallel GPUs (<span class="katex-inline">$N_d$</span> devices) without changing the mathematical model outputs.</p>
+<pre><code>Standard DDP:  Each GPU holds: [ Parameters (2Φ) | Gradients (2Φ) | Adam States (12Φ) ] (16Φ on EVERY GPU!)
+ZeRO-1:        Each GPU holds: [ Parameters (2Φ) | Gradients (2Φ) | Adam States (12Φ / N_d) ]
+ZeRO-2:        Each GPU holds: [ Parameters (2Φ) | Gradients (2Φ / N_d) | Adam States (12Φ / N_d) ]
+ZeRO-3 (FSDP): Each GPU holds: [ Parameters (2Φ / N_d) | Gradients (2Φ / N_d) | Adam States (12Φ / N_d) ]
+</code></pre>
+<h3 id="heading-4">2.1 Stage-by-Stage Memory &amp; Communication Proofs</h3>
 <table>
 <thead>
 <tr>
-<th style="text-align: center;">Priority</th>
-<th style="text-align: left;">Category</th>
-<th style="text-align: left;">Topics</th>
-<th style="text-align: left;">Files</th>
+<th style="text-align: left;">ZeRO Stage</th>
+<th style="text-align: left;">Parameter Memory</th>
+<th style="text-align: left;">Gradient Memory</th>
+<th style="text-align: left;">Optimizer State Memory</th>
+<th style="text-align: left;">Total Static Memory per GPU</th>
+<th style="text-align: left;">Communication Volume per Step</th>
 </tr>
 </thead>
 <tbody>
 <tr>
-<td style="text-align: center;"><strong>P0</strong></td>
-<td style="text-align: left;"><strong>Agentic ML Systems</strong></td>
-<td style="text-align: left;">ReAct, Tool Routing, Context/Memory, MCP, FSM JSON</td>
-<td style="text-align: left;"><a href="./10_AGENTIC_ML_SYSTEMS.md">10_AGENTIC_ML_SYSTEMS.md</a></td>
+<td style="text-align: left;"><strong>Baseline DDP</strong></td>
+<td style="text-align: left;"><span class="katex-inline">$2\Phi$</span></td>
+<td style="text-align: left;"><span class="katex-inline">$2\Phi$</span></td>
+<td style="text-align: left;"><span class="katex-inline">$12\Phi$</span></td>
+<td style="text-align: left;"><span class="katex-inline">$16\Phi$</span></td>
+<td style="text-align: left;"><span class="katex-inline">$2\Phi$</span> (<code>All-Reduce</code> gradients)</td>
 </tr>
 <tr>
-<td style="text-align: center;"><strong>P0</strong></td>
-<td style="text-align: left;"><strong>Long-Running Workflows</strong></td>
-<td style="text-align: left;">Durable State, Temporal, Sagas, Idempotency, Retries</td>
-<td style="text-align: left;"><a href="./11_LONG_RUNNING_WORKFLOW_RELIABILITY.md">11_LONG_RUNNING_WORKFLOW_RELIABILITY.md</a></td>
+<td style="text-align: left;"><strong>ZeRO-1 (<span class="katex-inline">$P_{os}$</span>)</strong></td>
+<td style="text-align: left;"><span class="katex-inline">$2\Phi$</span></td>
+<td style="text-align: left;"><span class="katex-inline">$2\Phi$</span></td>
+<td style="text-align: left;"><span class="katex-inline">$\frac{12\Phi}{N_d}$</span></td>
+<td style="text-align: left;"><span class="katex-inline">$4\Phi + \frac{12\Phi}{N_d}$</span></td>
+<td style="text-align: left;"><span class="katex-inline">$2\Phi$</span> (<code>All-Reduce</code> gradients)</td>
 </tr>
 <tr>
-<td style="text-align: center;"><strong>P0</strong></td>
-<td style="text-align: left;"><strong>Post-Training &amp; Reasoning</strong></td>
-<td style="text-align: left;">SFT, LoRA, QLoRA, DPO, GRPO, Test-Time Compute</td>
-<td style="text-align: left;"><a href="./05_POST_TRAINING.md">05_POST_TRAINING.md</a></td>
+<td style="text-align: left;"><strong>ZeRO-2 (<span class="katex-inline">$P_{os+g}$</span>)</strong></td>
+<td style="text-align: left;"><span class="katex-inline">$2\Phi$</span></td>
+<td style="text-align: left;"><span class="katex-inline">$\frac{2\Phi}{N_d}$</span></td>
+<td style="text-align: left;"><span class="katex-inline">$\frac{12\Phi}{N_d}$</span></td>
+<td style="text-align: left;"><span class="katex-inline">$2\Phi + \frac{14\Phi}{N_d}$</span></td>
+<td style="text-align: left;"><span class="katex-inline">$2\Phi$</span> (<code>Reduce-Scatter</code> gradients)</td>
 </tr>
 <tr>
-<td style="text-align: center;"><strong>P0</strong></td>
-<td style="text-align: left;"><strong>LLM &amp; Inference</strong></td>
-<td style="text-align: left;">PagedAttention, RadixAttention, PD Split, Chunked Prefill</td>
-<td style="text-align: left;"><a href="./04_TRANSFORMERS_AND_LLMS.md">04_TRANSFORMERS_AND_LLMS.md</a> · <a href="./09_INFERENCE_SYSTEMS.md">09_INFERENCE_SYSTEMS.md</a></td>
-</tr>
-<tr>
-<td style="text-align: center;"><strong>P0</strong></td>
-<td style="text-align: left;"><strong>GPU Architecture</strong></td>
-<td style="text-align: left;">SMs, SRAM Tiling, FlashAttention-3, Roofline Model</td>
-<td style="text-align: left;"><a href="./08_GPU_AND_PERFORMANCE.md">08_GPU_AND_PERFORMANCE.md</a></td>
-</tr>
-<tr>
-<td style="text-align: center;"><strong>P0</strong></td>
-<td style="text-align: left;"><strong>Evaluation &amp; Reliability</strong></td>
-<td style="text-align: left;">Z-Tests, ELO Ratings, SWE-bench, LLM-as-judge</td>
-<td style="text-align: left;"><a href="./12_EVALUATION.md">12_EVALUATION.md</a></td>
-</tr>
-<tr>
-<td style="text-align: center;"><strong>P1</strong></td>
-<td style="text-align: left;"><strong>Mathematical Foundations</strong></td>
-<td style="text-align: left;">SVD, Low-Rank, Information Theory, AdamW, Optimization</td>
-<td style="text-align: left;"><a href="./01_MATHEMATICAL_FOUNDATIONS.md">01_MATHEMATICAL_FOUNDATIONS.md</a></td>
-</tr>
-<tr>
-<td style="text-align: center;"><strong>P1</strong></td>
-<td style="text-align: left;"><strong>Training Systems</strong></td>
-<td style="text-align: left;">FSDP-2, 3D Parallelism, Context Parallelism, Checkpointing</td>
-<td style="text-align: left;"><a href="./07_TRAINING_SYSTEMS.md">07_TRAINING_SYSTEMS.md</a></td>
-</tr>
-<tr>
-<td style="text-align: center;"><strong>P1</strong></td>
-<td style="text-align: left;"><strong>Data Engineering</strong></td>
-<td style="text-align: left;">MinHash LSH, Model Collapse, Synthetic Curation</td>
-<td style="text-align: left;"><a href="./06_DATA_AND_SYNTHETIC_DATA.md">06_DATA_AND_SYNTHETIC_DATA.md</a></td>
-</tr>
-<tr>
-<td style="text-align: center;"><strong>P1</strong></td>
-<td style="text-align: left;"><strong>Distributed Systems</strong></td>
-<td style="text-align: left;">Ring All-Reduce, GPUDirect RDMA, InfiniBand NDR</td>
-<td style="text-align: left;"><a href="./18_DISTRIBUTED_SYSTEMS.md">18_DISTRIBUTED_SYSTEMS.md</a></td>
-</tr>
-<tr>
-<td style="text-align: center;"><strong>P1</strong></td>
-<td style="text-align: left;"><strong>Observability</strong></td>
-<td style="text-align: left;">Little's Law, MFU, OpenTelemetry Tracing</td>
-<td style="text-align: left;"><a href="./14_OBSERVABILITY_AND_DEBUGGING.md">14_OBSERVABILITY_AND_DEBUGGING.md</a></td>
-</tr>
-<tr>
-<td style="text-align: center;"><strong>P1</strong></td>
-<td style="text-align: left;"><strong>Systems / ML Design</strong></td>
-<td style="text-align: left;">Architecture Trade-offs, Cost/Latency Scaling</td>
-<td style="text-align: left;"><a href="./16_SYSTEM_DESIGN.md">16_SYSTEM_DESIGN.md</a> · <a href="./13_PRODUCTION_ML.md">13_PRODUCTION_ML.md</a></td>
-</tr>
-<tr>
-<td style="text-align: center;"><strong>P1</strong></td>
-<td style="text-align: left;"><strong>Deep Learning</strong></td>
-<td style="text-align: left;">Backpropagation, Softmax Jacobians, LayerNorm/RMSNorm</td>
-<td style="text-align: left;"><a href="./02_03_ML_AND_DL_FOUNDATIONS.md">02_03_ML_AND_DL_FOUNDATIONS.md</a></td>
-</tr>
-<tr>
-<td style="text-align: center;"><strong>P2</strong></td>
-<td style="text-align: left;"><strong>Python &amp; Coding</strong></td>
-<td style="text-align: left;">PyTorch Modules, FSM Parsers, Continuous Batching</td>
-<td style="text-align: left;"><a href="./17_PYTHON_AND_CODING.md">17_PYTHON_AND_CODING.md</a></td>
+<td style="text-align: left;"><strong>ZeRO-3 / FSDP-2 (<span class="katex-inline">$P_{os+g+p}$</span>)</strong></td>
+<td style="text-align: left;"><span class="katex-inline">$\frac{2\Phi}{N_d}$</span></td>
+<td style="text-align: left;"><span class="katex-inline">$\frac{2\Phi}{N_d}$</span></td>
+<td style="text-align: left;"><span class="katex-inline">$\frac{12\Phi}{N_d}$</span></td>
+<td style="text-align: left;"><span class="katex-inline">$\mathbf{\frac{16\Phi}{N_d}}$</span></td>
+<td style="text-align: left;"><span class="katex-inline">$\mathbf{3\Phi}$</span> (<span class="katex-inline">$2\times$</span> <code>All-Gather</code> + <span class="katex-inline">$1\times$</span> <code>Reduce-Scatter</code>)</td>
 </tr>
 </tbody>
 </table>
+<h4>Detailed Communication Walkthrough of ZeRO-3 / FSDP-2:</h4>
+<ol>
+<li><strong>Forward Pass</strong>: Before layer <span class="katex-inline">$l$</span> executes, perform <code>All-Gather</code> across <span class="katex-inline">$N_d$</span> GPUs to reconstruct full weights <span class="katex-inline">$W_l$</span> (<span class="katex-inline">$1\Phi$</span> total volume). After execution, immediately discard <span class="katex-inline">$W_l$</span>.</li>
+<li><strong>Backward Pass</strong>: Before backpropagating through layer <span class="katex-inline">$l$</span>, perform <code>All-Gather</code> again to reconstruct <span class="katex-inline">$W_l$</span> (<span class="katex-inline">$1\Phi$</span> total volume). Discard <span class="katex-inline">$W_l$</span> immediately.</li>
+<li><strong>Gradient Reduction</strong>: Compute local gradients <span class="katex-inline">$g_l$</span>, perform <code>Reduce-Scatter</code> across <span class="katex-inline">$N_d$</span> GPUs so each GPU retains only its <span class="katex-inline">$\frac{1}{N_d}$</span> gradient slice (<span class="katex-inline">$1\Phi$</span> total volume).</li>
+<li><strong>Total Comm Volume</strong>: <span class="katex-inline">$1\Phi + 1\Phi + 1\Phi = \mathbf{3\Phi \text{ bytes per step}}$</span> (only <span class="katex-inline">$1.5\times$</span> baseline DDP).</li>
+</ol>
 <hr />
-<h2 id="heading-6">4. Internal Dependency Graph</h2>
-<div class="mermaid">flowchart TD
-    %% Base Layer
-    Math[&quot;01: Mathematical Foundations (SVD, Info Theory, Optimization)&quot;] --&gt; DL[&quot;02_03: Deep Learning (Backprop, RMSNorm, Loss Landscapes)&quot;]
-    DL --&gt; LLM[&quot;04: Modern LLMs (Attention, RoPE, MLA, MoE)&quot;]
-    
-    %% Hardware &amp; Performance Layer
-    GPU[&quot;08: GPU Architecture &amp; FlashAttention-3&quot;] --&gt; Inf[&quot;09: Inference Systems (PagedAttention, SGLang, PD Split)&quot;]
-    GPU --&gt; TS[&quot;07: Training Systems (FSDP-2, 3D Parallelism)&quot;]
-    Net[&quot;18: Distributed Systems (Ring All-Reduce, RDMA)&quot;] --&gt; TS
-    LLM --&gt; Inf
-    LLM --&gt; TS
-    
-    %% Training &amp; Alignment Layer
-    Data[&quot;06: Data Engineering (MinHash LSH, Synthetic Flywheels)&quot;] --&gt; PT[&quot;05: Post-Training (SFT, LoRA, DPO, GRPO)&quot;]
-    LLM --&gt; PT
-    PT --&gt; Eval[&quot;12: Evaluation (Z-Tests, ELO, SWE-bench)&quot;]
-    
-    %% Serving &amp; Agent Layer
-    Inf --&gt; Agent[&quot;10: Agentic Systems (ReAct, FSM JSON, MCP, Hybrid RAG)&quot;]
-    Agent --&gt; Rel[&quot;11: Long-Running Workflows (Temporal, Sagas, Jitter)&quot;]
-    Rel --&gt; Prod[&quot;13/14/15: Production MLOps, Tracing, Safety Guardrails&quot;]
-    
-    %% Synthesis Layer
-    Prod --&gt; SysDes[&quot;16-22: System Design, Production Code &amp; Playbooks&quot;]</div>
+<h2 id="heading-5">3. Megatron 3D Parallelism: TP, PP, and DP</h2>
+<p>When training models exceeding 100B parameters across thousands of GPUs, combining <strong>Tensor Parallelism (TP)</strong>, <strong>Pipeline Parallelism (PP)</strong>, and <strong>Data Parallelism (DP)</strong> is mandatory.</p>
+<pre><code>Total GPUs (N) = TP × PP × DP
+</code></pre>
+<h3 id="heading-6">3.1 Tensor Parallelism (Megatron-LM Intra-Node Splitting)</h3>
+<p>Tensor Parallelism splits individual weight matrices across <span class="katex-inline">$N_{\text{TP}}$</span> GPUs (typically within the same 8-GPU NVLink node).</p>
+<pre><code>MLP Layer Splitting in Megatron-LM:
+Input X ──► [ Column Parallel Linear (W_1) ] ──► Split Activations [Y_1, Y_2]
+                     │ (GeLU Activation applied locally on each GPU)
+                     ▼
+            [ Row Parallel Linear (W_2) ]    ──► Local Outputs [Z_1, Z_2]
+                     │
+                     ▼
+           ┌────────────────────────┐
+           │ All-Reduce Sum Barrier │ ──► Final Output Z = Z_1 + Z_2 (Exact Result!)
+           └────────────────────────┘
+</code></pre>
+<ol>
+<li><strong>Column Parallel Linear (<span class="katex-inline">$W_1 \in \mathbb{R}^{d \times 4d}$</span>)</strong>:<br />
+   Splits <span class="katex-inline">$W_1$</span> column-wise into <span class="katex-inline">$[W_{1, 1}, \dots, W_{1, N_{\text{TP}}}]$</span>.<br />
+   Each GPU computes <span class="katex-inline">$Y_i = X W_{1, i}$</span> locally with zero communication.</li>
+<li><strong>Row Parallel Linear (<span class="katex-inline">$W_2 \in \mathbb{R}^{4d \times d}$</span>)</strong>:<br />
+   Splits <span class="katex-inline">$W_2$</span> row-wise into <span class="katex-inline">$\begin{bmatrix} W_{2, 1} \\ \vdots \\ W_{2, N_{\text{TP}}} \end{bmatrix}$</span>.<br />
+   Each GPU computes <span class="katex-inline">$Z_i = \text{GeLU}(Y_i) W_{2, i}$</span>.</li>
+<li><strong>The Communication Step</strong>:<br />
+   The full output is <span class="katex-inline">$Z = \sum_{i=1}^{N_{\text{TP}}} Z_i$</span>. Requires an <strong><code>All-Reduce</code> sum</strong> across the <span class="katex-inline">$N_{\text{TP}}$</span> GPUs.<br />
+   - Total communication per Transformer block = <strong>2 <code>All-Reduce</code> in forward pass, 2 <code>All-Reduce</code> in backward pass</strong> (one for Attention, one for MLP).</li>
+</ol>
+<hr />
+<h3 id="heading-7">3.2 Pipeline Parallelism &amp; The 1F1B Schedule Bubble</h3>
+<p>Pipeline Parallelism partitions the <span class="katex-inline">$L$</span> layers of a Transformer across <span class="katex-inline">$p$</span> pipeline stages (nodes).</p>
+<p>To minimize idle time, a batch of size <span class="katex-inline">$B$</span> is split into <span class="katex-inline">$m$</span> <strong>micro-batches</strong> (<span class="katex-inline">$m \gg p$</span>).</p>
+<pre><code>1F1B Schedule (p = 4 stages, m = 8 microbatches):
+Stage 3: ───[F0][F1][F2][F3][B0][F4][B1][F5][B2][F6][B3][F7][B4][B5][B6][B7]───
+Stage 2: ──[F0][F1][F2][B0][F3][B1][F4][B2][F5][B3][F6][B4][F7][B5][B6][B7]────
+Stage 1: ─[F0][F1][B0][F2][B1][F3][B2][F4][B3][F5][B4][F6][B5][F7][B6][B7]─────
+Stage 0: [F0][B0][F1][B1][F2][B2][F3][B3][F4][B4][F5][B5][F6][B6][F7][B7]──────
+         ◄────────────────────────────── Total Time ────────────────────────────►
+</code></pre>
+<h4>Exact Pipeline Bubble Fraction Derivation:</h4>
+<p>In 1F1B (One-Forward-One-Backward) steady state, the pipeline bubble consists of <span class="katex-inline">$p-1$</span> warmup forward steps and <span class="katex-inline">$p-1$</span> cooldown backward steps.<br />
+Let <span class="katex-inline">$t_f$</span> and <span class="katex-inline">$t_b$</span> be the execution time of one micro-batch forward and backward pass (<span class="katex-inline">$t_b \approx 2 t_f$</span>).<br />
+The total ideal execution time is <span class="katex-inline">$m (t_f + t_b)$</span>. The idle bubble time is <span class="katex-inline">$(p - 1)(t_f + t_b)$</span>.</p>
+<div class="katex-display">$$\mathbf{\text{Bubble Fraction } F_{\text{bubble}} = \frac{(p - 1)(t_f + t_b)}{m(t_f + t_b) + (p - 1)(t_f + t_b)} = \frac{p - 1}{m + p - 1}}$$</div>
 
+<p><em>Sizing Rule</em>: To keep bubble overhead <span class="katex-inline">$&lt; 10\%$</span>, set <span class="katex-inline">$m \geq 9(p - 1)$</span>.</p>
 <hr />
-<h2 id="heading-7">5. Depth Philosophy &amp; Technical Bridge</h2>
-<p>Every document in this Single Source of Knowledge (SSK) follows the <strong>10-Level Depth Framework</strong>, bridging <strong>Mathematics <span class="katex-inline">$\longleftrightarrow$</span> Algorithms <span class="katex-inline">$\longleftrightarrow$</span> GPU Execution <span class="katex-inline">$\longleftrightarrow$</span> Production Systems</strong>.</p>
+<h3 id="heading-8">3.3 Context Parallelism: Ring Attention vs. DeepSpeed Ulysses</h3>
+<p>When training with context lengths <span class="katex-inline">$S \geq 128\text{k}$</span> tokens, single GPU VRAM cannot fit even one sequence's attention matrices.</p>
+<ol>
+<li><strong>Ring Attention (Liu et al., 2023)</strong>:<br />
+   - Partitions sequence <span class="katex-inline">$S$</span> across <span class="katex-inline">$N_{\text{cp}}$</span> GPUs arranged in a logical ring.<br />
+   - Overlaps computation of local block Attention with asynchronous P2P sending of Key/Value blocks around the ring.<br />
+   - <em>Communication Volume</em>: <span class="katex-inline">$2 \left(\frac{N_{\text{cp}} - 1}{N_{\text{cp}}}\right) S \cdot d \cdot b_{\text{kv}}$</span>. Perfectly memory-bounded and scalable to million-token contexts.</li>
+<li><strong>DeepSpeed Ulysses (Jacobs et al., 2023)</strong>:<br />
+   - Partitions sequence dimension across GPUs before attention.<br />
+   - Performs an <code>All-to-All</code> collective to transpose from Sequence-Partitioned to Head-Partitioned (<span class="katex-inline">$N_h / N_{\text{cp}}$</span> heads per GPU).<br />
+   - Computes standard FlashAttention locally, then performs a second <code>All-to-All</code> to transpose back.<br />
+   - <em>Advantage</em>: Leverages standard FlashAttention kernels with zero changes, but requires high-bandwidth interconnects (InfiniBand/NVLink).</li>
+</ol>
+<hr />
+<h2 id="heading-9">4. PyTorch FSDP-2 Configuration Reference</h2>
+<pre><code class="language-python">import torch
+import torch.nn as nn
+from torch.distributed.fsdp import (
+    FullyShardedDataParallel as FSDP,
+    ShardingStrategy,
+    MixedPrecision,
+    BackwardPrefetch,
+    CPUOffload
+)
+from torch.distributed.fsdp.wrap import transformer_auto_wrap_policy
+
+def setup_fsdp_model(model: nn.Module, transformer_layer_cls) -&gt; FSDP:
+    &quot;&quot;&quot;
+    Production-grade FSDP-2 configuration with BF16 mixed precision,
+    Transformer layer wrapping, and backward prefetching.
+    &quot;&quot;&quot;
+    # 1. Mixed Precision Policy (BF16 computation, FP32 master reduction)
+    mixed_precision_policy = MixedPrecision(
+        param_dtype=torch.bfloat16,
+        reduce_dtype=torch.bfloat16,
+        buffer_dtype=torch.bfloat16
+    )
+
+    # 2. Layer Wrapping Policy: Shards each Transformer Block independently
+    auto_wrap_policy = transformer_auto_wrap_policy(
+        transformer_layer_cls={transformer_layer_cls}
+    )
+
+    # 3. Wrap Model in FSDP (ZeRO-3 Full Shard)
+    fsdp_model = FSDP(
+        model,
+        auto_wrap_policy=auto_wrap_policy,
+        mixed_precision=mixed_precision_policy,
+        sharding_strategy=ShardingStrategy.FULL_SHARD, # ZeRO-3
+        backward_prefetch=BackwardPrefetch.BACKWARD_PRE, # Overlap All-Gather with backward GEMM
+        cpu_offload=CPUOffload(offload_params=False), # False for high NVLink bandwidth clusters
+        device_id=torch.cuda.current_device(),
+        limit_all_gathers=True # Prevents CPU memory bloat from in-flight All-Gathers
+    )
+    return fsdp_model
+</code></pre>
+<hr />
+<h2 id="heading-10">5. Deep Interview Interrogation Ladder</h2>
+<ul>
+<li><strong>Level 1 (Concept)</strong>: What are the three components of static training memory in AdamW mixed-precision training?</li>
+<li><strong>Level 3 (Derivation)</strong>: Calculate why the static memory of a 70B parameter model is exactly 1,120 GB in FP16 training with AdamW.</li>
+<li><strong>Level 5 (FSDP Mechanics)</strong>: Walk through the exact communication primitives (<code>All-Gather</code> vs <code>Reduce-Scatter</code>) executed during the forward and backward pass of FSDP (ZeRO-3), and prove that total communication volume is <span class="katex-inline">$3\Phi$</span>.</li>
+<li><strong>Level 7 (Pipeline Parallelism)</strong>: Derive the exact Pipeline Bubble Fraction <span class="katex-inline">$F_{\text{bubble}} = \frac{p - 1}{m + p - 1}$</span> for a 1F1B schedule with <span class="katex-inline">$p$</span> stages and <span class="katex-inline">$m$</span> micro-batches.</li>
+<li><strong>Level 9 (Long Context)</strong>: Compare Ring Attention and DeepSpeed Ulysses. What are their communication trade-offs when scaling sequence length to 512k tokens?</li>
+<li><strong>Level 10 (Principal Engineering)</strong>: You are provisioning an 8,192 H100 GPU cluster to pre-train a 400B MoE model. Design the exact 4D Parallelism strategy (TP <span class="katex-inline">$\times$</span> PP <span class="katex-inline">$\times$</span> EP <span class="katex-inline">$\times$</span> DP), select the micro-batch size <span class="katex-inline">$m$</span>, and calculate the NCCL network bandwidth saturation over InfiniBand NDR400.</li>
+</ul>
         
         <!-- Navigation Footer -->
         <div class="doc-nav-footer">
-          <div></div>
           
-        <a href="01_MATHEMATICAL_FOUNDATIONS.html" class="doc-nav-btn" style="text-align: right;">
+        <a href="09_INFERENCE_SYSTEMS.html" class="doc-nav-btn">
+          <span class="label">← Previous</span>
+          <span class="title">09_INFERENCE_SYSTEMS</span>
+        </a>
+        
+          
+        <a href="18_DISTRIBUTED_SYSTEMS.html" class="doc-nav-btn" style="text-align: right;">
           <span class="label">Next →</span>
-          <span class="title">01_MATHEMATICAL_FOUNDATIONS</span>
+          <span class="title">18_DISTRIBUTED_SYSTEMS</span>
         </a>
         
         </div>
@@ -864,35 +943,47 @@
         <ul class="toc-list">
           
         <li class="toc-item">
-          <a href="#heading-0" class="toc-link">Role Context &amp; Core Hypothesis</a>
-        </li>
-        
-        <li class="toc-item">
-          <a href="#heading-1" class="toc-link">Role Decomposition</a>
+          <a href="#heading-0" class="toc-link">Memory Anatomy of Large Language Model Training</a>
         </li>
         
         <li class="toc-item h3">
-          <a href="#heading-2" class="toc-link">Explicit Technical Requirements</a>
+          <a href="#heading-1" class="toc-link">Exact Memory Formulations</a>
         </li>
         
         <li class="toc-item h3">
-          <a href="#heading-3" class="toc-link">Implicit Technical Requirements</a>
+          <a href="#heading-2" class="toc-link">Activation Memory &amp; Gradient Checkpointing (Activation Recomputation)</a>
+        </li>
+        
+        <li class="toc-item">
+          <a href="#heading-3" class="toc-link">ZeRO Optimization &amp; PyTorch FSDP-2</a>
         </li>
         
         <li class="toc-item h3">
-          <a href="#heading-4" class="toc-link">Staff/Principal-Level Requirements</a>
+          <a href="#heading-4" class="toc-link">Stage-by-Stage Memory &amp; Communication Proofs</a>
         </li>
         
         <li class="toc-item">
-          <a href="#heading-5" class="toc-link">Role Competency Model &amp; Priority Matrix</a>
+          <a href="#heading-5" class="toc-link">Megatron 3D Parallelism: TP, PP, and DP</a>
+        </li>
+        
+        <li class="toc-item h3">
+          <a href="#heading-6" class="toc-link">Tensor Parallelism (Megatron-LM Intra-Node Splitting)</a>
+        </li>
+        
+        <li class="toc-item h3">
+          <a href="#heading-7" class="toc-link">Pipeline Parallelism &amp; The 1F1B Schedule Bubble</a>
+        </li>
+        
+        <li class="toc-item h3">
+          <a href="#heading-8" class="toc-link">Context Parallelism: Ring Attention vs. DeepSpeed Ulysses</a>
         </li>
         
         <li class="toc-item">
-          <a href="#heading-6" class="toc-link">Internal Dependency Graph</a>
+          <a href="#heading-9" class="toc-link">PyTorch FSDP-2 Configuration Reference</a>
         </li>
         
         <li class="toc-item">
-          <a href="#heading-7" class="toc-link">Depth Philosophy &amp; Technical Bridge</a>
+          <a href="#heading-10" class="toc-link">Deep Interview Interrogation Ladder</a>
         </li>
         
         </ul>

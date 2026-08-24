@@ -1,0 +1,1139 @@
+<!DOCTYPE html>
+<html lang="en" class="dark">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>08_GPU_AND_PERFORMANCE — ML Engineer (SSK)</title>
+  
+  <!-- Fonts -->
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Fira+Code:wght@400;500;600&family=Inter:wght@300;400;500;600;700;800&family=Outfit:wght@500;600;700;800&display=swap" rel="stylesheet">
+  
+  <!-- KaTeX for LaTeX Math -->
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/katex@0.16.9/dist/katex.min.css">
+  <script defer src="https://cdn.jsdelivr.net/npm/katex@0.16.9/dist/katex.min.js"></script>
+  <script defer src="https://cdn.jsdelivr.net/npm/katex@0.16.9/dist/contrib/auto-render.min.js"></script>
+
+  <!-- Prism.js for Syntax Highlighting -->
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/prism/1.29.0/themes/prism-tomorrow.min.css">
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/prism/1.29.0/prism.min.js"></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/prism/1.29.0/components/prism-python.min.js"></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/prism/1.29.0/components/prism-bash.min.js"></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/prism/1.29.0/components/prism-json.min.js"></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/prism/1.29.0/components/prism-c.min.js"></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/prism/1.29.0/components/prism-cpp.min.js"></script>
+
+  <!-- Mermaid.js for Architecture Diagrams -->
+  <script src="https://cdn.jsdelivr.net/npm/mermaid@10.8.0/dist/mermaid.min.js"></script>
+
+  <style>
+    :root {
+      --bg-primary: #0a0d14;
+      --bg-secondary: #111622;
+      --bg-card: rgba(22, 28, 42, 0.75);
+      --bg-hover: #1c2436;
+      --border-color: rgba(255, 255, 255, 0.08);
+      --border-focus: rgba(99, 102, 241, 0.5);
+      --text-primary: #f1f5f9;
+      --text-secondary: #94a3b8;
+      --text-muted: #64748b;
+      --accent-primary: #6366f1;
+      --accent-gradient: linear-gradient(135deg, #6366f1 0%, #a855f7 50%, #ec4899 100%);
+      --accent-glow: rgba(99, 102, 241, 0.25);
+      --p0-color: #ef4444;
+      --p0-bg: rgba(239, 68, 68, 0.15);
+      --p1-color: #3b82f6;
+      --p1-bg: rgba(59, 130, 246, 0.15);
+      --p2-color: #10b981;
+      --p2-bg: rgba(16, 185, 129, 0.15);
+      --sidebar-width: 320px;
+      --toc-width: 260px;
+    }
+
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+
+    body {
+      font-family: 'Inter', -apple-system, BlinkMacSystemFont, sans-serif;
+      background-color: var(--bg-primary);
+      color: var(--text-primary);
+      line-height: 1.65;
+      overflow-x: hidden;
+      display: flex;
+      height: 100vh;
+    }
+
+    /* Scrollbars */
+    ::-webkit-scrollbar { width: 6px; height: 6px; }
+    ::-webkit-scrollbar-track { background: transparent; }
+    ::-webkit-scrollbar-thumb { background: rgba(255, 255, 255, 0.15); border-radius: 4px; }
+    ::-webkit-scrollbar-thumb:hover { background: rgba(255, 255, 255, 0.3); }
+
+    /* Left Sidebar Navigation */
+    aside.sidebar {
+      width: var(--sidebar-width);
+      min-width: var(--sidebar-width);
+      background: var(--bg-secondary);
+      border-right: 1px solid var(--border-color);
+      display: flex;
+      flex-direction: column;
+      height: 100vh;
+      z-index: 50;
+    }
+
+    .brand-header {
+      padding: 20px 24px;
+      border-bottom: 1px solid var(--border-color);
+      background: rgba(10, 13, 20, 0.5);
+      backdrop-filter: blur(10px);
+    }
+
+    .brand-title {
+      font-family: 'Outfit', sans-serif;
+      font-size: 1.15rem;
+      font-weight: 700;
+      background: var(--accent-gradient);
+      -webkit-background-clip: text;
+      -webkit-text-fill-color: transparent;
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      text-decoration: none;
+    }
+
+    .brand-subtitle {
+      font-size: 0.75rem;
+      color: var(--text-muted);
+      margin-top: 4px;
+      text-transform: uppercase;
+      letter-spacing: 0.05em;
+    }
+
+    .search-box {
+      padding: 14px 20px;
+      border-bottom: 1px solid var(--border-color);
+    }
+
+    .search-input {
+      width: 100%;
+      background: rgba(0, 0, 0, 0.3);
+      border: 1px solid var(--border-color);
+      border-radius: 8px;
+      padding: 10px 14px;
+      color: var(--text-primary);
+      font-size: 0.85rem;
+      outline: none;
+      transition: all 0.2s;
+    }
+    .search-input:focus {
+      border-color: var(--accent-primary);
+      box-shadow: 0 0 0 3px var(--accent-glow);
+    }
+
+    .nav-list {
+      flex: 1;
+      overflow-y: auto;
+      padding: 12px 14px;
+      list-style: none;
+    }
+
+    .nav-phase-header {
+      font-size: 0.7rem;
+      font-weight: 700;
+      text-transform: uppercase;
+      color: var(--text-muted);
+      letter-spacing: 0.08em;
+      padding: 14px 10px 6px 10px;
+    }
+
+    .nav-item {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      padding: 8px 12px;
+      border-radius: 6px;
+      color: var(--text-secondary);
+      font-size: 0.82rem;
+      text-decoration: none;
+      transition: all 0.15s ease;
+      margin-bottom: 2px;
+      border: 1px solid transparent;
+    }
+    .nav-item:hover {
+      background: var(--bg-hover);
+      color: var(--text-primary);
+    }
+    .nav-item.active {
+      background: rgba(99, 102, 241, 0.15);
+      color: #818cf8;
+      border-color: rgba(99, 102, 241, 0.3);
+      font-weight: 600;
+    }
+
+    .priority-badge {
+      font-size: 0.65rem;
+      font-weight: 700;
+      padding: 2px 6px;
+      border-radius: 4px;
+      text-transform: uppercase;
+    }
+    .priority-p0 { color: var(--p0-color); background: var(--p0-bg); }
+    .priority-p1 { color: var(--p1-color); background: var(--p1-bg); }
+    .priority-p2 { color: var(--p2-color); background: var(--p2-bg); }
+
+    /* Main Content Area */
+    main.main-viewport {
+      flex: 1;
+      height: 100vh;
+      overflow-y: auto;
+      display: flex;
+      flex-direction: column;
+      position: relative;
+    }
+
+    .top-toolbar {
+      position: sticky;
+      top: 0;
+      background: rgba(10, 13, 20, 0.85);
+      backdrop-filter: blur(12px);
+      border-bottom: 1px solid var(--border-color);
+      padding: 12px 36px;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      z-index: 40;
+    }
+
+    .breadcrumbs {
+      font-size: 0.85rem;
+      color: var(--text-secondary);
+      display: flex;
+      align-items: center;
+      gap: 8px;
+    }
+    .breadcrumbs a {
+      color: var(--text-secondary);
+      text-decoration: none;
+    }
+    .breadcrumbs a:hover {
+      color: #818cf8;
+    }
+    .breadcrumbs span.current {
+      color: var(--text-primary);
+      font-weight: 600;
+    }
+
+    .tool-actions {
+      display: flex;
+      gap: 12px;
+      align-items: center;
+    }
+
+    .btn {
+      background: rgba(255, 255, 255, 0.05);
+      border: 1px solid var(--border-color);
+      color: var(--text-primary);
+      padding: 6px 14px;
+      border-radius: 6px;
+      font-size: 0.8rem;
+      font-weight: 500;
+      cursor: pointer;
+      display: flex;
+      align-items: center;
+      gap: 6px;
+      text-decoration: none;
+      transition: all 0.2s;
+    }
+    .btn:hover {
+      background: rgba(255, 255, 255, 0.1);
+      border-color: rgba(255, 255, 255, 0.2);
+    }
+
+    .content-container {
+      display: flex;
+      flex: 1;
+      max-width: 1600px;
+      margin: 0 auto;
+      width: 100%;
+    }
+
+    .markdown-body {
+      flex: 1;
+      padding: 40px 48px 100px 48px;
+      max-width: 960px;
+    }
+
+    /* Markdown Styling */
+    .markdown-body h1 {
+      font-family: 'Outfit', sans-serif;
+      font-size: 2.2rem;
+      font-weight: 800;
+      margin-bottom: 24px;
+      padding-bottom: 12px;
+      border-bottom: 1px solid var(--border-color);
+      letter-spacing: -0.02em;
+      color: #fff;
+    }
+
+    .markdown-body h2 {
+      font-family: 'Outfit', sans-serif;
+      font-size: 1.5rem;
+      font-weight: 700;
+      margin-top: 40px;
+      margin-bottom: 16px;
+      color: #e2e8f0;
+      border-bottom: 1px solid rgba(255, 255, 255, 0.05);
+      padding-bottom: 8px;
+    }
+
+    .markdown-body h3 {
+      font-size: 1.15rem;
+      font-weight: 600;
+      margin-top: 28px;
+      margin-bottom: 12px;
+      color: #cbd5e1;
+    }
+
+    .markdown-body h4 {
+      font-size: 1.0rem;
+      font-weight: 600;
+      margin-top: 20px;
+      margin-bottom: 8px;
+      color: #94a3b8;
+    }
+
+    .markdown-body p {
+      margin-bottom: 16px;
+      color: #cbd5e1;
+      font-size: 0.96rem;
+    }
+
+    .markdown-body ul, .markdown-body ol {
+      margin-bottom: 18px;
+      padding-left: 24px;
+      color: #cbd5e1;
+    }
+    .markdown-body li {
+      margin-bottom: 6px;
+    }
+
+    .markdown-body blockquote {
+      border-left: 4px solid var(--accent-primary);
+      background: rgba(99, 102, 241, 0.08);
+      padding: 14px 20px;
+      border-radius: 0 8px 8px 0;
+      margin-bottom: 20px;
+      color: #e2e8f0;
+      font-size: 0.92rem;
+    }
+
+    .markdown-body table {
+      width: 100%;
+      border-collapse: collapse;
+      margin-bottom: 24px;
+      font-size: 0.88rem;
+      background: rgba(17, 22, 34, 0.6);
+      border-radius: 8px;
+      overflow: hidden;
+      border: 1px solid var(--border-color);
+    }
+    .markdown-body th {
+      background: rgba(30, 41, 59, 0.8);
+      padding: 12px 16px;
+      text-align: left;
+      font-weight: 600;
+      color: #f1f5f9;
+      border-bottom: 1px solid var(--border-color);
+    }
+    .markdown-body td {
+      padding: 10px 16px;
+      border-bottom: 1px solid rgba(255, 255, 255, 0.04);
+      color: #cbd5e1;
+    }
+    .markdown-body tr:hover td {
+      background: rgba(255, 255, 255, 0.02);
+    }
+
+    .markdown-body code {
+      font-family: 'Fira Code', monospace;
+      font-size: 0.85em;
+      background: rgba(255, 255, 255, 0.08);
+      color: #f472b6;
+      padding: 2px 6px;
+      border-radius: 4px;
+    }
+
+    .markdown-body pre {
+      background: #0f141f !important;
+      border: 1px solid var(--border-color);
+      border-radius: 8px;
+      padding: 18px !important;
+      margin-bottom: 24px;
+      overflow-x: auto;
+      position: relative;
+    }
+    .markdown-body pre code {
+      background: transparent !important;
+      color: #e2e8f0;
+      padding: 0;
+      font-size: 0.88rem;
+    }
+
+    /* Math Formulas */
+    .katex-display {
+      margin: 20px 0;
+      padding: 14px 20px;
+      background: rgba(17, 22, 34, 0.5);
+      border-radius: 8px;
+      border: 1px solid rgba(255, 255, 255, 0.05);
+      overflow-x: auto;
+      overflow-y: hidden;
+    }
+
+    /* Mermaid diagrams */
+    .mermaid {
+      background: rgba(15, 20, 31, 0.9);
+      border: 1px solid var(--border-color);
+      border-radius: 8px;
+      padding: 20px;
+      margin-bottom: 24px;
+      display: flex;
+      justify-content: center;
+    }
+
+    /* Navigation Footer */
+    .doc-nav-footer {
+      display: flex;
+      justify-content: space-between;
+      margin-top: 60px;
+      padding-top: 24px;
+      border-top: 1px solid var(--border-color);
+    }
+    .doc-nav-btn {
+      display: flex;
+      flex-direction: column;
+      text-decoration: none;
+      padding: 12px 20px;
+      background: var(--bg-secondary);
+      border: 1px solid var(--border-color);
+      border-radius: 8px;
+      transition: all 0.2s;
+    }
+    .doc-nav-btn:hover {
+      border-color: var(--accent-primary);
+      background: var(--bg-hover);
+    }
+    .doc-nav-btn .label {
+      font-size: 0.72rem;
+      color: var(--text-muted);
+      text-transform: uppercase;
+      letter-spacing: 0.05em;
+    }
+    .doc-nav-btn .title {
+      font-size: 0.9rem;
+      color: #818cf8;
+      font-weight: 600;
+      margin-top: 2px;
+    }
+
+    /* Right TOC Sidebar */
+    aside.toc-sidebar {
+      width: var(--toc-width);
+      padding: 40px 24px 40px 12px;
+      position: sticky;
+      top: 60px;
+      height: calc(100vh - 60px);
+      overflow-y: auto;
+      display: flex;
+      flex-direction: column;
+    }
+
+    .toc-title {
+      font-size: 0.75rem;
+      font-weight: 700;
+      text-transform: uppercase;
+      letter-spacing: 0.08em;
+      color: var(--text-muted);
+      margin-bottom: 14px;
+    }
+
+    .toc-list {
+      list-style: none;
+      display: flex;
+      flex-direction: column;
+      gap: 6px;
+      border-left: 1px solid var(--border-color);
+    }
+    .toc-item {
+      padding-left: 14px;
+    }
+    .toc-item.h3 {
+      padding-left: 24px;
+    }
+    .toc-link {
+      color: var(--text-secondary);
+      font-size: 0.8rem;
+      text-decoration: none;
+      display: block;
+      transition: color 0.15s;
+      white-space: nowrap;
+      overflow: hidden;
+      text-overflow: ellipsis;
+    }
+    .toc-link:hover {
+      color: #818cf8;
+    }
+
+    /* Responsive */
+    @media (max-width: 1200px) {
+      aside.toc-sidebar { display: none; }
+    }
+    @media (max-width: 768px) {
+      aside.sidebar { position: fixed; transform: translateX(-100%); transition: transform 0.3s; }
+      aside.sidebar.open { transform: translateX(0); }
+      .markdown-body { padding: 24px 20px; }
+    }
+  </style>
+</head>
+<body>
+
+  <!-- Left Sidebar Navigation -->
+  <aside class="sidebar">
+    <div class="brand-header">
+      <a href="index.html" class="brand-title">
+        <span>⚡</span> ML Engineer (SSK)
+      </a>
+      <div class="brand-subtitle">LLM & Agentic Systems</div>
+    </div>
+    
+    <div class="search-box">
+      <input type="text" id="searchInput" class="search-input" placeholder="Quick search topics & math...">
+    </div>
+
+    <ul class="nav-list" id="navList">
+      <li class="nav-phase-header">Phase 0: Architecture</li>
+        <li>
+          <a href="00_ROLE_ANALYSIS.html" class="nav-item">
+            <span>00_ROLE_ANALYSIS</span>
+            <span class="priority-badge priority-p1">P1</span>
+          </a>
+        </li>
+        <li class="nav-phase-header">Phase 1: Foundations</li>
+        <li>
+          <a href="01_MATHEMATICAL_FOUNDATIONS.html" class="nav-item">
+            <span>01_MATHEMATICAL_FOUNDATIONS</span>
+            <span class="priority-badge priority-p1">P1</span>
+          </a>
+        </li>
+        
+        <li>
+          <a href="02_03_ML_AND_DL_FOUNDATIONS.html" class="nav-item">
+            <span>02_03_ML_AND_DL_FOUNDATIONS</span>
+            <span class="priority-badge priority-p1">P1</span>
+          </a>
+        </li>
+        <li class="nav-phase-header">Phase 2: Core LLM</li>
+        <li>
+          <a href="04_TRANSFORMERS_AND_LLMS.html" class="nav-item">
+            <span>04_TRANSFORMERS_AND_LLMS</span>
+            <span class="priority-badge priority-p0">P0</span>
+          </a>
+        </li>
+        <li class="nav-phase-header">Phase 3: Alignment & Reasoning</li>
+        <li>
+          <a href="05_POST_TRAINING.html" class="nav-item">
+            <span>05_POST_TRAINING</span>
+            <span class="priority-badge priority-p0">P0</span>
+          </a>
+        </li>
+        
+        <li>
+          <a href="06_DATA_AND_SYNTHETIC_DATA.html" class="nav-item">
+            <span>06_DATA_AND_SYNTHETIC_DATA</span>
+            <span class="priority-badge priority-p1">P1</span>
+          </a>
+        </li>
+        <li class="nav-phase-header">Phase 4: Hardware & Inference</li>
+        <li>
+          <a href="08_GPU_AND_PERFORMANCE.html" class="nav-item active">
+            <span>08_GPU_AND_PERFORMANCE</span>
+            <span class="priority-badge priority-p0">P0</span>
+          </a>
+        </li>
+        
+        <li>
+          <a href="09_INFERENCE_SYSTEMS.html" class="nav-item">
+            <span>09_INFERENCE_SYSTEMS</span>
+            <span class="priority-badge priority-p0">P0</span>
+          </a>
+        </li>
+        <li class="nav-phase-header">Phase 5: Distributed Scaling</li>
+        <li>
+          <a href="07_TRAINING_SYSTEMS.html" class="nav-item">
+            <span>07_TRAINING_SYSTEMS</span>
+            <span class="priority-badge priority-p1">P1</span>
+          </a>
+        </li>
+        
+        <li>
+          <a href="18_DISTRIBUTED_SYSTEMS.html" class="nav-item">
+            <span>18_DISTRIBUTED_SYSTEMS</span>
+            <span class="priority-badge priority-p1">P1</span>
+          </a>
+        </li>
+        <li class="nav-phase-header">Phase 6: Agentic Systems</li>
+        <li>
+          <a href="10_AGENTIC_ML_SYSTEMS.html" class="nav-item">
+            <span>10_AGENTIC_ML_SYSTEMS</span>
+            <span class="priority-badge priority-p0">P0</span>
+          </a>
+        </li>
+        
+        <li>
+          <a href="11_LONG_RUNNING_WORKFLOW_RELIABILITY.html" class="nav-item">
+            <span>11_LONG_RUNNING_WORKFLOW_RELIABILITY</span>
+            <span class="priority-badge priority-p0">P0</span>
+          </a>
+        </li>
+        
+        <li>
+          <a href="15_SAFETY_AND_ROBUSTNESS.html" class="nav-item">
+            <span>15_SAFETY_AND_ROBUSTNESS</span>
+            <span class="priority-badge priority-p0">P0</span>
+          </a>
+        </li>
+        <li class="nav-phase-header">Phase 7: Production & MLOps</li>
+        <li>
+          <a href="12_EVALUATION.html" class="nav-item">
+            <span>12_EVALUATION</span>
+            <span class="priority-badge priority-p0">P0</span>
+          </a>
+        </li>
+        
+        <li>
+          <a href="13_PRODUCTION_ML.html" class="nav-item">
+            <span>13_PRODUCTION_ML</span>
+            <span class="priority-badge priority-p1">P1</span>
+          </a>
+        </li>
+        
+        <li>
+          <a href="14_OBSERVABILITY_AND_DEBUGGING.html" class="nav-item">
+            <span>14_OBSERVABILITY_AND_DEBUGGING</span>
+            <span class="priority-badge priority-p1">P1</span>
+          </a>
+        </li>
+        <li class="nav-phase-header">Phase 8: Synthesis & Interview Prep</li>
+        <li>
+          <a href="16_SYSTEM_DESIGN.html" class="nav-item">
+            <span>16_SYSTEM_DESIGN</span>
+            <span class="priority-badge priority-p1">P1</span>
+          </a>
+        </li>
+        
+        <li>
+          <a href="17_PYTHON_AND_CODING.html" class="nav-item">
+            <span>17_PYTHON_AND_CODING</span>
+            <span class="priority-badge priority-p2">P2</span>
+          </a>
+        </li>
+        
+        <li>
+          <a href="19_LEADERSHIP_AND_TECHNICAL_JUDGMENT.html" class="nav-item">
+            <span>19_LEADERSHIP_AND_TECHNICAL_JUDGMENT</span>
+            <span class="priority-badge priority-p1">P1</span>
+          </a>
+        </li>
+        
+        <li>
+          <a href="20_INTERVIEW_QUESTION_BANK.html" class="nav-item">
+            <span>20_INTERVIEW_QUESTION_BANK</span>
+            <span class="priority-badge priority-p0">P0</span>
+          </a>
+        </li>
+        
+        <li>
+          <a href="21_CASE_STUDIES.html" class="nav-item">
+            <span>21_CASE_STUDIES</span>
+            <span class="priority-badge priority-p0">P0</span>
+          </a>
+        </li>
+        
+        <li>
+          <a href="22_FINAL_SYNTHESIS_PLAYBOOKS.html" class="nav-item">
+            <span>22_FINAL_SYNTHESIS_PLAYBOOKS</span>
+            <span class="priority-badge priority-p0">P0</span>
+          </a>
+        </li>
+        <li class="nav-phase-header">Overview</li>
+        <li>
+          <a href="README.html" class="nav-item">
+            <span>README</span>
+            <span class="priority-badge priority-p0">P0</span>
+          </a>
+        </li>
+        
+    </ul>
+  </aside>
+
+  <!-- Main Viewport -->
+  <main class="main-viewport">
+    <div class="top-toolbar">
+      <div class="breadcrumbs">
+        <a href="index.html">Curriculum</a>
+        <span>/</span>
+        <span>Phase 4: Hardware & Inference</span>
+        <span>/</span>
+        <span class="current">08_GPU_AND_PERFORMANCE</span>
+      </div>
+      <div class="tool-actions">
+        <button class="btn" onclick="window.print()">🖨️ Print / PDF</button>
+      </div>
+    </div>
+
+    <div class="content-container">
+      <article class="markdown-body" id="docContent">
+        <h1>08_GPU_AND_PERFORMANCE — Mathematical &amp; Bare-Metal Hardware Reference</h1>
+<blockquote>
+<p><strong>Audience</strong>: ML Engineers, LLM Systems Engineers, and AI Researchers preparing for senior/principal technical interviews.<br />
+<strong>Core Objective</strong>: Provide an exhaustive mathematical and microarchitectural bridge from physical NVIDIA GPU hardware (H100/A100) to PyTorch kernel execution — covering the Roofline model, SRAM tiling proofs in FlashAttention-1/2/3, Tensor Core MMA instructions, and memory bandwidth optimization.</p>
+</blockquote>
+<hr />
+<h2 id="heading-0">1. NVIDIA GPU Architecture &amp; Memory Hierarchy</h2>
+<pre><code>┌─────────────────────────────────────────────────────────────────────────────┐
+│                          NVIDIA H100 GPU (Hopper)                           │
+│  132 Streaming Multiprocessors (SMs) | 80GB HBM3 (3.35 TB/s Bandwidth)       │
+│  Peak FP16 Tensor Core Compute: 989 TFLOPs (Dense) / 1,978 TFLOPs (Sparse)   │
+└─────────────────────────────────────────────────────────────────────────────┘
+                                      │
+              ┌───────────────────────┴───────────────────────┐
+              ▼                                               ▼
+┌───────────────────────────┐                   ┌───────────────────────────┐
+│     SM 0 (Streaming MP)   │                   │    SM 131 (Streaming MP)  │
+│ ┌───────────────────────┐ │                   │ ┌───────────────────────┐ │
+│ │ 256KB Register File   │ │                   │ │ 256KB Register File   │ │
+│ ├───────────────────────┤ │                   │ ├───────────────────────┤ │
+│ │ 228KB Shared Mem/SRAM │ │                   │ │ 228KB Shared Mem/SRAM │ │
+│ ├───────────────────────┤ │                   │ ├───────────────────────┤ │
+│ │ 4x 4th Gen Tensor Core│ │                   │ │ 4x 4th Gen Tensor Core│ │
+│ ├───────────────────────┤ │                   │ ├───────────────────────┤ │
+│ │ 4x Warp Schedulers    │ │                   │ │ 4x Warp Schedulers    │ │
+│ └───────────────────────┘ │                   │ └───────────────────────┘ │
+└───────────────────────────┘                   └───────────────────────────┘
+              │                                               │
+              └───────────────────────┬───────────────────────┘
+                                      ▼
+                  ┌───────────────────────────────────────┐
+                  │          50MB L2 Cache                │
+                  └───────────────────┬───────────────────┘
+                                      ▼
+                  ┌───────────────────────────────────────┐
+                  │       80GB HBM3 Memory (3.35 TB/s)    │
+                  └───────────────────────────────────────┘
+</code></pre>
+<h3 id="heading-1">1.1 Memory Hierarchy Latency &amp; Bandwidth (NVIDIA H100 SXM5)</h3>
+<table>
+<thead>
+<tr>
+<th style="text-align: left;">Memory Level</th>
+<th style="text-align: left;">Location</th>
+<th style="text-align: left;">Capacity</th>
+<th style="text-align: left;">Latency</th>
+<th style="text-align: left;">Bandwidth</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td style="text-align: left;"><strong>Registers</strong></td>
+<td style="text-align: left;">On-Chip per SM</td>
+<td style="text-align: left;">256 KB per SM (<span class="katex-inline">$\sim 33 \text{ MB}$</span> total)</td>
+<td style="text-align: left;"><span class="katex-inline">$\sim 1$</span> cycle (<span class="katex-inline">$0.5 \text{ ns}$</span>)</td>
+<td style="text-align: left;"><span class="katex-inline">$\sim 30 \text{ TB/s}$</span> aggregate</td>
+</tr>
+<tr>
+<td style="text-align: left;"><strong>Shared Memory (SRAM)</strong></td>
+<td style="text-align: left;">On-Chip per SM</td>
+<td style="text-align: left;">Up to 228 KB per SM (<span class="katex-inline">$\sim 30 \text{ MB}$</span> total)</td>
+<td style="text-align: left;"><span class="katex-inline">$\sim 15-30$</span> cycles (<span class="katex-inline">$10 \text{ ns}$</span>)</td>
+<td style="text-align: left;"><span class="katex-inline">$\sim 15 \text{ TB/s}$</span> aggregate</td>
+</tr>
+<tr>
+<td style="text-align: left;"><strong>L2 Cache</strong></td>
+<td style="text-align: left;">On-Chip global</td>
+<td style="text-align: left;">50 MB</td>
+<td style="text-align: left;"><span class="katex-inline">$\sim 100-200$</span> cycles (<span class="katex-inline">$50 \text{ ns}$</span>)</td>
+<td style="text-align: left;"><span class="katex-inline">$\sim 5.5 \text{ TB/s}$</span></td>
+</tr>
+<tr>
+<td style="text-align: left;"><strong>High Bandwidth Memory (HBM3)</strong></td>
+<td style="text-align: left;">Off-Chip package</td>
+<td style="text-align: left;">80 GB</td>
+<td style="text-align: left;"><span class="katex-inline">$\sim 400-800$</span> cycles (<span class="katex-inline">$200 \text{ ns}$</span>)</td>
+<td style="text-align: left;"><strong>3.35 TB/s</strong></td>
+</tr>
+<tr>
+<td style="text-align: left;"><strong>Host RAM via PCIe Gen5 / NVLink</strong></td>
+<td style="text-align: left;">Off-Board CPU</td>
+<td style="text-align: left;">512 GB - 2 TB</td>
+<td style="text-align: left;"><span class="katex-inline">$\sim 5,000$</span> cycles (<span class="katex-inline">$2 \text{ }\mu\text{s}$</span>)</td>
+<td style="text-align: left;"><span class="katex-inline">$128 \text{ GB/s (PCIe)} / 900 \text{ GB/s (NVLink)}$</span></td>
+</tr>
+</tbody>
+</table>
+<p><em>The Golden Rule of GPU Programming</em>: Reading from HBM is <strong><span class="katex-inline">$200\times$</span> slower</strong> than reading from Shared Memory (SRAM). Every unnecessary round-trip to HBM stalls the Streaming Multiprocessors.</p>
+<hr />
+<h2 id="heading-2">2. The Roofline Model &amp; Arithmetic Intensity</h2>
+<p>The <strong>Roofline Model</strong> determines whether a kernel is bounded by memory bandwidth or compute throughput.</p>
+<h3 id="heading-3">2.1 Arithmetic Intensity (AI)</h3>
+<div class="katex-display">$$\text{Arithmetic Intensity (AI)} = \frac{\text{Total Floating Point Operations (FLOPs)}}{\text{Total Memory Transferred from HBM (Bytes)}} \quad \left[ \frac{\text{FLOPs}}{\text{Byte}} \right]$$</div>
+
+<ul>
+<li><strong>Attainable Performance (<span class="katex-inline">$P$</span>)</strong>:<br />
+  <div class="katex-display">$$P = \min\left( P_{\text{peak}}, \; \text{AI} \times B_{\text{peak}} \right) \quad [\text{TFLOPs/s}]$$</div></li>
+</ul>
+<p>Where:<br />
+  - <span class="katex-inline">$P_{\text{peak}}$</span> is the theoretical peak compute capacity (e.g. <span class="katex-inline">$989 \text{ TFLOPs}$</span> for H100 FP16).<br />
+  - <span class="katex-inline">$B_{\text{peak}}$</span> is the peak memory bandwidth (e.g. <span class="katex-inline">$3.35 \text{ TB/s}$</span> for H100 HBM3).</p>
+<ul>
+<li><strong>The Critical Ridge Point (<span class="katex-inline">$I^*$</span>)</strong>:<br />
+  <div class="katex-display">$$I^* = \frac{P_{\text{peak}}}{B_{\text{peak}}} = \frac{989 \times 10^{12} \text{ FLOPs/s}}{3.35 \times 10^{12} \text{ Bytes/s}} \approx \mathbf{295.2 \text{ FLOPs/Byte}}$$</div>
+</li>
+</ul>
+<pre><code>  Attainable Performance (TFLOPs/s)
+  989 ┼                                     ┌─────────────────────── (Compute Bound Peak)
+      │                                    /
+      │                                   /
+      │                                  /
+      │   Memory Bound Region           /
+      │   Slope = Memory Bandwidth     /
+      │                               /
+    0 ┼──────────────────────────────┼──────────────────────────────► Arithmetic Intensity (FLOPs/Byte)
+                                  I* = 295.2 FLOPs/Byte (Ridge Point)
+</code></pre>
+<h3 id="heading-4">2.2 Operational Regimes in Large Language Models:</h3>
+<ol>
+<li><strong>Memory-Bound Regime (<span class="katex-inline">$\text{AI} &lt; I^* = 295$</span>)</strong>:<br />
+   - <strong>Autoregressive Decoding (Batch Size 1)</strong>: For a 70B parameter model in FP16 (<span class="katex-inline">$140\text{ GB}$</span> weights), generating 1 token requires loading <span class="katex-inline">$140\text{ GB}$</span> to perform <span class="katex-inline">$2 \times 70\times 10^9 = 140\text{ GFLOPs}$</span>.<br />
+     <span class="katex-inline">$\text{AI} = \frac{140 \times 10^9 \text{ FLOPs}}{140 \times 10^9 \text{ Bytes}} = \mathbf{1.0 \text{ FLOP/Byte}} \ll 295.2$</span>.<br />
+<em>Hardware Utilization</em>: The H100 achieves only <span class="katex-inline">$\frac{1 \times 3.35 \text{ TB/s}}{989 \text{ TFLOPs}} \approx \mathbf{0.34\%}$</span> of its peak compute capacity!<br />
+   - <strong>Element-wise Kernels</strong>: LayerNorm, RMSNorm, GeLU, Softmax, Residual addition (<span class="katex-inline">$\text{AI} \approx 0.25 - 2 \text{ FLOPs/Byte}$</span>).</li>
+<li><strong>Compute-Bound Regime (<span class="katex-inline">$\text{AI} \geq I^* = 295$</span>)</strong>:<br />
+   - <strong>Prefill Phase (Large Prompts)</strong>: Processing a prompt of sequence length <span class="katex-inline">$S = 4096$</span> with batch size <span class="katex-inline">$B=8$</span>.<br />
+     Matrix Multiply <span class="katex-inline">$X W$</span>: <span class="katex-inline">$\text{FLOPs} = 2 \cdot B \cdot S \cdot d_{\text{in}} \cdot d_{\text{out}}$</span>.<br />
+     Memory read: <span class="katex-inline">$d_{\text{in}} \cdot d_{\text{out}} \times 2\text{ bytes}$</span>.<br />
+     <span class="katex-inline">$\text{AI} = \frac{2 \cdot B \cdot S \cdot d^2}{2 \cdot d^2} = B \cdot S = 8 \times 4096 = \mathbf{32,768 \text{ FLOPs/Byte}} \gg 295.2$</span>.<br />
+<em>Hardware Utilization</em>: Tensor Cores operate at near 100% capacity (<span class="katex-inline">$&gt; 80\%$</span> MFU).</li>
+</ol>
+<hr />
+<h2 id="heading-5">3. FlashAttention Mechanics: Mathematical SRAM Tiling</h2>
+<h3 id="heading-6">3.1 The Standard Attention Memory Wall</h3>
+<p>Standard PyTorch Attention computes:</p>
+<div class="katex-display">$$S = Q K^T \in \mathbb{R}^{N \times N}, \quad P = \text{Softmax}(S) \in \mathbb{R}^{N \times N}, \quad O = P V \in \mathbb{R}^{N \times d}$$</div>
+<ul>
+<li><strong>HBM Round-Trips</strong>: Writes intermediate <span class="katex-inline">$N \times N$</span> matrices <span class="katex-inline">$S$</span> and <span class="katex-inline">$P$</span> to off-chip HBM, then reads them back to compute <span class="katex-inline">$P V$</span>.</li>
+<li><strong>HBM Memory Access Complexity</strong>: <span class="katex-inline">$O(N d + N^2)$</span> bytes transferred. For sequence length <span class="katex-inline">$N = 64\text{k}$</span>, <span class="katex-inline">$N^2 = 4.096 \times 10^9$</span> elements (<span class="katex-inline">$8.2\text{ GB}$</span> of VRAM per attention head just for attention scores!).</li>
+</ul>
+<hr />
+<h3 id="heading-7">3.2 Online Softmax Normalization (Milakov &amp; Gimelshtein / Rabe &amp; Staats)</h3>
+<p>To compute attention in small SRAM blocks without materializing the <span class="katex-inline">$N \times N$</span> matrix in HBM, we must maintain running softmax normalizers across split chunks.</p>
+<p>Let a vector <span class="katex-inline">$x \in \mathbb{R}^N$</span> be split into two blocks <span class="katex-inline">$x^{(1)}, x^{(2)} \in \mathbb{R}^{N/2}$</span>.<br />
+Let local maximums and normalizers be:</p>
+<div class="katex-display">$$m^{(1)} = \max_i x_i^{(1)}, \quad l^{(1)} = \sum_i e^{x_i^{(1)} - m^{(1)}}$$</div>
+<div class="katex-display">$$m^{(2)} = \max_i x_i^{(2)}, \quad l^{(2)} = \sum_i e^{x_i^{(2)} - m^{(2)}}$$</div>
+
+<p>The global maximum and combined normalizer are:</p>
+<div class="katex-display">$$m = \max(m^{(1)}, m^{(2)})$$</div>
+<div class="katex-display">$$l = e^{m^{(1)} - m} l^{(1)} + e^{m^{(2)} - m} l^{(2)}$$</div>
+
+<h4>Incremental Output Aggregation Update Formula:</h4>
+<p>Let <span class="katex-inline">$O^{(1)} = \sum_j \frac{e^{x_j^{(1)} - m^{(1)}}}{l^{(1)}} V_j^{(1)}$</span>. When combining with block 2:</p>
+<div class="katex-display">$$\mathbf{O = \frac{l^{(1)} e^{m^{(1)} - m}}{l} O^{(1)} + \frac{e^{m^{(2)} - m}}{l} \left( \sum_j e^{x_j^{(2)} - m^{(2)}} V_j^{(2)} \right)}$$</div>
+
+<hr />
+<h3 id="heading-8">3.3 FlashAttention Tiling Algorithm &amp; IO Complexity Proof</h3>
+<pre><code>High Bandwidth Memory (HBM)
+┌────────────────────────────────────────────────────────┐
+│  Q (N x d)        K (N x d)        V (N x d)           │
+└───────────────────────┬────────────────────────────────┘
+                        │ Block Tiling (Load B_r, B_c into SRAM)
+                        ▼
+Streaming Multiprocessor SRAM (Fast On-Chip Memory: ~228KB)
+┌────────────────────────────────────────────────────────┐
+│  Q_i (B_r x d)   x   K_j^T (d x B_c)  ──► S_ij (B_r x B_c)│
+│  Online Softmax Accumulation in Registers               │
+│  O_i = Rescale(O_prev) + P_ij · V_j                    │
+└───────────────────────┬────────────────────────────────┘
+                        │ Write final output block directly to HBM
+                        ▼
+┌────────────────────────────────────────────────────────┐
+│  O (N x d) in HBM (Zero N x N Intermediate Matrices!)  │
+└────────────────────────────────────────────────────────┘
+</code></pre>
+<p>Let SRAM capacity be <span class="katex-inline">$M$</span> bytes. Block sizes are chosen such that <span class="katex-inline">$B_c, B_r \approx \Theta\left(\frac{M}{d}\right)$</span>.<br />
+- <strong>Outer Loop</strong>: Iterate over blocks of <span class="katex-inline">$K, V$</span> of size <span class="katex-inline">$B_c \times d$</span> (loaded into SRAM once).<br />
+- <strong>Inner Loop</strong>: Iterate over blocks of <span class="katex-inline">$Q$</span> of size <span class="katex-inline">$B_r \times d$</span>, update local output <span class="katex-inline">$O_i$</span> in registers, and write back only the final <span class="katex-inline">$N \times d$</span> output to HBM.</p>
+<h4>IO Complexity Proof (Dao et al., 2022):</h4>
+<ul>
+<li>Standard Attention Memory IO: <span class="katex-inline">$\Theta(N d + N^2)$</span> accesses to HBM.</li>
+<li>FlashAttention Memory IO: <span class="katex-inline">$\Theta\left(\frac{N^2 d^2}{M}\right)$</span> accesses to HBM.</li>
+<li>For typical SRAM size <span class="katex-inline">$M \approx 100\text{KB}$</span> and <span class="katex-inline">$d = 128$</span>: FlashAttention requires <strong><span class="katex-inline">$10\times$</span> to <span class="katex-inline">$20\times$</span> fewer HBM accesses</strong>, achieving a <strong><span class="katex-inline">$3\times - 5\times$</span> end-to-end wall-clock speedup</strong>.</li>
+</ul>
+<hr />
+<h3 id="heading-9">3.4 FlashAttention-3 Innovations (Hopper H100 Architecture)</h3>
+<ol>
+<li><strong>Warp Specialization</strong>: Divides SM warps into <strong>Producer Warps</strong> (loading data from HBM to Shared Memory via asynchronous TMA instructions) and <strong>Consumer Warps</strong> (executing Tensor Core MMA instructions without waiting on memory barriers).</li>
+<li><strong>Ping-Pong Buffering</strong>: Overlaps GEMM computation of block <span class="katex-inline">$k$</span> with asynchronous memory copy of block <span class="katex-inline">$k+1$</span>.</li>
+<li><strong>FP8 Tensor Core GEMMs</strong>: Leverages FP8 low-precision arithmetic with block quantization, doubling theoretical peak compute to <span class="katex-inline">$1.98 \text{ PFLOPs/s}$</span>.</li>
+</ol>
+<hr />
+<h2 id="heading-10">4. CUDA Execution Mechanics: Warps, Divergence &amp; Bank Conflicts</h2>
+<h3 id="heading-11">4.1 Warps and SIMT Execution</h3>
+<p>On NVIDIA GPUs, threads are grouped into <strong>Warps of 32 threads</strong>. All 32 threads in a warp execute the exact same instruction at the same clock cycle in a Single Instruction, Multiple Threads (SIMT) fashion.</p>
+<ul>
+<li><strong>Warp Divergence Penalty</strong>:<br />
+<code>cuda
+  if (threadIdx.x % 2 == 0) {
+      // Path A (16 threads active, 16 threads masked/idle)
+  } else {
+      // Path B (16 threads active, 16 threads masked/idle)
+  }</code><br />
+<em>Cost</em>: Total execution time = <span class="katex-inline">$\text{Time}(\text{Path A}) + \text{Time}(\text{Path B})$</span>. Effective compute throughput drops by <span class="katex-inline">$50\%$</span>.</li>
+</ul>
+<hr />
+<h3 id="heading-12">4.2 Shared Memory Bank Conflicts</h3>
+<p>Shared memory (SRAM) is organized into <strong>32 independent banks</strong> (each 4 bytes wide).<br />
+Successive 32-bit words are assigned to successive banks: <span class="katex-inline">$\text{Bank Index} = (\text{Byte Address} / 4) \pmod{32}$</span>.</p>
+<pre><code>Bank 0    Bank 1    Bank 2   ...  Bank 31
+┌───────┐ ┌───────┐ ┌───────┐     ┌───────┐
+│ Word 0│ │ Word 1│ │ Word 2│ ... │Word 31│  &lt;-- Threads 0..31 access words 0..31 (0 conflicts: 1 cycle)
+├───────┤ ├───────┤ ├───────┤     ├───────┤
+│Word 32│ │Word 33│ │Word 34│ ... │Word 63│  &lt;-- Threads 0..31 access words 0, 2, 4.. (2-way conflict: 2 cycles)
+└───────┘ └───────┘ └───────┘     └───────┘
+</code></pre>
+<ul>
+<li><strong>Conflict-Free Access</strong>: All 32 threads in a warp access distinct banks in parallel (serviced in 1 cycle).</li>
+<li><strong><span class="katex-inline">$k$</span>-Way Bank Conflict</strong>: If <span class="katex-inline">$k$</span> threads in the same warp request distinct addresses belonging to the <em>same bank</em>, the requests are serialized, taking <strong><span class="katex-inline">$k$</span> clock cycles</strong>.</li>
+<li><strong>Padding Solution</strong>: Pad 2D shared memory arrays (e.g. <code>__shared__ float smem[32][33]</code> instead of <code>[32][32]</code>) to skew row strides and eliminate bank collisions.</li>
+</ul>
+<hr />
+<h2 id="heading-13">5. Python / Triton Implementation: Online Softmax Attention Block</h2>
+<pre><code class="language-python">import torch
+import math
+
+def online_softmax_reference(Q: torch.Tensor, K: torch.Tensor, V: torch.Tensor, block_size: int = 16) -&gt; torch.Tensor:
+    &quot;&quot;&quot;
+    Step-by-step Python simulation of FlashAttention's Online Softmax Tiling.
+    Q, K, V: [Seq_Len, d_head]
+    &quot;&quot;&quot;
+    S, D = Q.shape
+    scale = 1.0 / math.sqrt(D)
+    O = torch.zeros_like(Q)
+
+    # Running statistics per row
+    running_max = torch.full((S,), float('-inf'), device=Q.device)
+    running_sum = torch.zeros(S, device=Q.device)
+
+    # Outer loop: Iterate over K, V blocks (simulating loading into SRAM)
+    for j_start in range(0, S, block_size):
+        j_end = min(j_start + block_size, S)
+        K_j = K[j_start:j_end] # [B_c, D]
+        V_j = V[j_start:j_end] # [B_c, D]
+
+        # Inner loop: Iterate over Q blocks
+        for i_start in range(0, S, block_size):
+            i_end = min(i_start + block_size, S)
+            Q_i = Q[i_start:i_end] # [B_r, D]
+
+            # Compute block dot products: [B_r, B_c]
+            S_ij = torch.matmul(Q_i, K_j.t()) * scale
+
+            # Causal mask for the block
+            for r in range(i_start, i_end):
+                for c in range(j_start, j_end):
+                    if c &gt; r:
+                        S_ij[r - i_start, c - j_start] = float('-inf')
+
+            # Local block maximum &amp; exponential sums
+            block_max, _ = torch.max(S_ij, dim=-1)
+            new_max = torch.maximum(running_max[i_start:i_end], block_max)
+
+            # Rescaling factors
+            alpha = torch.exp(running_max[i_start:i_end] - new_max)
+            P_ij = torch.exp(S_ij - new_max.unsqueeze(-1))
+            P_ij = torch.nan_to_num(P_ij, nan=0.0)
+
+            # Update running normalizer
+            new_sum = running_sum[i_start:i_end] * alpha + P_ij.sum(dim=-1)
+
+            # Incremental output update
+            O_prev = O[i_start:i_end]
+            O_block = torch.matmul(P_ij, V_j)
+
+            # Rescale previous output and accumulate
+            O[i_start:i_end] = (O_prev * (running_sum[i_start:i_end] * alpha).unsqueeze(-1) + O_block) / (new_sum.unsqueeze(-1) + 1e-8)
+
+            running_max[i_start:i_end] = new_max
+            running_sum[i_start:i_end] = new_sum
+
+    return O
+
+if __name__ == &quot;__main__&quot;:
+    S, D = 64, 32
+    q, k, v = torch.randn(S, D), torch.randn(S, D), torch.randn(S, D)
+    out_online = online_softmax_reference(q, k, v, block_size=16)
+
+    # Standard Attention Baseline
+    scores = torch.matmul(q, k.t()) / math.sqrt(D)
+    mask = torch.triu(torch.full((S, S), float('-inf')), diagonal=1)
+    weights = torch.softmax(scores + mask, dim=-1)
+    weights = torch.nan_to_num(weights, nan=0.0)
+    out_standard = torch.matmul(weights, v)
+
+    assert torch.allclose(out_online, out_standard, atol=1e-4), &quot;Online softmax mismatch with standard attention!&quot;
+    print(&quot;Online Softmax mathematical tiling verified successfully.&quot;)
+</code></pre>
+<hr />
+<h2 id="heading-14">6. Deep Interview Interrogation Ladder</h2>
+<ul>
+<li><strong>Level 1 (Concept)</strong>: What is the primary difference between memory-bound and compute-bound operations?</li>
+<li><strong>Level 3 (Roofline)</strong>: Calculate the arithmetic intensity of autoregressive token generation for a 70B parameter model at batch size 1, and explain why GPU compute utilization is <span class="katex-inline">$&lt; 1\%$</span>.</li>
+<li><strong>Level 5 (Hardware)</strong>: What is a Shared Memory Bank Conflict, and how does array padding resolve it?</li>
+<li><strong>Level 7 (Derivation)</strong>: Derive the incremental output update formula in FlashAttention's online softmax algorithm when combining two disjoint blocks.</li>
+<li><strong>Level 9 (Microarchitecture)</strong>: Explain how FlashAttention-3 leverages TMA (Tensor Memory Accelerator) and Warp Specialization on NVIDIA Hopper GPUs to achieve asynchronous memory-compute overlap.</li>
+<li><strong>Level 10 (Principal Engineering)</strong>: You are tasked with optimizing a custom mixture-of-experts model on an 8xH100 node. All-to-All communication between GPUs is stalling SM execution. Walk through how you would trace the bottleneck using NVIDIA Nsight Systems (<code>nsys</code>) and re-architect the dispatch kernel to overlap computation with NVLink transfers.</li>
+</ul>
+        
+        <!-- Navigation Footer -->
+        <div class="doc-nav-footer">
+          
+        <a href="06_DATA_AND_SYNTHETIC_DATA.html" class="doc-nav-btn">
+          <span class="label">← Previous</span>
+          <span class="title">06_DATA_AND_SYNTHETIC_DATA</span>
+        </a>
+        
+          
+        <a href="09_INFERENCE_SYSTEMS.html" class="doc-nav-btn" style="text-align: right;">
+          <span class="label">Next →</span>
+          <span class="title">09_INFERENCE_SYSTEMS</span>
+        </a>
+        
+        </div>
+      </article>
+
+      <aside class="toc-sidebar">
+        <div class="toc-title">On This Page</div>
+        <ul class="toc-list">
+          
+        <li class="toc-item">
+          <a href="#heading-0" class="toc-link">NVIDIA GPU Architecture &amp; Memory Hierarchy</a>
+        </li>
+        
+        <li class="toc-item h3">
+          <a href="#heading-1" class="toc-link">Memory Hierarchy Latency &amp; Bandwidth (NVIDIA H100 SXM5)</a>
+        </li>
+        
+        <li class="toc-item">
+          <a href="#heading-2" class="toc-link">The Roofline Model &amp; Arithmetic Intensity</a>
+        </li>
+        
+        <li class="toc-item h3">
+          <a href="#heading-3" class="toc-link">Arithmetic Intensity (AI)</a>
+        </li>
+        
+        <li class="toc-item h3">
+          <a href="#heading-4" class="toc-link">Operational Regimes in Large Language Models:</a>
+        </li>
+        
+        <li class="toc-item">
+          <a href="#heading-5" class="toc-link">FlashAttention Mechanics: Mathematical SRAM Tiling</a>
+        </li>
+        
+        <li class="toc-item h3">
+          <a href="#heading-6" class="toc-link">The Standard Attention Memory Wall</a>
+        </li>
+        
+        <li class="toc-item h3">
+          <a href="#heading-7" class="toc-link">Online Softmax Normalization (Milakov &amp; Gimelshtein / Rabe &amp; Staats)</a>
+        </li>
+        
+        <li class="toc-item h3">
+          <a href="#heading-8" class="toc-link">FlashAttention Tiling Algorithm &amp; IO Complexity Proof</a>
+        </li>
+        
+        <li class="toc-item h3">
+          <a href="#heading-9" class="toc-link">FlashAttention-3 Innovations (Hopper H100 Architecture)</a>
+        </li>
+        
+        <li class="toc-item">
+          <a href="#heading-10" class="toc-link">CUDA Execution Mechanics: Warps, Divergence &amp; Bank Conflicts</a>
+        </li>
+        
+        <li class="toc-item h3">
+          <a href="#heading-11" class="toc-link">Warps and SIMT Execution</a>
+        </li>
+        
+        <li class="toc-item h3">
+          <a href="#heading-12" class="toc-link">Shared Memory Bank Conflicts</a>
+        </li>
+        
+        <li class="toc-item">
+          <a href="#heading-13" class="toc-link">Python / Triton Implementation: Online Softmax Attention Block</a>
+        </li>
+        
+        <li class="toc-item">
+          <a href="#heading-14" class="toc-link">Deep Interview Interrogation Ladder</a>
+        </li>
+        
+        </ul>
+      </aside>
+    </div>
+  </main>
+
+  <script>
+    // Search filter for sidebar
+    document.getElementById('searchInput').addEventListener('input', (e) => {
+      const query = e.target.value.toLowerCase();
+      document.querySelectorAll('.nav-item').forEach(item => {
+        const text = item.textContent.toLowerCase();
+        item.style.display = text.includes(query) ? 'flex' : 'none';
+      });
+    });
+
+    // Initialize KaTeX, Prism, and Mermaid on static DOM
+    document.addEventListener('DOMContentLoaded', () => {
+      // 1. KaTeX Math Render
+      try {
+        if (typeof renderMathInElement !== 'undefined') {
+          renderMathInElement(document.getElementById('docContent'), {
+            delimiters: [
+              { left: '$$', right: '$$', display: true },
+              { left: '$', right: '$', display: false }
+            ],
+            throwOnError: false
+          });
+        }
+      } catch (e) {
+        console.warn('KaTeX render error:', e);
+      }
+
+      // 2. Prism Code Highlight
+      try {
+        if (typeof Prism !== 'undefined') {
+          Prism.highlightAll();
+        }
+      } catch (e) {
+        console.warn('Prism highlight error:', e);
+      }
+
+      // 3. Mermaid Diagrams Render
+      try {
+        if (typeof mermaid !== 'undefined') {
+          mermaid.initialize({ startOnLoad: true, theme: 'dark', securityLevel: 'loose' });
+        }
+      } catch (e) {
+        console.warn('Mermaid render error:', e);
+      }
+    });
+  </script>
+</body>
+</html>

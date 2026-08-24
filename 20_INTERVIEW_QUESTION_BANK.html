@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>00_ROLE_ANALYSIS — ML Engineer (SSK)</title>
+  <title>20_INTERVIEW_QUESTION_BANK — ML Engineer (SSK)</title>
   
   <!-- Fonts -->
   <link rel="preconnect" href="https://fonts.googleapis.com">
@@ -513,7 +513,7 @@
     <ul class="nav-list" id="navList">
       <li class="nav-phase-header">Phase 0: Architecture</li>
         <li>
-          <a href="00_ROLE_ANALYSIS.html" class="nav-item active">
+          <a href="00_ROLE_ANALYSIS.html" class="nav-item">
             <span>00_ROLE_ANALYSIS</span>
             <span class="priority-badge priority-p1">P1</span>
           </a>
@@ -646,7 +646,7 @@
         </li>
         
         <li>
-          <a href="20_INTERVIEW_QUESTION_BANK.html" class="nav-item">
+          <a href="20_INTERVIEW_QUESTION_BANK.html" class="nav-item active">
             <span>20_INTERVIEW_QUESTION_BANK</span>
             <span class="priority-badge priority-p0">P0</span>
           </a>
@@ -682,9 +682,9 @@
       <div class="breadcrumbs">
         <a href="index.html">Curriculum</a>
         <span>/</span>
-        <span>Phase 0: Architecture</span>
+        <span>Phase 8: Synthesis & Interview Prep</span>
         <span>/</span>
-        <span class="current">00_ROLE_ANALYSIS</span>
+        <span class="current">20_INTERVIEW_QUESTION_BANK</span>
       </div>
       <div class="tool-actions">
         <button class="btn" onclick="window.print()">🖨️ Print / PDF</button>
@@ -693,167 +693,94 @@
 
     <div class="content-container">
       <article class="markdown-body" id="docContent">
-        <h1>00_ROLE_ANALYSIS — ML Engineer (LLM &amp; Agentic Systems)</h1>
-<h2 id="heading-0">1. Role Context &amp; Core Hypothesis</h2>
-<p><strong>Role Context:</strong> This role targets building a proactive AI assistant that executes real-world tasks, performs multi-step reasoning, interacts with external tools, and handles long-running workflows with high reliability under production constraints.</p>
-<p><strong>Core Interview Hypothesis:</strong> "Can this candidate take an ML/LLM research idea, turn it into a trainable system, adapt it effectively, deploy it efficiently, integrate it into an agentic product, measure whether it actually works, debug it in production, and continuously improve it under latency, cost, reliability, and safety constraints?"</p>
-<p>The ML execution layer sits exactly at the boundary of Research, Systems Engineering, and Product Outcomes. The candidate must span these seamlessly.</p>
+        <h1>20_INTERVIEW_QUESTION_BANK — 50+ Graded Interview Questions</h1>
+<blockquote>
+<p><strong>Audience</strong>: Candidates preparing for Senior, Staff, and Principal ML / LLM Systems Engineer interviews.<br />
+<strong>Structure</strong>: Graded from <strong>Level 1 (Foundations)</strong> to <strong>Level 10 (Principal Systems Architecture)</strong>.</p>
+</blockquote>
 <hr />
-<h2 id="heading-1">2. Role Decomposition</h2>
-<h3 id="heading-2">Explicit Technical Requirements</h3>
+<h2 id="heading-0">1. Mathematics, Attention &amp; Transformer Mechanics</h2>
 <ul>
-<li>Python, PyTorch, CUDA, Triton</li>
-<li>GPU-based training and inference architecture (vLLM, SGLang, Megatron-LM, FSDP-2)</li>
-<li>SFT, LoRA, QLoRA, DPO, GRPO (Reasoning Models)</li>
-<li>Data pipelines (MinHash LSH, Synthetic data curation, Decontamination)</li>
-<li>Evaluation systems (SWE-bench, GAIA, Statistical significance) and latency/cost optimization</li>
-</ul>
-<h3 id="heading-3">Implicit Technical Requirements</h3>
-<ul>
-<li><strong>Hardware/Software Co-design Awareness</strong>: Understanding how PyTorch ops map to CUDA kernels, SRAM tiling, and memory bandwidth bounds.</li>
-<li><strong>Probabilistic Engineering</strong>: Building deterministic, reliable long-running workflows on top of inherently non-deterministic LLM behavior.</li>
-</ul>
-<h3 id="heading-4">Staff/Principal-Level Requirements</h3>
-<ul>
-<li><strong>Architectural Judgment</strong>: Knowing when to use full fine-tuning vs. LoRA vs. Prompt Engineering vs. Distillation vs. GRPO based on data scale and latency budgets.</li>
-<li><strong>Incident Leadership</strong>: Ability to trace a 99th percentile (P99) latency spike from the network layer down to KV-cache fragmentation on a specific GPU.</li>
+<li><strong>Level 1</strong>: What is the mathematical difference between an autoregressive decoder and a masked encoder?</li>
+<li><strong>Level 2</strong>: Why is the Softmax function invariant to constant addition (<span class="katex-inline">$z - c$</span>)?</li>
+<li><strong>Level 3</strong>: Derive the analytical gradient of Cross-Entropy Loss with Softmax: <span class="katex-inline">$\nabla_z \mathcal{L} = p - y$</span>.</li>
+<li><strong>Level 4</strong>: Prove mathematically why Query-Key dot products have variance equal to <span class="katex-inline">$d_k$</span>, and why scaling by <span class="katex-inline">$\frac{1}{\sqrt{d_k}}$</span> is mandatory.</li>
+<li><strong>Level 5</strong>: In Rotary Position Embedding (RoPE), prove that <span class="katex-inline">$\langle R_m q, R_n k \rangle = g(q, k, m-n)$</span> preserves relative distance.</li>
+<li><strong>Level 6</strong>: Compare MHA, MQA, GQA, and MLA in terms of KV Cache footprint and compute FLOPs.</li>
+<li><strong>Level 7</strong>: Walk through the low-rank Key-Value compression and decoupled RoPE projections in Multi-Head Latent Attention (MLA).</li>
+<li><strong>Level 8</strong>: How does YaRN (Yet another RoPE extensioN) scale context windows without degrading local token relationships?</li>
+<li><strong>Level 9</strong>: Explain why SwiGLU requires <span class="katex-inline">$d_{ff} = \frac{8}{3} d_{\text{model}}$</span> to maintain exact parameter parity with standard ReLU FFN.</li>
+<li><strong>Level 10</strong>: Derive the memory layout and online softmax incremental update equations for FlashAttention-1, 2, and 3 on NVIDIA H100 GPUs.</li>
 </ul>
 <hr />
-<h2 id="heading-5">3. Role Competency Model &amp; Priority Matrix</h2>
-<table>
-<thead>
-<tr>
-<th style="text-align: center;">Priority</th>
-<th style="text-align: left;">Category</th>
-<th style="text-align: left;">Topics</th>
-<th style="text-align: left;">Files</th>
-</tr>
-</thead>
-<tbody>
-<tr>
-<td style="text-align: center;"><strong>P0</strong></td>
-<td style="text-align: left;"><strong>Agentic ML Systems</strong></td>
-<td style="text-align: left;">ReAct, Tool Routing, Context/Memory, MCP, FSM JSON</td>
-<td style="text-align: left;"><a href="./10_AGENTIC_ML_SYSTEMS.md">10_AGENTIC_ML_SYSTEMS.md</a></td>
-</tr>
-<tr>
-<td style="text-align: center;"><strong>P0</strong></td>
-<td style="text-align: left;"><strong>Long-Running Workflows</strong></td>
-<td style="text-align: left;">Durable State, Temporal, Sagas, Idempotency, Retries</td>
-<td style="text-align: left;"><a href="./11_LONG_RUNNING_WORKFLOW_RELIABILITY.md">11_LONG_RUNNING_WORKFLOW_RELIABILITY.md</a></td>
-</tr>
-<tr>
-<td style="text-align: center;"><strong>P0</strong></td>
-<td style="text-align: left;"><strong>Post-Training &amp; Reasoning</strong></td>
-<td style="text-align: left;">SFT, LoRA, QLoRA, DPO, GRPO, Test-Time Compute</td>
-<td style="text-align: left;"><a href="./05_POST_TRAINING.md">05_POST_TRAINING.md</a></td>
-</tr>
-<tr>
-<td style="text-align: center;"><strong>P0</strong></td>
-<td style="text-align: left;"><strong>LLM &amp; Inference</strong></td>
-<td style="text-align: left;">PagedAttention, RadixAttention, PD Split, Chunked Prefill</td>
-<td style="text-align: left;"><a href="./04_TRANSFORMERS_AND_LLMS.md">04_TRANSFORMERS_AND_LLMS.md</a> · <a href="./09_INFERENCE_SYSTEMS.md">09_INFERENCE_SYSTEMS.md</a></td>
-</tr>
-<tr>
-<td style="text-align: center;"><strong>P0</strong></td>
-<td style="text-align: left;"><strong>GPU Architecture</strong></td>
-<td style="text-align: left;">SMs, SRAM Tiling, FlashAttention-3, Roofline Model</td>
-<td style="text-align: left;"><a href="./08_GPU_AND_PERFORMANCE.md">08_GPU_AND_PERFORMANCE.md</a></td>
-</tr>
-<tr>
-<td style="text-align: center;"><strong>P0</strong></td>
-<td style="text-align: left;"><strong>Evaluation &amp; Reliability</strong></td>
-<td style="text-align: left;">Z-Tests, ELO Ratings, SWE-bench, LLM-as-judge</td>
-<td style="text-align: left;"><a href="./12_EVALUATION.md">12_EVALUATION.md</a></td>
-</tr>
-<tr>
-<td style="text-align: center;"><strong>P1</strong></td>
-<td style="text-align: left;"><strong>Mathematical Foundations</strong></td>
-<td style="text-align: left;">SVD, Low-Rank, Information Theory, AdamW, Optimization</td>
-<td style="text-align: left;"><a href="./01_MATHEMATICAL_FOUNDATIONS.md">01_MATHEMATICAL_FOUNDATIONS.md</a></td>
-</tr>
-<tr>
-<td style="text-align: center;"><strong>P1</strong></td>
-<td style="text-align: left;"><strong>Training Systems</strong></td>
-<td style="text-align: left;">FSDP-2, 3D Parallelism, Context Parallelism, Checkpointing</td>
-<td style="text-align: left;"><a href="./07_TRAINING_SYSTEMS.md">07_TRAINING_SYSTEMS.md</a></td>
-</tr>
-<tr>
-<td style="text-align: center;"><strong>P1</strong></td>
-<td style="text-align: left;"><strong>Data Engineering</strong></td>
-<td style="text-align: left;">MinHash LSH, Model Collapse, Synthetic Curation</td>
-<td style="text-align: left;"><a href="./06_DATA_AND_SYNTHETIC_DATA.md">06_DATA_AND_SYNTHETIC_DATA.md</a></td>
-</tr>
-<tr>
-<td style="text-align: center;"><strong>P1</strong></td>
-<td style="text-align: left;"><strong>Distributed Systems</strong></td>
-<td style="text-align: left;">Ring All-Reduce, GPUDirect RDMA, InfiniBand NDR</td>
-<td style="text-align: left;"><a href="./18_DISTRIBUTED_SYSTEMS.md">18_DISTRIBUTED_SYSTEMS.md</a></td>
-</tr>
-<tr>
-<td style="text-align: center;"><strong>P1</strong></td>
-<td style="text-align: left;"><strong>Observability</strong></td>
-<td style="text-align: left;">Little's Law, MFU, OpenTelemetry Tracing</td>
-<td style="text-align: left;"><a href="./14_OBSERVABILITY_AND_DEBUGGING.md">14_OBSERVABILITY_AND_DEBUGGING.md</a></td>
-</tr>
-<tr>
-<td style="text-align: center;"><strong>P1</strong></td>
-<td style="text-align: left;"><strong>Systems / ML Design</strong></td>
-<td style="text-align: left;">Architecture Trade-offs, Cost/Latency Scaling</td>
-<td style="text-align: left;"><a href="./16_SYSTEM_DESIGN.md">16_SYSTEM_DESIGN.md</a> · <a href="./13_PRODUCTION_ML.md">13_PRODUCTION_ML.md</a></td>
-</tr>
-<tr>
-<td style="text-align: center;"><strong>P1</strong></td>
-<td style="text-align: left;"><strong>Deep Learning</strong></td>
-<td style="text-align: left;">Backpropagation, Softmax Jacobians, LayerNorm/RMSNorm</td>
-<td style="text-align: left;"><a href="./02_03_ML_AND_DL_FOUNDATIONS.md">02_03_ML_AND_DL_FOUNDATIONS.md</a></td>
-</tr>
-<tr>
-<td style="text-align: center;"><strong>P2</strong></td>
-<td style="text-align: left;"><strong>Python &amp; Coding</strong></td>
-<td style="text-align: left;">PyTorch Modules, FSM Parsers, Continuous Batching</td>
-<td style="text-align: left;"><a href="./17_PYTHON_AND_CODING.md">17_PYTHON_AND_CODING.md</a></td>
-</tr>
-</tbody>
-</table>
+<h2 id="heading-1">2. Post-Training, Alignment &amp; Reasoning Models</h2>
+<ul>
+<li><strong>Level 1</strong>: What is the difference between SFT and Preference Optimization?</li>
+<li><strong>Level 2</strong>: Why do we mask prompt tokens from the SFT loss calculation?</li>
+<li><strong>Level 3</strong>: Derive the Bradley-Terry preference probability model from first principles.</li>
+<li><strong>Level 4</strong>: In LoRA, why is matrix <span class="katex-inline">$B$</span> initialized to zero and matrix <span class="katex-inline">$A$</span> to Gaussian noise?</li>
+<li><strong>Level 5</strong>: Walk through the complete mathematical derivation of DPO from the RLHF objective. Why does the partition function <span class="katex-inline">$Z(x)$</span> cancel out?</li>
+<li><strong>Level 6</strong>: Explain the NormalFloat4 (NF4) quantile construction in QLoRA.</li>
+<li><strong>Level 7</strong>: How does Group Relative Policy Optimization (GRPO) compute advantages without a Critic model?</li>
+<li><strong>Level 8</strong>: Why do rule-based verifiable rewards prevent reward hacking compared to neural reward models in mathematical reasoning tasks?</li>
+<li><strong>Level 9</strong>: Derive the analytical gradient of the DPO loss and explain the function of the implicit error weight <span class="katex-inline">$\sigma(\hat{r}_l - \hat{r}_w)$</span>.</li>
+<li><strong>Level 10</strong>: Design an automated test-time compute scaling harness combining Monte Carlo Tree Search (MCTS), Process Reward Models (PRMs), and GRPO for code generation.</li>
+</ul>
 <hr />
-<h2 id="heading-6">4. Internal Dependency Graph</h2>
-<div class="mermaid">flowchart TD
-    %% Base Layer
-    Math[&quot;01: Mathematical Foundations (SVD, Info Theory, Optimization)&quot;] --&gt; DL[&quot;02_03: Deep Learning (Backprop, RMSNorm, Loss Landscapes)&quot;]
-    DL --&gt; LLM[&quot;04: Modern LLMs (Attention, RoPE, MLA, MoE)&quot;]
-    
-    %% Hardware &amp; Performance Layer
-    GPU[&quot;08: GPU Architecture &amp; FlashAttention-3&quot;] --&gt; Inf[&quot;09: Inference Systems (PagedAttention, SGLang, PD Split)&quot;]
-    GPU --&gt; TS[&quot;07: Training Systems (FSDP-2, 3D Parallelism)&quot;]
-    Net[&quot;18: Distributed Systems (Ring All-Reduce, RDMA)&quot;] --&gt; TS
-    LLM --&gt; Inf
-    LLM --&gt; TS
-    
-    %% Training &amp; Alignment Layer
-    Data[&quot;06: Data Engineering (MinHash LSH, Synthetic Flywheels)&quot;] --&gt; PT[&quot;05: Post-Training (SFT, LoRA, DPO, GRPO)&quot;]
-    LLM --&gt; PT
-    PT --&gt; Eval[&quot;12: Evaluation (Z-Tests, ELO, SWE-bench)&quot;]
-    
-    %% Serving &amp; Agent Layer
-    Inf --&gt; Agent[&quot;10: Agentic Systems (ReAct, FSM JSON, MCP, Hybrid RAG)&quot;]
-    Agent --&gt; Rel[&quot;11: Long-Running Workflows (Temporal, Sagas, Jitter)&quot;]
-    Rel --&gt; Prod[&quot;13/14/15: Production MLOps, Tracing, Safety Guardrails&quot;]
-    
-    %% Synthesis Layer
-    Prod --&gt; SysDes[&quot;16-22: System Design, Production Code &amp; Playbooks&quot;]</div>
-
+<h2 id="heading-2">3. GPU Architecture, Performance &amp; Inference Systems</h2>
+<ul>
+<li><strong>Level 1</strong>: What is the difference between Time To First Token (TTFT) and Time Per Output Token (TPOT)?</li>
+<li><strong>Level 2</strong>: Why is autoregressive decode memory-bandwidth bound at batch size 1?</li>
+<li><strong>Level 3</strong>: Calculate the critical ridge point <span class="katex-inline">$I^*$</span> in the Roofline Model for an NVIDIA H100 GPU.</li>
+<li><strong>Level 4</strong>: Calculate the exact KV cache memory footprint for a 70B model at batch size 32 and 8k context in FP16.</li>
+<li><strong>Level 5</strong>: How does PagedAttention eliminate memory fragmentation in GPU VRAM?</li>
+<li><strong>Level 6</strong>: Explain the Radix Tree prefix caching mechanism in SGLang.</li>
+<li><strong>Level 7</strong>: Prove mathematically why the expected number of tokens accepted per step in Speculative Decoding is <span class="katex-inline">$\frac{1 - \alpha^{K+1}}{1 - \alpha}$</span>.</li>
+<li><strong>Level 8</strong>: How does SmoothQuant mathematically migrate quantization outliers from activations to weights?</li>
+<li><strong>Level 9</strong>: Compare FP8 E4M3 and E5M2 data formats. Which format is optimal for weights vs. gradients?</li>
+<li><strong>Level 10</strong>: Architect a Disaggregated Prefill and Decode (PD Split) cluster for a 100k QPS serving platform with RDMA KV-cache transfers.</li>
+</ul>
 <hr />
-<h2 id="heading-7">5. Depth Philosophy &amp; Technical Bridge</h2>
-<p>Every document in this Single Source of Knowledge (SSK) follows the <strong>10-Level Depth Framework</strong>, bridging <strong>Mathematics <span class="katex-inline">$\longleftrightarrow$</span> Algorithms <span class="katex-inline">$\longleftrightarrow$</span> GPU Execution <span class="katex-inline">$\longleftrightarrow$</span> Production Systems</strong>.</p>
+<h2 id="heading-3">4. Distributed Systems &amp; Training Infrastructures</h2>
+<ul>
+<li><strong>Level 1</strong>: What is Data Parallelism vs. Model Parallelism?</li>
+<li><strong>Level 2</strong>: Why does AdamW require 16 bytes of static memory per parameter?</li>
+<li><strong>Level 3</strong>: Prove that Ring All-Reduce communication volume per node is <span class="katex-inline">$2 \left(\frac{N-1}{N}\right) M$</span>, independent of node count <span class="katex-inline">$N$</span>.</li>
+<li><strong>Level 4</strong>: Explain the memory savings and communication primitives in ZeRO-1, ZeRO-2, and ZeRO-3 (FSDP).</li>
+<li><strong>Level 5</strong>: How does Megatron-LM split Linear layers in Tensor Parallelism using Column and Row Parallel layers?</li>
+<li><strong>Level 6</strong>: Derive the Pipeline Bubble Fraction <span class="katex-inline">$F_{\text{bubble}} = \frac{p-1}{m+p-1}$</span> for a 1F1B schedule.</li>
+<li><strong>Level 7</strong>: Compare Ring Attention and DeepSpeed Ulysses for context parallelism at 512k sequence lengths.</li>
+<li><strong>Level 8</strong>: What is GPUDirect RDMA and how does it bypass host CPU memory during inter-node transfers?</li>
+<li><strong>Level 9</strong>: Explain how DeepSeek-V3 implements Auxiliary-Loss-Free load balancing across Mixture-of-Experts (MoE) nodes.</li>
+<li><strong>Level 10</strong>: Design the 4D Parallelism strategy (TP <span class="katex-inline">$\times$</span> PP <span class="katex-inline">$\times$</span> EP <span class="katex-inline">$\times$</span> DP) and network topology for training a 1-trillion parameter model across 16,384 GPUs.</li>
+</ul>
+<hr />
+<h2 id="heading-4">5. Agentic Systems, Reliability &amp; Production Engineering</h2>
+<ul>
+<li><strong>Level 1</strong>: What is the ReAct loop?</li>
+<li><strong>Level 2</strong>: Why does an agent with 95% single-step accuracy fail on a 20-step task?</li>
+<li><strong>Level 3</strong>: How does FSM logit biasing guarantee 100% valid JSON schema adherence?</li>
+<li><strong>Level 4</strong>: Derive the Two-Proportion Z-Test formula for A/B testing and calculate the sample size needed to detect a 2% gain.</li>
+<li><strong>Level 5</strong>: How does Full Jitter in Exponential Backoff eliminate Thundering Herds?</li>
+<li><strong>Level 6</strong>: Explain the Bradley-Terry ELO rating update formula used in Chatbot Arena.</li>
+<li><strong>Level 7</strong>: How does the Distributed Saga pattern handle compensation rollbacks during multi-system agent failures?</li>
+<li><strong>Level 8</strong>: Calculate the Population Stability Index (PSI) and explain the standard threshold bounds for data drift.</li>
+<li><strong>Level 9</strong>: Design an OpenTelemetry distributed tracing schema for recursive multi-agent reflection loops.</li>
+<li><strong>Level 10</strong>: Architect an enterprise-grade autonomous agent platform with Firecracker microVM sandboxing, Model Context Protocol (MCP), and Temporal durable execution capable of handling 50,000 concurrent long-running workflows.</li>
+</ul>
         
         <!-- Navigation Footer -->
         <div class="doc-nav-footer">
-          <div></div>
           
-        <a href="01_MATHEMATICAL_FOUNDATIONS.html" class="doc-nav-btn" style="text-align: right;">
+        <a href="19_LEADERSHIP_AND_TECHNICAL_JUDGMENT.html" class="doc-nav-btn">
+          <span class="label">← Previous</span>
+          <span class="title">19_LEADERSHIP_AND_TECHNICAL_JUDGMENT</span>
+        </a>
+        
+          
+        <a href="21_CASE_STUDIES.html" class="doc-nav-btn" style="text-align: right;">
           <span class="label">Next →</span>
-          <span class="title">01_MATHEMATICAL_FOUNDATIONS</span>
+          <span class="title">21_CASE_STUDIES</span>
         </a>
         
         </div>
@@ -864,35 +791,23 @@
         <ul class="toc-list">
           
         <li class="toc-item">
-          <a href="#heading-0" class="toc-link">Role Context &amp; Core Hypothesis</a>
+          <a href="#heading-0" class="toc-link">Mathematics, Attention &amp; Transformer Mechanics</a>
         </li>
         
         <li class="toc-item">
-          <a href="#heading-1" class="toc-link">Role Decomposition</a>
-        </li>
-        
-        <li class="toc-item h3">
-          <a href="#heading-2" class="toc-link">Explicit Technical Requirements</a>
-        </li>
-        
-        <li class="toc-item h3">
-          <a href="#heading-3" class="toc-link">Implicit Technical Requirements</a>
-        </li>
-        
-        <li class="toc-item h3">
-          <a href="#heading-4" class="toc-link">Staff/Principal-Level Requirements</a>
+          <a href="#heading-1" class="toc-link">Post-Training, Alignment &amp; Reasoning Models</a>
         </li>
         
         <li class="toc-item">
-          <a href="#heading-5" class="toc-link">Role Competency Model &amp; Priority Matrix</a>
+          <a href="#heading-2" class="toc-link">GPU Architecture, Performance &amp; Inference Systems</a>
         </li>
         
         <li class="toc-item">
-          <a href="#heading-6" class="toc-link">Internal Dependency Graph</a>
+          <a href="#heading-3" class="toc-link">Distributed Systems &amp; Training Infrastructures</a>
         </li>
         
         <li class="toc-item">
-          <a href="#heading-7" class="toc-link">Depth Philosophy &amp; Technical Bridge</a>
+          <a href="#heading-4" class="toc-link">Agentic Systems, Reliability &amp; Production Engineering</a>
         </li>
         
         </ul>

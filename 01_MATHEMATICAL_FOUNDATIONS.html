@@ -1,0 +1,1205 @@
+<!DOCTYPE html>
+<html lang="en" class="dark">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>01_MATHEMATICAL_FOUNDATIONS — ML Engineer (SSK)</title>
+  
+  <!-- Fonts -->
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Fira+Code:wght@400;500;600&family=Inter:wght@300;400;500;600;700;800&family=Outfit:wght@500;600;700;800&display=swap" rel="stylesheet">
+  
+  <!-- KaTeX for LaTeX Math -->
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/katex@0.16.9/dist/katex.min.css">
+  <script defer src="https://cdn.jsdelivr.net/npm/katex@0.16.9/dist/katex.min.js"></script>
+  <script defer src="https://cdn.jsdelivr.net/npm/katex@0.16.9/dist/contrib/auto-render.min.js"></script>
+
+  <!-- Prism.js for Syntax Highlighting -->
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/prism/1.29.0/themes/prism-tomorrow.min.css">
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/prism/1.29.0/prism.min.js"></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/prism/1.29.0/components/prism-python.min.js"></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/prism/1.29.0/components/prism-bash.min.js"></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/prism/1.29.0/components/prism-json.min.js"></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/prism/1.29.0/components/prism-c.min.js"></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/prism/1.29.0/components/prism-cpp.min.js"></script>
+
+  <!-- Mermaid.js for Architecture Diagrams -->
+  <script src="https://cdn.jsdelivr.net/npm/mermaid@10.8.0/dist/mermaid.min.js"></script>
+
+  <style>
+    :root {
+      --bg-primary: #0a0d14;
+      --bg-secondary: #111622;
+      --bg-card: rgba(22, 28, 42, 0.75);
+      --bg-hover: #1c2436;
+      --border-color: rgba(255, 255, 255, 0.08);
+      --border-focus: rgba(99, 102, 241, 0.5);
+      --text-primary: #f1f5f9;
+      --text-secondary: #94a3b8;
+      --text-muted: #64748b;
+      --accent-primary: #6366f1;
+      --accent-gradient: linear-gradient(135deg, #6366f1 0%, #a855f7 50%, #ec4899 100%);
+      --accent-glow: rgba(99, 102, 241, 0.25);
+      --p0-color: #ef4444;
+      --p0-bg: rgba(239, 68, 68, 0.15);
+      --p1-color: #3b82f6;
+      --p1-bg: rgba(59, 130, 246, 0.15);
+      --p2-color: #10b981;
+      --p2-bg: rgba(16, 185, 129, 0.15);
+      --sidebar-width: 320px;
+      --toc-width: 260px;
+    }
+
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+
+    body {
+      font-family: 'Inter', -apple-system, BlinkMacSystemFont, sans-serif;
+      background-color: var(--bg-primary);
+      color: var(--text-primary);
+      line-height: 1.65;
+      overflow-x: hidden;
+      display: flex;
+      height: 100vh;
+    }
+
+    /* Scrollbars */
+    ::-webkit-scrollbar { width: 6px; height: 6px; }
+    ::-webkit-scrollbar-track { background: transparent; }
+    ::-webkit-scrollbar-thumb { background: rgba(255, 255, 255, 0.15); border-radius: 4px; }
+    ::-webkit-scrollbar-thumb:hover { background: rgba(255, 255, 255, 0.3); }
+
+    /* Left Sidebar Navigation */
+    aside.sidebar {
+      width: var(--sidebar-width);
+      min-width: var(--sidebar-width);
+      background: var(--bg-secondary);
+      border-right: 1px solid var(--border-color);
+      display: flex;
+      flex-direction: column;
+      height: 100vh;
+      z-index: 50;
+    }
+
+    .brand-header {
+      padding: 20px 24px;
+      border-bottom: 1px solid var(--border-color);
+      background: rgba(10, 13, 20, 0.5);
+      backdrop-filter: blur(10px);
+    }
+
+    .brand-title {
+      font-family: 'Outfit', sans-serif;
+      font-size: 1.15rem;
+      font-weight: 700;
+      background: var(--accent-gradient);
+      -webkit-background-clip: text;
+      -webkit-text-fill-color: transparent;
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      text-decoration: none;
+    }
+
+    .brand-subtitle {
+      font-size: 0.75rem;
+      color: var(--text-muted);
+      margin-top: 4px;
+      text-transform: uppercase;
+      letter-spacing: 0.05em;
+    }
+
+    .search-box {
+      padding: 14px 20px;
+      border-bottom: 1px solid var(--border-color);
+    }
+
+    .search-input {
+      width: 100%;
+      background: rgba(0, 0, 0, 0.3);
+      border: 1px solid var(--border-color);
+      border-radius: 8px;
+      padding: 10px 14px;
+      color: var(--text-primary);
+      font-size: 0.85rem;
+      outline: none;
+      transition: all 0.2s;
+    }
+    .search-input:focus {
+      border-color: var(--accent-primary);
+      box-shadow: 0 0 0 3px var(--accent-glow);
+    }
+
+    .nav-list {
+      flex: 1;
+      overflow-y: auto;
+      padding: 12px 14px;
+      list-style: none;
+    }
+
+    .nav-phase-header {
+      font-size: 0.7rem;
+      font-weight: 700;
+      text-transform: uppercase;
+      color: var(--text-muted);
+      letter-spacing: 0.08em;
+      padding: 14px 10px 6px 10px;
+    }
+
+    .nav-item {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      padding: 8px 12px;
+      border-radius: 6px;
+      color: var(--text-secondary);
+      font-size: 0.82rem;
+      text-decoration: none;
+      transition: all 0.15s ease;
+      margin-bottom: 2px;
+      border: 1px solid transparent;
+    }
+    .nav-item:hover {
+      background: var(--bg-hover);
+      color: var(--text-primary);
+    }
+    .nav-item.active {
+      background: rgba(99, 102, 241, 0.15);
+      color: #818cf8;
+      border-color: rgba(99, 102, 241, 0.3);
+      font-weight: 600;
+    }
+
+    .priority-badge {
+      font-size: 0.65rem;
+      font-weight: 700;
+      padding: 2px 6px;
+      border-radius: 4px;
+      text-transform: uppercase;
+    }
+    .priority-p0 { color: var(--p0-color); background: var(--p0-bg); }
+    .priority-p1 { color: var(--p1-color); background: var(--p1-bg); }
+    .priority-p2 { color: var(--p2-color); background: var(--p2-bg); }
+
+    /* Main Content Area */
+    main.main-viewport {
+      flex: 1;
+      height: 100vh;
+      overflow-y: auto;
+      display: flex;
+      flex-direction: column;
+      position: relative;
+    }
+
+    .top-toolbar {
+      position: sticky;
+      top: 0;
+      background: rgba(10, 13, 20, 0.85);
+      backdrop-filter: blur(12px);
+      border-bottom: 1px solid var(--border-color);
+      padding: 12px 36px;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      z-index: 40;
+    }
+
+    .breadcrumbs {
+      font-size: 0.85rem;
+      color: var(--text-secondary);
+      display: flex;
+      align-items: center;
+      gap: 8px;
+    }
+    .breadcrumbs a {
+      color: var(--text-secondary);
+      text-decoration: none;
+    }
+    .breadcrumbs a:hover {
+      color: #818cf8;
+    }
+    .breadcrumbs span.current {
+      color: var(--text-primary);
+      font-weight: 600;
+    }
+
+    .tool-actions {
+      display: flex;
+      gap: 12px;
+      align-items: center;
+    }
+
+    .btn {
+      background: rgba(255, 255, 255, 0.05);
+      border: 1px solid var(--border-color);
+      color: var(--text-primary);
+      padding: 6px 14px;
+      border-radius: 6px;
+      font-size: 0.8rem;
+      font-weight: 500;
+      cursor: pointer;
+      display: flex;
+      align-items: center;
+      gap: 6px;
+      text-decoration: none;
+      transition: all 0.2s;
+    }
+    .btn:hover {
+      background: rgba(255, 255, 255, 0.1);
+      border-color: rgba(255, 255, 255, 0.2);
+    }
+
+    .content-container {
+      display: flex;
+      flex: 1;
+      max-width: 1600px;
+      margin: 0 auto;
+      width: 100%;
+    }
+
+    .markdown-body {
+      flex: 1;
+      padding: 40px 48px 100px 48px;
+      max-width: 960px;
+    }
+
+    /* Markdown Styling */
+    .markdown-body h1 {
+      font-family: 'Outfit', sans-serif;
+      font-size: 2.2rem;
+      font-weight: 800;
+      margin-bottom: 24px;
+      padding-bottom: 12px;
+      border-bottom: 1px solid var(--border-color);
+      letter-spacing: -0.02em;
+      color: #fff;
+    }
+
+    .markdown-body h2 {
+      font-family: 'Outfit', sans-serif;
+      font-size: 1.5rem;
+      font-weight: 700;
+      margin-top: 40px;
+      margin-bottom: 16px;
+      color: #e2e8f0;
+      border-bottom: 1px solid rgba(255, 255, 255, 0.05);
+      padding-bottom: 8px;
+    }
+
+    .markdown-body h3 {
+      font-size: 1.15rem;
+      font-weight: 600;
+      margin-top: 28px;
+      margin-bottom: 12px;
+      color: #cbd5e1;
+    }
+
+    .markdown-body h4 {
+      font-size: 1.0rem;
+      font-weight: 600;
+      margin-top: 20px;
+      margin-bottom: 8px;
+      color: #94a3b8;
+    }
+
+    .markdown-body p {
+      margin-bottom: 16px;
+      color: #cbd5e1;
+      font-size: 0.96rem;
+    }
+
+    .markdown-body ul, .markdown-body ol {
+      margin-bottom: 18px;
+      padding-left: 24px;
+      color: #cbd5e1;
+    }
+    .markdown-body li {
+      margin-bottom: 6px;
+    }
+
+    .markdown-body blockquote {
+      border-left: 4px solid var(--accent-primary);
+      background: rgba(99, 102, 241, 0.08);
+      padding: 14px 20px;
+      border-radius: 0 8px 8px 0;
+      margin-bottom: 20px;
+      color: #e2e8f0;
+      font-size: 0.92rem;
+    }
+
+    .markdown-body table {
+      width: 100%;
+      border-collapse: collapse;
+      margin-bottom: 24px;
+      font-size: 0.88rem;
+      background: rgba(17, 22, 34, 0.6);
+      border-radius: 8px;
+      overflow: hidden;
+      border: 1px solid var(--border-color);
+    }
+    .markdown-body th {
+      background: rgba(30, 41, 59, 0.8);
+      padding: 12px 16px;
+      text-align: left;
+      font-weight: 600;
+      color: #f1f5f9;
+      border-bottom: 1px solid var(--border-color);
+    }
+    .markdown-body td {
+      padding: 10px 16px;
+      border-bottom: 1px solid rgba(255, 255, 255, 0.04);
+      color: #cbd5e1;
+    }
+    .markdown-body tr:hover td {
+      background: rgba(255, 255, 255, 0.02);
+    }
+
+    .markdown-body code {
+      font-family: 'Fira Code', monospace;
+      font-size: 0.85em;
+      background: rgba(255, 255, 255, 0.08);
+      color: #f472b6;
+      padding: 2px 6px;
+      border-radius: 4px;
+    }
+
+    .markdown-body pre {
+      background: #0f141f !important;
+      border: 1px solid var(--border-color);
+      border-radius: 8px;
+      padding: 18px !important;
+      margin-bottom: 24px;
+      overflow-x: auto;
+      position: relative;
+    }
+    .markdown-body pre code {
+      background: transparent !important;
+      color: #e2e8f0;
+      padding: 0;
+      font-size: 0.88rem;
+    }
+
+    /* Math Formulas */
+    .katex-display {
+      margin: 20px 0;
+      padding: 14px 20px;
+      background: rgba(17, 22, 34, 0.5);
+      border-radius: 8px;
+      border: 1px solid rgba(255, 255, 255, 0.05);
+      overflow-x: auto;
+      overflow-y: hidden;
+    }
+
+    /* Mermaid diagrams */
+    .mermaid {
+      background: rgba(15, 20, 31, 0.9);
+      border: 1px solid var(--border-color);
+      border-radius: 8px;
+      padding: 20px;
+      margin-bottom: 24px;
+      display: flex;
+      justify-content: center;
+    }
+
+    /* Navigation Footer */
+    .doc-nav-footer {
+      display: flex;
+      justify-content: space-between;
+      margin-top: 60px;
+      padding-top: 24px;
+      border-top: 1px solid var(--border-color);
+    }
+    .doc-nav-btn {
+      display: flex;
+      flex-direction: column;
+      text-decoration: none;
+      padding: 12px 20px;
+      background: var(--bg-secondary);
+      border: 1px solid var(--border-color);
+      border-radius: 8px;
+      transition: all 0.2s;
+    }
+    .doc-nav-btn:hover {
+      border-color: var(--accent-primary);
+      background: var(--bg-hover);
+    }
+    .doc-nav-btn .label {
+      font-size: 0.72rem;
+      color: var(--text-muted);
+      text-transform: uppercase;
+      letter-spacing: 0.05em;
+    }
+    .doc-nav-btn .title {
+      font-size: 0.9rem;
+      color: #818cf8;
+      font-weight: 600;
+      margin-top: 2px;
+    }
+
+    /* Right TOC Sidebar */
+    aside.toc-sidebar {
+      width: var(--toc-width);
+      padding: 40px 24px 40px 12px;
+      position: sticky;
+      top: 60px;
+      height: calc(100vh - 60px);
+      overflow-y: auto;
+      display: flex;
+      flex-direction: column;
+    }
+
+    .toc-title {
+      font-size: 0.75rem;
+      font-weight: 700;
+      text-transform: uppercase;
+      letter-spacing: 0.08em;
+      color: var(--text-muted);
+      margin-bottom: 14px;
+    }
+
+    .toc-list {
+      list-style: none;
+      display: flex;
+      flex-direction: column;
+      gap: 6px;
+      border-left: 1px solid var(--border-color);
+    }
+    .toc-item {
+      padding-left: 14px;
+    }
+    .toc-item.h3 {
+      padding-left: 24px;
+    }
+    .toc-link {
+      color: var(--text-secondary);
+      font-size: 0.8rem;
+      text-decoration: none;
+      display: block;
+      transition: color 0.15s;
+      white-space: nowrap;
+      overflow: hidden;
+      text-overflow: ellipsis;
+    }
+    .toc-link:hover {
+      color: #818cf8;
+    }
+
+    /* Responsive */
+    @media (max-width: 1200px) {
+      aside.toc-sidebar { display: none; }
+    }
+    @media (max-width: 768px) {
+      aside.sidebar { position: fixed; transform: translateX(-100%); transition: transform 0.3s; }
+      aside.sidebar.open { transform: translateX(0); }
+      .markdown-body { padding: 24px 20px; }
+    }
+  </style>
+</head>
+<body>
+
+  <!-- Left Sidebar Navigation -->
+  <aside class="sidebar">
+    <div class="brand-header">
+      <a href="index.html" class="brand-title">
+        <span>⚡</span> ML Engineer (SSK)
+      </a>
+      <div class="brand-subtitle">LLM & Agentic Systems</div>
+    </div>
+    
+    <div class="search-box">
+      <input type="text" id="searchInput" class="search-input" placeholder="Quick search topics & math...">
+    </div>
+
+    <ul class="nav-list" id="navList">
+      <li class="nav-phase-header">Phase 0: Architecture</li>
+        <li>
+          <a href="00_ROLE_ANALYSIS.html" class="nav-item">
+            <span>00_ROLE_ANALYSIS</span>
+            <span class="priority-badge priority-p1">P1</span>
+          </a>
+        </li>
+        <li class="nav-phase-header">Phase 1: Foundations</li>
+        <li>
+          <a href="01_MATHEMATICAL_FOUNDATIONS.html" class="nav-item active">
+            <span>01_MATHEMATICAL_FOUNDATIONS</span>
+            <span class="priority-badge priority-p1">P1</span>
+          </a>
+        </li>
+        
+        <li>
+          <a href="02_03_ML_AND_DL_FOUNDATIONS.html" class="nav-item">
+            <span>02_03_ML_AND_DL_FOUNDATIONS</span>
+            <span class="priority-badge priority-p1">P1</span>
+          </a>
+        </li>
+        <li class="nav-phase-header">Phase 2: Core LLM</li>
+        <li>
+          <a href="04_TRANSFORMERS_AND_LLMS.html" class="nav-item">
+            <span>04_TRANSFORMERS_AND_LLMS</span>
+            <span class="priority-badge priority-p0">P0</span>
+          </a>
+        </li>
+        <li class="nav-phase-header">Phase 3: Alignment & Reasoning</li>
+        <li>
+          <a href="05_POST_TRAINING.html" class="nav-item">
+            <span>05_POST_TRAINING</span>
+            <span class="priority-badge priority-p0">P0</span>
+          </a>
+        </li>
+        
+        <li>
+          <a href="06_DATA_AND_SYNTHETIC_DATA.html" class="nav-item">
+            <span>06_DATA_AND_SYNTHETIC_DATA</span>
+            <span class="priority-badge priority-p1">P1</span>
+          </a>
+        </li>
+        <li class="nav-phase-header">Phase 4: Hardware & Inference</li>
+        <li>
+          <a href="08_GPU_AND_PERFORMANCE.html" class="nav-item">
+            <span>08_GPU_AND_PERFORMANCE</span>
+            <span class="priority-badge priority-p0">P0</span>
+          </a>
+        </li>
+        
+        <li>
+          <a href="09_INFERENCE_SYSTEMS.html" class="nav-item">
+            <span>09_INFERENCE_SYSTEMS</span>
+            <span class="priority-badge priority-p0">P0</span>
+          </a>
+        </li>
+        <li class="nav-phase-header">Phase 5: Distributed Scaling</li>
+        <li>
+          <a href="07_TRAINING_SYSTEMS.html" class="nav-item">
+            <span>07_TRAINING_SYSTEMS</span>
+            <span class="priority-badge priority-p1">P1</span>
+          </a>
+        </li>
+        
+        <li>
+          <a href="18_DISTRIBUTED_SYSTEMS.html" class="nav-item">
+            <span>18_DISTRIBUTED_SYSTEMS</span>
+            <span class="priority-badge priority-p1">P1</span>
+          </a>
+        </li>
+        <li class="nav-phase-header">Phase 6: Agentic Systems</li>
+        <li>
+          <a href="10_AGENTIC_ML_SYSTEMS.html" class="nav-item">
+            <span>10_AGENTIC_ML_SYSTEMS</span>
+            <span class="priority-badge priority-p0">P0</span>
+          </a>
+        </li>
+        
+        <li>
+          <a href="11_LONG_RUNNING_WORKFLOW_RELIABILITY.html" class="nav-item">
+            <span>11_LONG_RUNNING_WORKFLOW_RELIABILITY</span>
+            <span class="priority-badge priority-p0">P0</span>
+          </a>
+        </li>
+        
+        <li>
+          <a href="15_SAFETY_AND_ROBUSTNESS.html" class="nav-item">
+            <span>15_SAFETY_AND_ROBUSTNESS</span>
+            <span class="priority-badge priority-p0">P0</span>
+          </a>
+        </li>
+        <li class="nav-phase-header">Phase 7: Production & MLOps</li>
+        <li>
+          <a href="12_EVALUATION.html" class="nav-item">
+            <span>12_EVALUATION</span>
+            <span class="priority-badge priority-p0">P0</span>
+          </a>
+        </li>
+        
+        <li>
+          <a href="13_PRODUCTION_ML.html" class="nav-item">
+            <span>13_PRODUCTION_ML</span>
+            <span class="priority-badge priority-p1">P1</span>
+          </a>
+        </li>
+        
+        <li>
+          <a href="14_OBSERVABILITY_AND_DEBUGGING.html" class="nav-item">
+            <span>14_OBSERVABILITY_AND_DEBUGGING</span>
+            <span class="priority-badge priority-p1">P1</span>
+          </a>
+        </li>
+        <li class="nav-phase-header">Phase 8: Synthesis & Interview Prep</li>
+        <li>
+          <a href="16_SYSTEM_DESIGN.html" class="nav-item">
+            <span>16_SYSTEM_DESIGN</span>
+            <span class="priority-badge priority-p1">P1</span>
+          </a>
+        </li>
+        
+        <li>
+          <a href="17_PYTHON_AND_CODING.html" class="nav-item">
+            <span>17_PYTHON_AND_CODING</span>
+            <span class="priority-badge priority-p2">P2</span>
+          </a>
+        </li>
+        
+        <li>
+          <a href="19_LEADERSHIP_AND_TECHNICAL_JUDGMENT.html" class="nav-item">
+            <span>19_LEADERSHIP_AND_TECHNICAL_JUDGMENT</span>
+            <span class="priority-badge priority-p1">P1</span>
+          </a>
+        </li>
+        
+        <li>
+          <a href="20_INTERVIEW_QUESTION_BANK.html" class="nav-item">
+            <span>20_INTERVIEW_QUESTION_BANK</span>
+            <span class="priority-badge priority-p0">P0</span>
+          </a>
+        </li>
+        
+        <li>
+          <a href="21_CASE_STUDIES.html" class="nav-item">
+            <span>21_CASE_STUDIES</span>
+            <span class="priority-badge priority-p0">P0</span>
+          </a>
+        </li>
+        
+        <li>
+          <a href="22_FINAL_SYNTHESIS_PLAYBOOKS.html" class="nav-item">
+            <span>22_FINAL_SYNTHESIS_PLAYBOOKS</span>
+            <span class="priority-badge priority-p0">P0</span>
+          </a>
+        </li>
+        <li class="nav-phase-header">Overview</li>
+        <li>
+          <a href="README.html" class="nav-item">
+            <span>README</span>
+            <span class="priority-badge priority-p0">P0</span>
+          </a>
+        </li>
+        
+    </ul>
+  </aside>
+
+  <!-- Main Viewport -->
+  <main class="main-viewport">
+    <div class="top-toolbar">
+      <div class="breadcrumbs">
+        <a href="index.html">Curriculum</a>
+        <span>/</span>
+        <span>Phase 1: Foundations</span>
+        <span>/</span>
+        <span class="current">01_MATHEMATICAL_FOUNDATIONS</span>
+      </div>
+      <div class="tool-actions">
+        <button class="btn" onclick="window.print()">🖨️ Print / PDF</button>
+      </div>
+    </div>
+
+    <div class="content-container">
+      <article class="markdown-body" id="docContent">
+        <h1>01_MATHEMATICAL_FOUNDATIONS — Rigorous Mathematical Reference for ML &amp; LLM Engineers</h1>
+<blockquote>
+<p><strong>Audience</strong>: ML Engineers, LLM Systems Engineers, and AI Researchers preparing for senior/principal technical interviews.<br />
+<strong>Core Objective</strong>: Provide an exhaustive, step-by-step mathematical bridge from fundamental Linear Algebra, Multivariate Calculus, Probability, and Optimization up to the mathematical machinery driving modern LLMs, Transformers, and Agentic Systems.</p>
+</blockquote>
+<hr />
+<h2 id="heading-0">1. Linear Algebra &amp; Matrix Decompositions</h2>
+<h3 id="heading-1">1.1 Vector Spaces, Projections, and Orthogonality</h3>
+<p>Let <span class="katex-inline">$\mathcal{V} = \mathbb{R}^d$</span> be an inner product space equipped with the standard Euclidean inner product <span class="katex-inline">$\langle u, v \rangle = u^T v = \sum_{i=1}^d u_i v_i$</span>.</p>
+<ul>
+<li><strong>Vector Norms</strong>:</li>
+<li><span class="katex-inline">$L_p$</span> Norm: <span class="katex-inline">$\|x\|_p = \left( \sum_{i=1}^d |x_i|^p \right)^{1/p}$</span></li>
+<li><span class="katex-inline">$L_2$</span> Euclidean Norm: <span class="katex-inline">$\|x\|_2 = \sqrt{x^T x}$</span></li>
+<li><span class="katex-inline">$L_1$</span> Manhattan Norm: <span class="katex-inline">$\|x\|_1 = \sum_{i=1}^d |x_i|$</span> (promotes sparsity in regularized regression)</li>
+<li><span class="katex-inline">$L_\infty$</span> Maximum Norm: <span class="katex-inline">$\|x\|_\infty = \max_i |x_i|$</span></li>
+<li>
+<p>Dual Norm: <span class="katex-inline">$\|u\|_* = \sup \{ u^T v : \|v\| \leq 1 \}$</span>. The dual of <span class="katex-inline">$L_p$</span> is <span class="katex-inline">$L_q$</span> where <span class="katex-inline">$\frac{1}{p} + \frac{1}{q} = 1$</span>.</p>
+</li>
+<li>
+<p><strong>Orthogonal Projection</strong>:<br />
+  The orthogonal projection of a vector <span class="katex-inline">$y \in \mathbb{R}^d$</span> onto the subspace spanned by the columns of matrix <span class="katex-inline">$A \in \mathbb{R}^{d \times k}$</span> (where <span class="katex-inline">$A$</span> has full column rank <span class="katex-inline">$k$</span>) is given by:<br />
+  <div class="katex-display">$$\text{proj}_{\text{col}(A)}(y) = A (A^T A)^{-1} A^T y$$</div></p>
+</li>
+</ul>
+<p>The projection matrix <span class="katex-inline">$P = A (A^T A)^{-1} A^T$</span> satisfies:<br />
+  1. <strong>Idempotence</strong>: <span class="katex-inline">$P^2 = P$</span><br />
+  2. <strong>Symmetry</strong>: <span class="katex-inline">$P^T = P$</span></p>
+<hr />
+<h3 id="heading-2">1.2 Spectral Theorem and Eigendecomposition</h3>
+<p>For any real symmetric matrix <span class="katex-inline">$A \in \mathbb{R}^{d \times d}$</span> (<span class="katex-inline">$A = A^T$</span>):<br />
+1. All eigenvalues <span class="katex-inline">$\lambda_1, \lambda_2, \dots, \lambda_d$</span> are real: <span class="katex-inline">$\lambda_i \in \mathbb{R}$</span>.<br />
+2. Eigenvectors corresponding to distinct eigenvalues are mutually orthogonal.<br />
+3. <span class="katex-inline">$A$</span> can be orthogonally diagonalized:<br />
+   <div class="katex-display">$$A = Q \Lambda Q^T = \sum_{i=1}^d \lambda_i q_i q_i^T$$</div></p>
+<p>where <span class="katex-inline">$Q = [q_1, q_2, \dots, q_d]$</span> is an orthogonal matrix (<span class="katex-inline">$Q^T Q = Q Q^T = I$</span>) containing orthonormal eigenvectors, and <span class="katex-inline">$\Lambda = \text{diag}(\lambda_1, \dots, \lambda_d)$</span>.</p>
+<ul>
+<li><strong>Positive Semi-Definite (PSD) Matrices</strong>:<br />
+  A symmetric matrix <span class="katex-inline">$A \in \mathbb{R}^{d \times d}$</span> is PSD (<span class="katex-inline">$A \succeq 0$</span>) if and only if:<br />
+  <div class="katex-display">$$x^T A x \geq 0 \quad \forall x \in \mathbb{R}^d \iff \lambda_i(A) \geq 0 \quad \forall i \in \{1, \dots, d\}$$</div></li>
+</ul>
+<p><em>ML Application</em>: Covariance matrices <span class="katex-inline">$\Sigma = \frac{1}{N} X^T X$</span>, Hessian matrices at local minima <span class="katex-inline">$\nabla^2 \mathcal{L}(\theta) \succeq 0$</span>, and kernel Gram matrices <span class="katex-inline">$K_{ij} = k(x_i, x_j)$</span> are all PSD.</p>
+<hr />
+<h3 id="heading-3">1.3 Singular Value Decomposition (SVD)</h3>
+<p>For any arbitrary rectangular matrix <span class="katex-inline">$A \in \mathbb{R}^{m \times n}$</span> with rank <span class="katex-inline">$r \leq \min(m, n)$</span>:</p>
+<div class="katex-display">$$A = U \Sigma V^T = \sum_{i=1}^r \sigma_i u_i v_i^T$$</div>
+
+<p>Where:<br />
+- <span class="katex-inline">$U \in \mathbb{R}^{m \times m}$</span> is an orthogonal matrix of left singular vectors (eigenvectors of <span class="katex-inline">$A A^T$</span>).<br />
+- <span class="katex-inline">$V \in \mathbb{R}^{n \times n}$</span> is an orthogonal matrix of right singular vectors (eigenvectors of <span class="katex-inline">$A^T A$</span>).<br />
+- <span class="katex-inline">$\Sigma \in \mathbb{R}^{m \times n}$</span> is a rectangular diagonal matrix with non-negative singular values ordered monotonically:<br />
+  <div class="katex-display">$$\sigma_1 \geq \sigma_2 \geq \dots \geq \sigma_r &gt; \sigma_{r+1} = \dots = 0$$</div></p>
+<ul>
+<li>The relationship with eigenvalues: <span class="katex-inline">$\sigma_i(A) = \sqrt{\lambda_i(A^T A)} = \sqrt{\lambda_i(A A^T)}$</span>.</li>
+</ul>
+<h4>Matrix Norms via SVD:</h4>
+<ul>
+<li>
+<p><strong>Spectral Norm (<span class="katex-inline">$L_2$</span> Operator Norm)</strong>:<br />
+  <div class="katex-display">$$\|A\|_2 = \sup_{x \neq 0} \frac{\|Ax\|_2}{\|x\|_2} = \sigma_{\max}(A) = \sigma_1$$</div></p>
+</li>
+<li>
+<p><strong>Frobenius Norm</strong>:<br />
+  <div class="katex-display">$$\|A\|_F = \sqrt{\text{Tr}(A^T A)} = \sqrt{\sum_{i=1}^m \sum_{j=1}^n A_{ij}^2} = \sqrt{\sum_{i=1}^r \sigma_i^2}$$</div></p>
+</li>
+<li>
+<p><strong>Nuclear Norm (Trace Norm)</strong>:<br />
+  <div class="katex-display">$$\|A\|_* = \text{Tr}\left(\sqrt{A^T A}\right) = \sum_{i=1}^r \sigma_i$$</div>
+</p>
+</li>
+</ul>
+<hr />
+<h3 id="heading-4">1.4 Low-Rank Approximation &amp; The Eckart-Young-Mirsky Theorem</h3>
+<p>The <strong>Eckart-Young-Mirsky Theorem</strong> provides the theoretical justification for low-rank parameter-efficient fine-tuning (LoRA), KV cache compression, and Multi-Head Latent Attention (MLA).</p>
+<h4>Theorem Statement:</h4>
+<p>Let <span class="katex-inline">$A \in \mathbb{R}^{m \times n}$</span> have SVD <span class="katex-inline">$A = \sum_{i=1}^r \sigma_i u_i v_i^T$</span>. For any <span class="katex-inline">$k &lt; r$</span>, the optimal rank-<span class="katex-inline">$k$</span> approximation matrix <span class="katex-inline">$A_k = \sum_{i=1}^k \sigma_i u_i v_i^T$</span> solves the optimization problem:</p>
+<div class="katex-display">$$A_k = \arg\min_{B \in \mathbb{R}^{m \times n}, \text{rank}(B) \leq k} \|A - B\|$$</div>
+
+<p>The approximation errors are given analytically by:<br />
+- Under the <strong>Spectral Norm</strong>:<br />
+  <div class="katex-display">$$\min_{\text{rank}(B) \leq k} \|A - B\|_2 = \|A - A_k\|_2 = \sigma_{k+1}$$</div></p>
+<ul>
+<li>Under the <strong>Frobenius Norm</strong>:<br />
+  <div class="katex-display">$$\min_{\text{rank}(B) \leq k} \|A - B\|_F = \|A - A_k\|_F = \sqrt{\sum_{i=k+1}^r \sigma_i^2}$$</div>
+</li>
+</ul>
+<h4>Concrete Mathematical Implication for LoRA &amp; MLA:</h4>
+<p>When fine-tuning a weight matrix <span class="katex-inline">$W_0 \in \mathbb{R}^{d_{out} \times d_{in}}$</span>, the weight update <span class="katex-inline">$\Delta W$</span> has an intrinsic rank <span class="katex-inline">$r \ll \min(d_{out}, d_{in})$</span>. Parameterizing <span class="katex-inline">$\Delta W = \frac{\alpha}{r} B A$</span> (where <span class="katex-inline">$B \in \mathbb{R}^{d_{out} \times r}, A \in \mathbb{R}^{r \times d_{in}}$</span>) captures the principal singular directions of the gradient trajectory while reducing parameter complexity from <span class="katex-inline">$d_{out} \cdot d_{in}$</span> to <span class="katex-inline">$r \cdot (d_{out} + d_{in})$</span>.</p>
+<hr />
+<h2 id="heading-5">2. Multivariate Calculus &amp; Computational Graphs</h2>
+<h3 id="heading-6">2.1 Jacobians, Hessians, and Matrix Derivatives</h3>
+<p>Let <span class="katex-inline">$f: \mathbb{R}^n \to \mathbb{R}^m$</span> be a differentiable vector-valued function <span class="katex-inline">$y = f(x)$</span>.</p>
+<ul>
+<li>
+<p><strong>The Jacobian Matrix</strong> <span class="katex-inline">$J \in \mathbb{R}^{m \times n}$</span>:<br />
+  <div class="katex-display">$$J_{ij} = \frac{\partial y_i}{\partial x_j} \implies J = \begin{bmatrix} \frac{\partial y_1}{\partial x_1} &amp; \cdots &amp; \frac{\partial y_1}{\partial x_n} \\ \vdots &amp; \ddots &amp; \vdots \\ \frac{\partial y_m}{\partial x_1} &amp; \cdots &amp; \frac{\partial y_m}{\partial x_n} \end{bmatrix}$$</div>
+</p>
+</li>
+<li>
+<p><strong>The Hessian Matrix</strong> <span class="katex-inline">$H \in \mathbb{R}^{n \times n}$</span> for scalar loss <span class="katex-inline">$\mathcal{L}: \mathbb{R}^n \to \mathbb{R}$</span>:<br />
+  <div class="katex-display">$$H_{ij} = \frac{\partial^2 \mathcal{L}}{\partial x_i \partial x_j} \implies \nabla^2 \mathcal{L}(x)$$</div>
+</p>
+</li>
+<li>
+<p><strong>Essential Matrix Derivative Identities</strong>:<br />
+  Let <span class="katex-inline">$X \in \mathbb{R}^{m \times n}$</span>, <span class="katex-inline">$a \in \mathbb{R}^m$</span>, <span class="katex-inline">$b \in \mathbb{R}^n$</span>, <span class="katex-inline">$A \in \mathbb{R}^{n \times m}$</span>, <span class="katex-inline">$W \in \mathbb{R}^{n \times n}$</span>:<br />
+  1. <span class="katex-inline">$\frac{\partial (a^T X b)}{\partial X} = a b^T \in \mathbb{R}^{m \times n}$</span><br />
+  2. <span class="katex-inline">$\frac{\partial \text{Tr}(A X)}{\partial X} = A^T$</span><br />
+  3. <span class="katex-inline">$\frac{\partial \text{Tr}(X^T A X)}{\partial X} = (A + A^T) X$</span> (for symmetric <span class="katex-inline">$A$</span>: <span class="katex-inline">$2AX$</span>)<br />
+  4. <span class="katex-inline">$\frac{\partial \log \det(W)}{\partial W} = W^{-T} = (W^{-1})^T$</span> (for invertible <span class="katex-inline">$W$</span>)<br />
+  5. <span class="katex-inline">$\frac{\partial \|X\|_F^2}{\partial X} = 2X$</span><br />
+  6. <span class="katex-inline">$\frac{\partial (u^T W v)}{\partial W} = u v^T$</span></p>
+</li>
+</ul>
+<hr />
+<h3 id="heading-7">2.2 Vector-Jacobian Products (VJPs) and Automatic Differentiation</h3>
+<p>In Deep Learning backpropagation (Reverse-Mode Automatic Differentiation), we never materialize the full Jacobian <span class="katex-inline">$J \in \mathbb{R}^{m \times n}$</span> because <span class="katex-inline">$m, n \approx 10^7 - 10^{11}$</span> (e.g. 70B parameter models).</p>
+<p>Instead, reverse-mode autodiff evaluates <strong>Vector-Jacobian Products (VJPs)</strong>:<br />
+Given an incoming adjoint gradient from the downstream loss <span class="katex-inline">$v = \nabla_y \mathcal{L} \in \mathbb{R}^{1 \times m}$</span>:</p>
+<div class="katex-display">$$\nabla_x \mathcal{L} = v \cdot J = v \cdot \frac{\partial y}{\partial x} \in \mathbb{R}^{1 \times n}$$</div>
+
+<pre><code>[Forward Pass]:   x (dim n) ----[ f(x) ]----&gt; y (dim m) ----[ Loss L ]----&gt; Scalar Loss
+[Backward Pass]:  v·J (dim n) &lt;---[ VJP ]--- v = ∂L/∂y &lt;---[ Adjoint ]---
+</code></pre>
+<ul>
+<li><strong>Computational Complexity</strong>:</li>
+<li>Forward Evaluation: <span class="katex-inline">$O(T)$</span> FLOPs where <span class="katex-inline">$T$</span> is the number of operations in the computational graph.</li>
+<li>VJP Evaluation: Guaranteed by Baur-Strassen Theorem to take at most <span class="katex-inline">$c \cdot O(T)$</span> FLOPs, where constant <span class="katex-inline">$c \leq 5$</span>.</li>
+</ul>
+<hr />
+<h2 id="heading-8">3. Probability &amp; Information Theory</h2>
+<h3 id="heading-9">3.1 Random Variables, Expectations, and Covariance</h3>
+<p>Let <span class="katex-inline">$X \in \mathbb{R}^d$</span> be a continuous random vector with probability density function <span class="katex-inline">$p(x)$</span>.<br />
+- <strong>Expectation</strong>: <span class="katex-inline">$\mathbb{E}[X] = \int x p(x) dx \in \mathbb{R}^d$</span><br />
+- <strong>Covariance Matrix</strong>:<br />
+  <div class="katex-display">$$\text{Cov}(X) = \Sigma = \mathbb{E}[(X - \mathbb{E}[X])(X - \mathbb{E}[X])^T] = \mathbb{E}[X X^T] - \mathbb{E}[X]\mathbb{E}[X]^T \in \mathbb{R}^{d \times d}$$</div></p>
+<ul>
+<li><strong>Properties of Covariance</strong>:<br />
+  1. <span class="katex-inline">$\Sigma$</span> is symmetric: <span class="katex-inline">$\Sigma = \Sigma^T$</span>.<br />
+  2. <span class="katex-inline">$\Sigma$</span> is positive semi-definite: <span class="katex-inline">$v^T \Sigma v = \text{Var}(v^T X) \geq 0$</span> for all <span class="katex-inline">$v \in \mathbb{R}^d$</span>.<br />
+  3. Linear transformation: If <span class="katex-inline">$Y = A X + b$</span>, then <span class="katex-inline">$\text{Cov}(Y) = A \text{Cov}(X) A^T$</span>.</li>
+</ul>
+<hr />
+<h3 id="heading-10">3.2 Maximum Likelihood Estimation (MLE) vs. Maximum A Posteriori (MAP)</h3>
+<p>Given an observed dataset <span class="katex-inline">$\mathcal{D} = \{x_1, x_2, \dots, x_N\}$</span> drawn i.i.d. from a parameterized distribution <span class="katex-inline">$p(x | \theta)$</span>:</p>
+<ul>
+<li><strong>Maximum Likelihood Estimation (MLE)</strong>:<br />
+  <div class="katex-display">$$\hat{\theta}_{\text{MLE}} = \arg\max_\theta \prod_{i=1}^N p(x_i | \theta) = \arg\max_\theta \sum_{i=1}^N \log p(x_i | \theta) = \arg\min_\theta -\sum_{i=1}^N \log p(x_i | \theta)$$</div></li>
+</ul>
+<p><em>Equivalence</em>: Minimizing Negative Log-Likelihood (NLL) is mathematically identical to minimizing the empirical Cross-Entropy between the true empirical data distribution <span class="katex-inline">$\hat{p}_{\text{data}}$</span> and the model distribution <span class="katex-inline">$p_\theta$</span>.</p>
+<ul>
+<li><strong>Maximum A Posteriori (MAP)</strong>:<br />
+  Incorporating a prior distribution over parameters <span class="katex-inline">$p(\theta)$</span> via Bayes' Theorem:<br />
+  <div class="katex-display">$$p(\theta | \mathcal{D}) = \frac{p(\mathcal{D} | \theta) p(\theta)}{p(\mathcal{D})} \propto p(\mathcal{D} | \theta) p(\theta)$$</div></li>
+</ul>
+<div class="katex-display">$$\hat{\theta}_{\text{MAP}} = \arg\max_\theta \left[ \sum_{i=1}^N \log p(x_i | \theta) + \log p(\theta) \right] = \arg\min_\theta \left[ -\sum_{i=1}^N \log p(x_i | \theta) - \log p(\theta) \right]$$</div>
+
+<ul>
+<li><strong>Exact Equivalence with Regularization</strong>:<br />
+  1. <strong>Gaussian Prior</strong>: If <span class="katex-inline">$\theta \sim \mathcal{N}(0, \sigma_0^2 I)$</span>, then <span class="katex-inline">$-\log p(\theta) = \frac{1}{2\sigma_0^2} \|\theta\|_2^2 + \text{const} \implies \mathbf{L_2 \text{ Regularization (Weight Decay)}}$</span>.<br />
+  2. <strong>Laplace Prior</strong>: If <span class="katex-inline">$\theta_j \sim \text{Laplace}(0, b)$</span>, then <span class="katex-inline">$-\log p(\theta) = \frac{1}{b} \|\theta\|_1 + \text{const} \implies \mathbf{L_1 \text{ Regularization (Lasso / Sparsity)}}$</span>.</li>
+</ul>
+<hr />
+<h3 id="heading-11">3.3 Information Measures: Entropy, Cross-Entropy, and KL Divergence</h3>
+<p>Let <span class="katex-inline">$P$</span> and <span class="katex-inline">$Q$</span> be discrete probability distributions over a discrete support <span class="katex-inline">$\mathcal{X}$</span>.</p>
+<pre><code>               ┌───────────────────────────────────────────────┐
+               │         Cross-Entropy H(P, Q)                 │
+               │  = - \sum P(x) \log Q(x)                      │
+               └───────────────────────┬───────────────────────┘
+                                       │
+                   ┌───────────────────┴───────────────────┐
+                   ▼                                       ▼
+    ┌─────────────────────────────┐         ┌─────────────────────────────┐
+    │     Shannon Entropy H(P)    │    +    │    KL Divergence D_KL(P||Q) │
+    │   = - \sum P(x) \log P(x)   │         │  = \sum P(x) \log(P(x)/Q(x))│
+    └─────────────────────────────┘         └─────────────────────────────┘
+</code></pre>
+<h4>Mathematical Definitions:</h4>
+<ol>
+<li>
+<p><strong>Shannon Entropy</strong> (Information content / uncertainty of <span class="katex-inline">$P$</span>):<br />
+   <div class="katex-display">$$H(P) = -\sum_{x \in \mathcal{X}} P(x) \log_2 P(x) = \mathbb{E}_{x \sim P}\left[\log_2 \frac{1}{P(x)}\right]$$</div></p>
+</li>
+<li>
+<p><strong>Kullback-Leibler (KL) Divergence</strong> (Relative entropy / information lost when <span class="katex-inline">$Q$</span> approximates <span class="katex-inline">$P$</span>):<br />
+   <div class="katex-display">$$D_{KL}(P \parallel Q) = \sum_{x \in \mathcal{X}} P(x) \log \left( \frac{P(x)}{Q(x)} \right) = \mathbb{E}_{x \sim P}\left[ \log \frac{P(x)}{Q(x)} \right]$$</div></p>
+</li>
+<li>
+<p><strong>Cross-Entropy</strong>:<br />
+   <div class="katex-display">$$H(P, Q) = -\sum_{x \in \mathcal{X}} P(x) \log Q(x) = H(P) + D_{KL}(P \parallel Q)$$</div>
+</p>
+</li>
+</ol>
+<h4>Fundamental Properties of KL Divergence:</h4>
+<ul>
+<li><strong>Non-negativity (Gibbs' Inequality)</strong>:<br />
+  <div class="katex-display">$$D_{KL}(P \parallel Q) \geq 0 \quad \text{with equality } \iff P = Q \text{ almost everywhere.}$$</div></li>
+</ul>
+<p><em>Proof via Jensen's Inequality</em>: Since <span class="katex-inline">$-\log(t)$</span> is strictly convex:<br />
+  <div class="katex-display">$$D_{KL}(P \parallel Q) = \mathbb{E}_{x \sim P}\left[ -\log \frac{Q(x)}{P(x)} \right] \geq -\log \left( \mathbb{E}_{x \sim P}\left[ \frac{Q(x)}{P(x)} \right] \right) = -\log \left( \sum_{x} P(x) \frac{Q(x)}{P(x)} \right) = -\log(1) = 0$$</div>
+</p>
+<ul>
+<li><strong>Asymmetry</strong>: <span class="katex-inline">$D_{KL}(P \parallel Q) \neq D_{KL}(Q \parallel P)$</span></li>
+<li><strong>Forward KL (<span class="katex-inline">$D_{KL}(P_{\text{true}} \parallel Q_\theta)$</span>) — Mode Covering / Zero-Avoiding</strong>:<br />
+    If <span class="katex-inline">$P(x) &gt; 0$</span>, <span class="katex-inline">$Q(x)$</span> must be <span class="katex-inline">$&gt; 0$</span> to avoid infinite penalty. <span class="katex-inline">$Q_\theta$</span> averages over all modes of <span class="katex-inline">$P$</span>. (Used in Maximum Likelihood &amp; Standard SFT).</li>
+<li><strong>Reverse KL (<span class="katex-inline">$D_{KL}(Q_\theta \parallel P_{\text{true}})$</span>) — Mode Seeking / Zero-Forcing</strong>:<br />
+    If <span class="katex-inline">$P(x) = 0$</span>, <span class="katex-inline">$Q_\theta(x)$</span> is forced to <span class="katex-inline">$0$</span>. <span class="katex-inline">$Q_\theta$</span> locks onto a single high-probability mode of <span class="katex-inline">$P$</span> and drops the rest. (Used in RLHF, Policy Gradients, and Distillation).</li>
+</ul>
+<pre><code>Forward KL:  P(x) [Multi-modal]   --&gt; Q(x) stretches across ALL modes (blurry/safe)
+Reverse KL:  P(x) [Multi-modal]   --&gt; Q(x) concentrates on ONE sharp mode
+</code></pre>
+<hr />
+<h3 id="heading-12">3.4 Perplexity and Sequence Likelihood</h3>
+<p>For an autoregressive language model generating a token sequence <span class="katex-inline">$X = (x_1, x_2, \dots, x_T)$</span>:<br />
+The sequence probability factorizes by the probability chain rule:</p>
+<div class="katex-display">$$P_\theta(X) = \prod_{t=1}^T P_\theta(x_t \mid x_{&lt;t})$$</div>
+
+<p>The <strong>Perplexity (PPL)</strong> of the sequence is the exponentiated average negative log-likelihood per token:</p>
+<div class="katex-display">$$\text{PPL}(X) = \exp \left( -\frac{1}{T} \sum_{t=1}^T \log P_\theta(x_t \mid x_{&lt;t}) \right) = \left( \prod_{t=1}^T \frac{1}{P_\theta(x_t \mid x_{&lt;t})} \right)^{1/T} = 2^{H(\hat{P}_{\text{data}}, P_\theta)}$$</div>
+
+<p><em>Interpretation</em>: A perplexity of <span class="katex-inline">$K$</span> means the model is as uncertain at each step as choosing uniformly among <span class="katex-inline">$K$</span> discrete tokens.</p>
+<hr />
+<h2 id="heading-13">4. Optimization Theory &amp; Loss Landscapes</h2>
+<h3 id="heading-14">4.1 Gradient Descent Dynamics &amp; The Conditioning Number</h3>
+<p>Let <span class="katex-inline">$f: \mathbb{R}^d \to \mathbb{R}$</span> be twice continuously differentiable. The second-order Taylor expansion around <span class="katex-inline">$\theta_t$</span>:</p>
+<div class="katex-display">$$f(\theta) \approx f(\theta_t) + \nabla f(\theta_t)^T (\theta - \theta_t) + \frac{1}{2} (\theta - \theta_t)^T H (\theta - \theta_t)$$</div>
+<p>where <span class="katex-inline">$H = \nabla^2 f(\theta_t)$</span> is the Hessian matrix.</p>
+<ul>
+<li><strong>Lipschitz Smoothness</strong>:<br />
+  A function <span class="katex-inline">$f$</span> is <span class="katex-inline">$L$</span>-smooth if <span class="katex-inline">$\|\nabla f(x) - \nabla f(y)\|_2 \leq L \|x - y\|_2$</span>, which implies:<br />
+  <div class="katex-display">$$\lambda_{\max}(\nabla^2 f(x)) \leq L \quad \forall x$$</div></li>
+</ul>
+<p>Under <span class="katex-inline">$L$</span>-smoothness, standard gradient descent <span class="katex-inline">$\theta_{t+1} = \theta_t - \eta \nabla f(\theta_t)$</span> converges if learning rate <span class="katex-inline">$\eta &lt; \frac{2}{L}$</span>.</p>
+<ul>
+<li>
+<p><strong>Condition Number of the Hessian</strong>:<br />
+  <div class="katex-display">$$\kappa = \frac{\lambda_{\max}(H)}{\lambda_{\min}(H)}$$</div></p>
+</li>
+<li>
+<p><strong>Well-conditioned (<span class="katex-inline">$\kappa \approx 1$</span>)</strong>: Loss contours are spherical. Gradient points directly toward the global minimum.</p>
+</li>
+<li><strong>Ill-conditioned (<span class="katex-inline">$\kappa \gg 1$</span>)</strong>: Loss contours are elongated ravines. Standard gradient descent oscillates violently across the steep direction while making negligible progress along the flat direction.</li>
+</ul>
+<pre><code>       Ill-Conditioned Landscape (κ &gt;&gt; 1):
+       ▲
+       │      \      /           Oscillations across steep direction (λ_max)
+       │       \    /   ▲  ▲
+       │        \  /    │  │     Very slow progress along flat canyon (λ_min)
+       │         \/     ▼  ▼
+       └────────────────────────►
+</code></pre>
+<hr />
+<h3 id="heading-15">4.2 First-Order Optimizers: Momentum, Adam, and AdamW</h3>
+<h4>1. Stochastic Gradient Descent with Polyak Momentum:</h4>
+<p>Accumulates an exponentially decaying moving average of past gradients to cancel orthogonal oscillations:</p>
+<div class="katex-display">$$v_{t+1} = \beta v_t + g_t \quad (\beta \in [0.9, 0.99])$$</div>
+<div class="katex-display">$$\theta_{t+1} = \theta_t - \eta v_{t+1}$$</div>
+
+<h4>2. Adaptive Moment Estimation (Adam):</h4>
+<p>Maintains running estimates of both the uncentered mean (<span class="katex-inline">$m_t$</span>) and uncentered variance (<span class="katex-inline">$v_t$</span>) of the gradients:</p>
+<div class="katex-display">$$g_t = \nabla_\theta \mathcal{L}(\theta_t)$$</div>
+<div class="katex-display">$$m_t = \beta_1 m_{t-1} + (1 - \beta_1) g_t \quad \text{(First Moment: Mean)}$$</div>
+<div class="katex-display">$$v_t = \beta_2 v_{t-1} + (1 - \beta_2) g_t^2 \quad \text{(Second Moment: Uncentered Variance)}$$</div>
+
+<ul>
+<li><strong>Bias Correction Derivation</strong>:<br />
+  Expanding <span class="katex-inline">$m_t$</span> assuming <span class="katex-inline">$g_i$</span> come from a stationary distribution with mean <span class="katex-inline">$\mathbb{E}[g]$</span>:<br />
+  <div class="katex-display">$$m_t = (1 - \beta_1) \sum_{i=1}^t \beta_1^{t-i} g_i \implies \mathbb{E}[m_t] = \mathbb{E}[g] (1 - \beta_1) \sum_{i=1}^t \beta_1^{t-i} = \mathbb{E}[g] (1 - \beta_1) \frac{1 - \beta_1^t}{1 - \beta_1} = \mathbb{E}[g] (1 - \beta_1^t)$$</div></li>
+</ul>
+<p>Therefore, the unbiased estimators are:<br />
+  <div class="katex-display">$$\hat{m}_t = \frac{m_t}{1 - \beta_1^t}, \quad \hat{v}_t = \frac{v_t}{1 - \beta_2^t}$$</div>
+</p>
+<ul>
+<li><strong>Adam Update Rule</strong>:<br />
+  <div class="katex-display">$$\theta_{t+1} = \theta_t - \frac{\eta}{\sqrt{\hat{v}_t} + \epsilon} \hat{m}_t$$</div>
+</li>
+</ul>
+<hr />
+<h3 id="heading-16">4.3 The Critical Mathematical Difference: <span class="katex-inline">$L_2$</span> Regularization vs. AdamW (Decoupled Weight Decay)</h3>
+<p>In standard SGD, <span class="katex-inline">$L_2$</span> regularization <span class="katex-inline">$\mathcal{L}_{\text{reg}}(\theta) = \mathcal{L}(\theta) + \frac{\lambda}{2} \|\theta\|_2^2$</span> is mathematically equivalent to weight decay:</p>
+<div class="katex-display">$$\nabla_\theta \mathcal{L}_{\text{reg}}(\theta) = \nabla \mathcal{L}(\theta) + \lambda \theta \implies \theta_{t+1} = \theta_t - \eta (\nabla \mathcal{L}(\theta_t) + \lambda \theta_t) = (1 - \eta \lambda)\theta_t - \eta \nabla \mathcal{L}(\theta_t)$$</div>
+
+<h4>The Failure of <span class="katex-inline">$L_2$</span> Regularization in Adaptive Optimizers (Adam):</h4>
+<p>When adding <span class="katex-inline">$L_2$</span> regularization to Adam:</p>
+<div class="katex-display">$$g_t^{\text{reg}} = g_t + \lambda \theta_t$$</div>
+<p>The gradient <span class="katex-inline">$g_t^{\text{reg}}$</span> enters the second-moment estimator <span class="katex-inline">$v_t$</span>:</p>
+<div class="katex-display">$$v_t = \beta_2 v_{t-1} + (1 - \beta_2)(g_t + \lambda \theta_t)^2$$</div>
+<p>The parameter update becomes:</p>
+<div class="katex-display">$$\theta_{t+1} = \theta_t - \frac{\eta}{\sqrt{\hat{v}_t^{\text{reg}}} + \epsilon} \hat{m}_t^{\text{reg}} \approx \theta_t - \frac{\eta \lambda}{\sqrt{\hat{v}_t^{\text{reg}}}} \theta_t - \frac{\eta}{\sqrt{\hat{v}_t^{\text{reg}}}} \hat{m}_t$$</div>
+
+<p><strong>The Flaw</strong>: Parameters with massive historical gradients have large <span class="katex-inline">$\hat{v}_t$</span>, meaning their effective weight decay rate <span class="katex-inline">$\frac{\eta \lambda}{\sqrt{\hat{v}_t}}$</span> is drastically suppressed. Conversely, parameters with tiny or infrequent gradients receive disproportionately large weight decay.</p>
+<h4>The AdamW Solution (Loshchilov &amp; Hutter):</h4>
+<p>Decouple weight decay completely from the gradient moment updates:</p>
+<div class="katex-display">$$m_t = \beta_1 m_{t-1} + (1 - \beta_1) g_t$$</div>
+<div class="katex-display">$$v_t = \beta_2 v_{t-1} + (1 - \beta_2) g_t^2$$</div>
+<div class="katex-display">$$\hat{m}_t = \frac{m_t}{1 - \beta_1^t}, \quad \hat{v}_t = \frac{v_t}{1 - \beta_2^t}$$</div>
+<div class="katex-display">$$\theta_{t+1} = \theta_t - \eta \lambda \theta_t - \frac{\eta}{\sqrt{\hat{v}_t} + \epsilon} \hat{m}_t$$</div>
+
+<p><em>Production Implication</em>: Every modern LLM (LLaMA-3, Mistral, DeepSeek, GPT-4) uses AdamW exclusively.</p>
+<hr />
+<h3 id="heading-17">4.4 Learning Rate Schedules: Warmup and Cosine Decay</h3>
+<h4>Mathematical Formulation:</h4>
+<p>Given initial learning rate <span class="katex-inline">$\eta_{\max}$</span>, minimum learning rate <span class="katex-inline">$\eta_{\min}$</span>, warmup steps <span class="katex-inline">$T_{\text{warmup}}$</span>, and total training steps <span class="katex-inline">$T_{\text{total}}$</span>:</p>
+<div class="katex-display">$$\eta(t) = \begin{cases} \eta_{\max} \cdot \frac{t}{T_{\text{warmup}}} &amp; \text{if } t \leq T_{\text{warmup}} \\ \eta_{\min} + \frac{1}{2}(\eta_{\max} - \eta_{\min}) \left( 1 + \cos\left( \pi \frac{t - T_{\text{warmup}}}{T_{\text{total}} - T_{\text{warmup}}} \right) \right) &amp; \text{if } T_{\text{warmup}} &lt; t \leq T_{\text{total}} \end{cases}$$</div>
+
+<h4>Why Warmup is Mathematically Mandatory:</h4>
+<p>At step <span class="katex-inline">$t=1$</span>, the second moment vector <span class="katex-inline">$v_0 = 0$</span>. In early iterations (<span class="katex-inline">$t &lt; 100$</span>), the variance estimate <span class="katex-inline">$\hat{v}_t$</span> is uncalibrated and noisy. Dividing by <span class="katex-inline">$\sqrt{\hat{v}_t}$</span> results in huge, erratic updates in arbitrary directions that destroy pre-trained features or cause loss explosion. Warmup constrains step sizes until the second-moment moving average stabilizes.</p>
+<hr />
+<h2 id="heading-18">5. Mathematical Summary Cheat Sheet for Interviews</h2>
+<table>
+<thead>
+<tr>
+<th style="text-align: left;">Mathematical Concept</th>
+<th style="text-align: left;">Core Equation / Formulation</th>
+<th style="text-align: left;">Primary ML Application</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td style="text-align: left;"><strong>Eckart-Young Theorem</strong></td>
+<td style="text-align: left;"><span class="katex-inline">$\min_{\text{rank}(B)\leq k} \|A - B\|_F = \sqrt{\sum_{i=k+1}^r \sigma_i^2}$</span></td>
+<td style="text-align: left;">LoRA, MLA KV-Compression, SVD Pruning</td>
+</tr>
+<tr>
+<td style="text-align: left;"><strong>Negative Log-Likelihood</strong></td>
+<td style="text-align: left;"><span class="katex-inline">$\mathcal{L}_{\text{NLL}}(\theta) = -\sum_{t=1}^T \log P_\theta(x_t \mid x_{&lt;t})$</span></td>
+<td style="text-align: left;">Autoregressive Next-Token Prediction</td>
+</tr>
+<tr>
+<td style="text-align: left;"><strong>KL Divergence</strong></td>
+<td style="text-align: left;"><span class="katex-inline">$D_{KL}(P \parallel Q) = \sum P(x) \log \frac{P(x)}{Q(x)}$</span></td>
+<td style="text-align: left;">Distribution Drift, RLHF KL Penalties, DPO</td>
+</tr>
+<tr>
+<td style="text-align: left;"><strong>Reverse KL</strong></td>
+<td style="text-align: left;"><span class="katex-inline">$D_{KL}(Q_\theta \parallel P_{\text{true}})$</span></td>
+<td style="text-align: left;">Policy Gradient RL, Distillation (Mode Seeking)</td>
+</tr>
+<tr>
+<td style="text-align: left;"><strong>Perplexity</strong></td>
+<td style="text-align: left;"><span class="katex-inline">$\text{PPL} = \exp\left(-\frac{1}{T} \sum_{t=1}^T \log P_\theta(x_t \mid x_{&lt;t})\right)$</span></td>
+<td style="text-align: left;">Model Quality &amp; Validation Metric</td>
+</tr>
+<tr>
+<td style="text-align: left;"><strong>AdamW Update</strong></td>
+<td style="text-align: left;"><span class="katex-inline">$\theta_{t+1} = (1 - \eta \lambda)\theta_t - \frac{\eta}{\sqrt{\hat{v}_t}+\epsilon} \hat{m}_t$</span></td>
+<td style="text-align: left;">Standard LLM Pre-training &amp; Fine-tuning Optimizer</td>
+</tr>
+<tr>
+<td style="text-align: left;"><strong>Condition Number</strong></td>
+<td style="text-align: left;"><span class="katex-inline">$\kappa = \lambda_{\max}(H) / \lambda_{\min}(H)$</span></td>
+<td style="text-align: left;">Loss Landscape Curvature &amp; Convergence Speed</td>
+</tr>
+<tr>
+<td style="text-align: left;"><strong>Cosine LR Decay</strong></td>
+<td style="text-align: left;"><span class="katex-inline">$\eta(t) = \eta_{\min} + \frac{1}{2}(\eta_{\max}-\eta_{\min})(1 + \cos(\pi \frac{t}{T}))$</span></td>
+<td style="text-align: left;">LLM Learning Rate Annealing Schedule</td>
+</tr>
+</tbody>
+</table>
+        
+        <!-- Navigation Footer -->
+        <div class="doc-nav-footer">
+          
+        <a href="00_ROLE_ANALYSIS.html" class="doc-nav-btn">
+          <span class="label">← Previous</span>
+          <span class="title">00_ROLE_ANALYSIS</span>
+        </a>
+        
+          
+        <a href="02_03_ML_AND_DL_FOUNDATIONS.html" class="doc-nav-btn" style="text-align: right;">
+          <span class="label">Next →</span>
+          <span class="title">02_03_ML_AND_DL_FOUNDATIONS</span>
+        </a>
+        
+        </div>
+      </article>
+
+      <aside class="toc-sidebar">
+        <div class="toc-title">On This Page</div>
+        <ul class="toc-list">
+          
+        <li class="toc-item">
+          <a href="#heading-0" class="toc-link">Linear Algebra &amp; Matrix Decompositions</a>
+        </li>
+        
+        <li class="toc-item h3">
+          <a href="#heading-1" class="toc-link">Vector Spaces, Projections, and Orthogonality</a>
+        </li>
+        
+        <li class="toc-item h3">
+          <a href="#heading-2" class="toc-link">Spectral Theorem and Eigendecomposition</a>
+        </li>
+        
+        <li class="toc-item h3">
+          <a href="#heading-3" class="toc-link">Singular Value Decomposition (SVD)</a>
+        </li>
+        
+        <li class="toc-item h3">
+          <a href="#heading-4" class="toc-link">Low-Rank Approximation &amp; The Eckart-Young-Mirsky Theorem</a>
+        </li>
+        
+        <li class="toc-item">
+          <a href="#heading-5" class="toc-link">Multivariate Calculus &amp; Computational Graphs</a>
+        </li>
+        
+        <li class="toc-item h3">
+          <a href="#heading-6" class="toc-link">Jacobians, Hessians, and Matrix Derivatives</a>
+        </li>
+        
+        <li class="toc-item h3">
+          <a href="#heading-7" class="toc-link">Vector-Jacobian Products (VJPs) and Automatic Differentiation</a>
+        </li>
+        
+        <li class="toc-item">
+          <a href="#heading-8" class="toc-link">Probability &amp; Information Theory</a>
+        </li>
+        
+        <li class="toc-item h3">
+          <a href="#heading-9" class="toc-link">Random Variables, Expectations, and Covariance</a>
+        </li>
+        
+        <li class="toc-item h3">
+          <a href="#heading-10" class="toc-link">Maximum Likelihood Estimation (MLE) vs. Maximum A Posteriori (MAP)</a>
+        </li>
+        
+        <li class="toc-item h3">
+          <a href="#heading-11" class="toc-link">Information Measures: Entropy, Cross-Entropy, and KL Divergence</a>
+        </li>
+        
+        <li class="toc-item h3">
+          <a href="#heading-12" class="toc-link">Perplexity and Sequence Likelihood</a>
+        </li>
+        
+        <li class="toc-item">
+          <a href="#heading-13" class="toc-link">Optimization Theory &amp; Loss Landscapes</a>
+        </li>
+        
+        <li class="toc-item h3">
+          <a href="#heading-14" class="toc-link">Gradient Descent Dynamics &amp; The Conditioning Number</a>
+        </li>
+        
+        <li class="toc-item h3">
+          <a href="#heading-15" class="toc-link">First-Order Optimizers: Momentum, Adam, and AdamW</a>
+        </li>
+        
+        <li class="toc-item h3">
+          <a href="#heading-16" class="toc-link">The Critical Mathematical Difference: $L_2$ Regularization vs. AdamW (Decoupled Weight Decay)</a>
+        </li>
+        
+        <li class="toc-item h3">
+          <a href="#heading-17" class="toc-link">Learning Rate Schedules: Warmup and Cosine Decay</a>
+        </li>
+        
+        <li class="toc-item">
+          <a href="#heading-18" class="toc-link">Mathematical Summary Cheat Sheet for Interviews</a>
+        </li>
+        
+        </ul>
+      </aside>
+    </div>
+  </main>
+
+  <script>
+    // Search filter for sidebar
+    document.getElementById('searchInput').addEventListener('input', (e) => {
+      const query = e.target.value.toLowerCase();
+      document.querySelectorAll('.nav-item').forEach(item => {
+        const text = item.textContent.toLowerCase();
+        item.style.display = text.includes(query) ? 'flex' : 'none';
+      });
+    });
+
+    // Initialize KaTeX, Prism, and Mermaid on static DOM
+    document.addEventListener('DOMContentLoaded', () => {
+      // 1. KaTeX Math Render
+      try {
+        if (typeof renderMathInElement !== 'undefined') {
+          renderMathInElement(document.getElementById('docContent'), {
+            delimiters: [
+              { left: '$$', right: '$$', display: true },
+              { left: '$', right: '$', display: false }
+            ],
+            throwOnError: false
+          });
+        }
+      } catch (e) {
+        console.warn('KaTeX render error:', e);
+      }
+
+      // 2. Prism Code Highlight
+      try {
+        if (typeof Prism !== 'undefined') {
+          Prism.highlightAll();
+        }
+      } catch (e) {
+        console.warn('Prism highlight error:', e);
+      }
+
+      // 3. Mermaid Diagrams Render
+      try {
+        if (typeof mermaid !== 'undefined') {
+          mermaid.initialize({ startOnLoad: true, theme: 'dark', securityLevel: 'loose' });
+        }
+      } catch (e) {
+        console.warn('Mermaid render error:', e);
+      }
+    });
+  </script>
+</body>
+</html>

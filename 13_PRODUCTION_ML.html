@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>00_ROLE_ANALYSIS — ML Engineer (SSK)</title>
+  <title>13_PRODUCTION_ML — ML Engineer (SSK)</title>
   
   <!-- Fonts -->
   <link rel="preconnect" href="https://fonts.googleapis.com">
@@ -513,7 +513,7 @@
     <ul class="nav-list" id="navList">
       <li class="nav-phase-header">Phase 0: Architecture</li>
         <li>
-          <a href="00_ROLE_ANALYSIS.html" class="nav-item active">
+          <a href="00_ROLE_ANALYSIS.html" class="nav-item">
             <span>00_ROLE_ANALYSIS</span>
             <span class="priority-badge priority-p1">P1</span>
           </a>
@@ -611,7 +611,7 @@
         </li>
         
         <li>
-          <a href="13_PRODUCTION_ML.html" class="nav-item">
+          <a href="13_PRODUCTION_ML.html" class="nav-item active">
             <span>13_PRODUCTION_ML</span>
             <span class="priority-badge priority-p1">P1</span>
           </a>
@@ -682,9 +682,9 @@
       <div class="breadcrumbs">
         <a href="index.html">Curriculum</a>
         <span>/</span>
-        <span>Phase 0: Architecture</span>
+        <span>Phase 7: Production & MLOps</span>
         <span>/</span>
-        <span class="current">00_ROLE_ANALYSIS</span>
+        <span class="current">13_PRODUCTION_ML</span>
       </div>
       <div class="tool-actions">
         <button class="btn" onclick="window.print()">🖨️ Print / PDF</button>
@@ -693,167 +693,146 @@
 
     <div class="content-container">
       <article class="markdown-body" id="docContent">
-        <h1>00_ROLE_ANALYSIS — ML Engineer (LLM &amp; Agentic Systems)</h1>
-<h2 id="heading-0">1. Role Context &amp; Core Hypothesis</h2>
-<p><strong>Role Context:</strong> This role targets building a proactive AI assistant that executes real-world tasks, performs multi-step reasoning, interacts with external tools, and handles long-running workflows with high reliability under production constraints.</p>
-<p><strong>Core Interview Hypothesis:</strong> "Can this candidate take an ML/LLM research idea, turn it into a trainable system, adapt it effectively, deploy it efficiently, integrate it into an agentic product, measure whether it actually works, debug it in production, and continuously improve it under latency, cost, reliability, and safety constraints?"</p>
-<p>The ML execution layer sits exactly at the boundary of Research, Systems Engineering, and Product Outcomes. The candidate must span these seamlessly.</p>
+        <h1>13_PRODUCTION_ML — Mathematical &amp; MLOps Engineering Reference</h1>
+<blockquote>
+<p><strong>Audience</strong>: ML Engineers, LLM Systems Engineers, and AI Researchers preparing for senior/principal technical interviews.<br />
+<strong>Core Objective</strong>: Provide an exhaustive reference on production machine learning and MLOps — covering mathematical drift detection (PSI, KL Divergence, KS Test), safe rollout architectures (Canary, Shadow, Blue-Green), session pinning during rolling deployments, and automated CI/CD model promotion pipelines.</p>
+</blockquote>
 <hr />
-<h2 id="heading-1">2. Role Decomposition</h2>
-<h3 id="heading-2">Explicit Technical Requirements</h3>
+<h2 id="heading-0">1. Mathematical Foundations of Distribution Drift Detection</h2>
+<p>In production, user queries and data distributions change continuously over time (Covariate Shift: <span class="katex-inline">$P(X)$</span> changes while <span class="katex-inline">$P(Y \mid X)$</span> remains fixed; Concept Drift: <span class="katex-inline">$P(Y \mid X)$</span> changes).</p>
+<pre><code>Training Distribution P_train(X) ────────► Model Frozen
+                                               │
+                                               ▼
+Production Distribution P_prod(X) ───────► Measure Drift: PSI, KL Divergence, KS-Test
+                                               │
+                                               ▼ (If PSI &gt; 0.25)
+                                          Trigger Automated Retraining Pipeline
+</code></pre>
+<h3 id="heading-1">1.1 Population Stability Index (PSI)</h3>
+<p>Let the continuous feature or token distribution be binned into <span class="katex-inline">$K$</span> discrete quantile buckets.<br />
+Let <span class="katex-inline">$E_i$</span> be the expected proportion of samples in bucket <span class="katex-inline">$i$</span> from the baseline/training distribution (<span class="katex-inline">$P$</span>), and <span class="katex-inline">$A_i$</span> be the actual proportion of samples in bucket <span class="katex-inline">$i$</span> from production (<span class="katex-inline">$Q$</span>).</p>
+<div class="katex-display">$$\mathbf{\text{PSI} = \sum_{i=1}^K (A_i - E_i) \cdot \ln\left( \frac{A_i}{E_i} \right)}$$</div>
+
+<h4>Mathematical Properties of PSI:</h4>
 <ul>
-<li>Python, PyTorch, CUDA, Triton</li>
-<li>GPU-based training and inference architecture (vLLM, SGLang, Megatron-LM, FSDP-2)</li>
-<li>SFT, LoRA, QLoRA, DPO, GRPO (Reasoning Models)</li>
-<li>Data pipelines (MinHash LSH, Synthetic data curation, Decontamination)</li>
-<li>Evaluation systems (SWE-bench, GAIA, Statistical significance) and latency/cost optimization</li>
-</ul>
-<h3 id="heading-3">Implicit Technical Requirements</h3>
-<ul>
-<li><strong>Hardware/Software Co-design Awareness</strong>: Understanding how PyTorch ops map to CUDA kernels, SRAM tiling, and memory bandwidth bounds.</li>
-<li><strong>Probabilistic Engineering</strong>: Building deterministic, reliable long-running workflows on top of inherently non-deterministic LLM behavior.</li>
-</ul>
-<h3 id="heading-4">Staff/Principal-Level Requirements</h3>
-<ul>
-<li><strong>Architectural Judgment</strong>: Knowing when to use full fine-tuning vs. LoRA vs. Prompt Engineering vs. Distillation vs. GRPO based on data scale and latency budgets.</li>
-<li><strong>Incident Leadership</strong>: Ability to trace a 99th percentile (P99) latency spike from the network layer down to KV-cache fragmentation on a specific GPU.</li>
+<li>Each term <span class="katex-inline">$(A_i - E_i) \ln(A_i / E_i) \geq 0$</span> because if <span class="katex-inline">$A_i &gt; E_i$</span>, then <span class="katex-inline">$\ln(A_i / E_i) &gt; 0$</span>, and if <span class="katex-inline">$A_i &lt; E_i$</span>, then <span class="katex-inline">$\ln(A_i / E_i) &lt; 0$</span>.</li>
+<li><strong>Symmetric Metric</strong>: PSI represents the symmetric KL divergence: <span class="katex-inline">$\text{PSI} = D_{KL}(A \parallel E) + D_{KL}(E \parallel A)$</span>.</li>
+<li><strong>Standard Industry Thresholds</strong>:</li>
+<li><span class="katex-inline">$\text{PSI} &lt; 0.10$</span>: <strong>No Significant Shift</strong> (Baseline stable).</li>
+<li><span class="katex-inline">$0.10 \leq \text{PSI} &lt; 0.25$</span>: <strong>Moderate Drift</strong> (Warn / Investigate).</li>
+<li><span class="katex-inline">$\text{PSI} \geq 0.25$</span>: <strong>Actionable Severe Drift</strong> (Block canary deployment / Trigger retraining).</li>
 </ul>
 <hr />
-<h2 id="heading-5">3. Role Competency Model &amp; Priority Matrix</h2>
-<table>
-<thead>
-<tr>
-<th style="text-align: center;">Priority</th>
-<th style="text-align: left;">Category</th>
-<th style="text-align: left;">Topics</th>
-<th style="text-align: left;">Files</th>
-</tr>
-</thead>
-<tbody>
-<tr>
-<td style="text-align: center;"><strong>P0</strong></td>
-<td style="text-align: left;"><strong>Agentic ML Systems</strong></td>
-<td style="text-align: left;">ReAct, Tool Routing, Context/Memory, MCP, FSM JSON</td>
-<td style="text-align: left;"><a href="./10_AGENTIC_ML_SYSTEMS.md">10_AGENTIC_ML_SYSTEMS.md</a></td>
-</tr>
-<tr>
-<td style="text-align: center;"><strong>P0</strong></td>
-<td style="text-align: left;"><strong>Long-Running Workflows</strong></td>
-<td style="text-align: left;">Durable State, Temporal, Sagas, Idempotency, Retries</td>
-<td style="text-align: left;"><a href="./11_LONG_RUNNING_WORKFLOW_RELIABILITY.md">11_LONG_RUNNING_WORKFLOW_RELIABILITY.md</a></td>
-</tr>
-<tr>
-<td style="text-align: center;"><strong>P0</strong></td>
-<td style="text-align: left;"><strong>Post-Training &amp; Reasoning</strong></td>
-<td style="text-align: left;">SFT, LoRA, QLoRA, DPO, GRPO, Test-Time Compute</td>
-<td style="text-align: left;"><a href="./05_POST_TRAINING.md">05_POST_TRAINING.md</a></td>
-</tr>
-<tr>
-<td style="text-align: center;"><strong>P0</strong></td>
-<td style="text-align: left;"><strong>LLM &amp; Inference</strong></td>
-<td style="text-align: left;">PagedAttention, RadixAttention, PD Split, Chunked Prefill</td>
-<td style="text-align: left;"><a href="./04_TRANSFORMERS_AND_LLMS.md">04_TRANSFORMERS_AND_LLMS.md</a> · <a href="./09_INFERENCE_SYSTEMS.md">09_INFERENCE_SYSTEMS.md</a></td>
-</tr>
-<tr>
-<td style="text-align: center;"><strong>P0</strong></td>
-<td style="text-align: left;"><strong>GPU Architecture</strong></td>
-<td style="text-align: left;">SMs, SRAM Tiling, FlashAttention-3, Roofline Model</td>
-<td style="text-align: left;"><a href="./08_GPU_AND_PERFORMANCE.md">08_GPU_AND_PERFORMANCE.md</a></td>
-</tr>
-<tr>
-<td style="text-align: center;"><strong>P0</strong></td>
-<td style="text-align: left;"><strong>Evaluation &amp; Reliability</strong></td>
-<td style="text-align: left;">Z-Tests, ELO Ratings, SWE-bench, LLM-as-judge</td>
-<td style="text-align: left;"><a href="./12_EVALUATION.md">12_EVALUATION.md</a></td>
-</tr>
-<tr>
-<td style="text-align: center;"><strong>P1</strong></td>
-<td style="text-align: left;"><strong>Mathematical Foundations</strong></td>
-<td style="text-align: left;">SVD, Low-Rank, Information Theory, AdamW, Optimization</td>
-<td style="text-align: left;"><a href="./01_MATHEMATICAL_FOUNDATIONS.md">01_MATHEMATICAL_FOUNDATIONS.md</a></td>
-</tr>
-<tr>
-<td style="text-align: center;"><strong>P1</strong></td>
-<td style="text-align: left;"><strong>Training Systems</strong></td>
-<td style="text-align: left;">FSDP-2, 3D Parallelism, Context Parallelism, Checkpointing</td>
-<td style="text-align: left;"><a href="./07_TRAINING_SYSTEMS.md">07_TRAINING_SYSTEMS.md</a></td>
-</tr>
-<tr>
-<td style="text-align: center;"><strong>P1</strong></td>
-<td style="text-align: left;"><strong>Data Engineering</strong></td>
-<td style="text-align: left;">MinHash LSH, Model Collapse, Synthetic Curation</td>
-<td style="text-align: left;"><a href="./06_DATA_AND_SYNTHETIC_DATA.md">06_DATA_AND_SYNTHETIC_DATA.md</a></td>
-</tr>
-<tr>
-<td style="text-align: center;"><strong>P1</strong></td>
-<td style="text-align: left;"><strong>Distributed Systems</strong></td>
-<td style="text-align: left;">Ring All-Reduce, GPUDirect RDMA, InfiniBand NDR</td>
-<td style="text-align: left;"><a href="./18_DISTRIBUTED_SYSTEMS.md">18_DISTRIBUTED_SYSTEMS.md</a></td>
-</tr>
-<tr>
-<td style="text-align: center;"><strong>P1</strong></td>
-<td style="text-align: left;"><strong>Observability</strong></td>
-<td style="text-align: left;">Little's Law, MFU, OpenTelemetry Tracing</td>
-<td style="text-align: left;"><a href="./14_OBSERVABILITY_AND_DEBUGGING.md">14_OBSERVABILITY_AND_DEBUGGING.md</a></td>
-</tr>
-<tr>
-<td style="text-align: center;"><strong>P1</strong></td>
-<td style="text-align: left;"><strong>Systems / ML Design</strong></td>
-<td style="text-align: left;">Architecture Trade-offs, Cost/Latency Scaling</td>
-<td style="text-align: left;"><a href="./16_SYSTEM_DESIGN.md">16_SYSTEM_DESIGN.md</a> · <a href="./13_PRODUCTION_ML.md">13_PRODUCTION_ML.md</a></td>
-</tr>
-<tr>
-<td style="text-align: center;"><strong>P1</strong></td>
-<td style="text-align: left;"><strong>Deep Learning</strong></td>
-<td style="text-align: left;">Backpropagation, Softmax Jacobians, LayerNorm/RMSNorm</td>
-<td style="text-align: left;"><a href="./02_03_ML_AND_DL_FOUNDATIONS.md">02_03_ML_AND_DL_FOUNDATIONS.md</a></td>
-</tr>
-<tr>
-<td style="text-align: center;"><strong>P2</strong></td>
-<td style="text-align: left;"><strong>Python &amp; Coding</strong></td>
-<td style="text-align: left;">PyTorch Modules, FSM Parsers, Continuous Batching</td>
-<td style="text-align: left;"><a href="./17_PYTHON_AND_CODING.md">17_PYTHON_AND_CODING.md</a></td>
-</tr>
-</tbody>
-</table>
-<hr />
-<h2 id="heading-6">4. Internal Dependency Graph</h2>
-<div class="mermaid">flowchart TD
-    %% Base Layer
-    Math[&quot;01: Mathematical Foundations (SVD, Info Theory, Optimization)&quot;] --&gt; DL[&quot;02_03: Deep Learning (Backprop, RMSNorm, Loss Landscapes)&quot;]
-    DL --&gt; LLM[&quot;04: Modern LLMs (Attention, RoPE, MLA, MoE)&quot;]
-    
-    %% Hardware &amp; Performance Layer
-    GPU[&quot;08: GPU Architecture &amp; FlashAttention-3&quot;] --&gt; Inf[&quot;09: Inference Systems (PagedAttention, SGLang, PD Split)&quot;]
-    GPU --&gt; TS[&quot;07: Training Systems (FSDP-2, 3D Parallelism)&quot;]
-    Net[&quot;18: Distributed Systems (Ring All-Reduce, RDMA)&quot;] --&gt; TS
-    LLM --&gt; Inf
-    LLM --&gt; TS
-    
-    %% Training &amp; Alignment Layer
-    Data[&quot;06: Data Engineering (MinHash LSH, Synthetic Flywheels)&quot;] --&gt; PT[&quot;05: Post-Training (SFT, LoRA, DPO, GRPO)&quot;]
-    LLM --&gt; PT
-    PT --&gt; Eval[&quot;12: Evaluation (Z-Tests, ELO, SWE-bench)&quot;]
-    
-    %% Serving &amp; Agent Layer
-    Inf --&gt; Agent[&quot;10: Agentic Systems (ReAct, FSM JSON, MCP, Hybrid RAG)&quot;]
-    Agent --&gt; Rel[&quot;11: Long-Running Workflows (Temporal, Sagas, Jitter)&quot;]
-    Rel --&gt; Prod[&quot;13/14/15: Production MLOps, Tracing, Safety Guardrails&quot;]
-    
-    %% Synthesis Layer
-    Prod --&gt; SysDes[&quot;16-22: System Design, Production Code &amp; Playbooks&quot;]</div>
+<h3 id="heading-2">1.2 Two-Sample Kolmogorov-Smirnov (KS) Test</h3>
+<p>For continuous metrics (e.g. prompt token lengths, latency distributions):<br />
+Let <span class="katex-inline">$F_{\text{train}}(x)$</span> and <span class="katex-inline">$F_{\text{prod}}(x)$</span> be empirical cumulative distribution functions (eCDFs).</p>
+<p>The KS statistic <span class="katex-inline">$D$</span> is the supremum distance between the two eCDFs:</p>
+<div class="katex-display">$$\mathbf{D = \sup_x |F_{\text{train}}(x) - F_{\text{prod}}(x)|}$$</div>
+
+<p>Reject the null hypothesis (distributions are identical) at significance level <span class="katex-inline">$\alpha = 0.05$</span> if:</p>
+<div class="katex-display">$$D &gt; c(\alpha) \sqrt{\frac{n_1 + n_2}{n_1 n_2}} \quad \left(c(0.05) = 1.36\right)$$</div>
 
 <hr />
-<h2 id="heading-7">5. Depth Philosophy &amp; Technical Bridge</h2>
-<p>Every document in this Single Source of Knowledge (SSK) follows the <strong>10-Level Depth Framework</strong>, bridging <strong>Mathematics <span class="katex-inline">$\longleftrightarrow$</span> Algorithms <span class="katex-inline">$\longleftrightarrow$</span> GPU Execution <span class="katex-inline">$\longleftrightarrow$</span> Production Systems</strong>.</p>
+<h2 id="heading-3">2. Production Deployment Strategies: Canary, Shadow, and Blue-Green</h2>
+<pre><code>┌─────────────────────────────────────────────────────────────────────────────┐
+│ 1. Blue-Green Deployment: Instant Cutover (100% Blue -&gt; 100% Green)          │
+│    - Zero downtime, but maximum blast radius if Green has a hidden bug!     │
+├─────────────────────────────────────────────────────────────────────────────┤
+│ 2. Canary Deployment: Incremental Traffic Shifting (1% -&gt; 5% -&gt; 25% -&gt; 100%)│
+│    - Minimizes blast radius, monitors P99 latency and error rates online    │
+├─────────────────────────────────────────────────────────────────────────────┤
+│ 3. Shadow / Dark Launch: Dual-Inference (100% Live -&gt; V1, Mirror -&gt; V2)     │
+│    - V2 runs silently on live traffic; outputs compared offline (Zero Risk) │
+└─────────────────────────────────────────────────────────────────────────────┘
+</code></pre>
+<hr />
+<h2 id="heading-4">3. Session Pinning &amp; Affinity Routing in Agentic Systems</h2>
+<p>In multi-step long-running agent workflows:<br />
+If a rolling deployment updates Model V1 to Model V2 while an agent is at Step 3 of a 10-step plan:<br />
+- <strong>The Split-Brain Failure</strong>: Model V2 receives the intermediate context, interprets tool schemas slightly differently, and emits incompatible action arguments, crashing the workflow.</p>
+<h4>The Architectural Solution:</h4>
+<ul>
+<li><strong>Affinity Session Pinning</strong>: The API Gateway inspects the <code>workflow_id</code>.</li>
+<li>Active workflows remain strictly pinned to Model V1 replicas until completion.</li>
+<li>New workflow requests are routed to the Model V2 Canary.</li>
+</ul>
+<pre><code>Incoming Request ──► [ Istio / Envoy Router ]
+                            │
+            ┌───────────────┴───────────────┐
+            ▼ (Existing Workflow ID)         ▼ (New Session)
+    [ Model V1 Replicas ]           [ Model V2 Canary (5%) ]
+    (Pinned until completion)       (Evaluated on new traffic)
+</code></pre>
+<hr />
+<h2 id="heading-5">4. Python Implementation: Population Stability Index (PSI) Calculator</h2>
+<pre><code class="language-python">import numpy as np
+
+def calculate_psi(expected: np.ndarray, actual: np.ndarray, num_buckets: int = 10, eps: float = 1e-4) -&gt; float:
+    &quot;&quot;&quot;
+    Calculates the Population Stability Index (PSI) between baseline and production distributions.
+    &quot;&quot;&quot;
+    # Define quantile bin boundaries based on expected distribution
+    percentiles = np.linspace(0, 100, num_buckets + 1)
+    bin_edges = np.percentile(expected, percentiles)
+    bin_edges[0] -= 1e-5
+    bin_edges[-1] += 1e-5
+
+    # Compute frequency counts in each bucket
+    expected_counts, _ = np.histogram(expected, bins=bin_edges)
+    actual_counts, _ = np.histogram(actual, bins=bin_edges)
+
+    # Convert to proportions
+    expected_pct = expected_counts / len(expected)
+    actual_pct = actual_counts / len(actual)
+
+    # Apply epsilon smoothing to prevent log(0) or division by zero
+    expected_pct = np.clip(expected_pct, eps, 1.0)
+    actual_pct = np.clip(actual_pct, eps, 1.0)
+
+    # PSI = ∑ (Actual - Expected) * ln(Actual / Expected)
+    psi_value = np.sum((actual_pct - expected_pct) * np.log(actual_pct / expected_pct))
+    return float(psi_value)
+
+if __name__ == &quot;__main__&quot;:
+    np.random.seed(42)
+    baseline_tokens = np.random.normal(loc=500, scale=100, size=10000)
+    stable_production = np.random.normal(loc=505, scale=102, size=5000)
+    drifted_production = np.random.normal(loc=750, scale=150, size=5000)
+
+    psi_stable = calculate_psi(baseline_tokens, stable_production)
+    psi_drift = calculate_psi(baseline_tokens, drifted_production)
+
+    print(f&quot;PSI (Stable Production): {psi_stable:.4f} (Status: STABLE)&quot;)
+    print(f&quot;PSI (Drifted Production): {psi_drift:.4f} (Status: SEVERE DRIFT)&quot;)
+
+    assert psi_stable &lt; 0.10, &quot;Expected stable PSI &lt; 0.10!&quot;
+    assert psi_drift &gt; 0.25, &quot;Expected drifted PSI &gt; 0.25!&quot;
+    print(&quot;PSI Drift Engine Verified Successfully.&quot;)
+</code></pre>
+<hr />
+<h2 id="heading-6">5. Deep Interview Interrogation Ladder</h2>
+<ul>
+<li><strong>Level 1 (Concept)</strong>: What is the purpose of a Model Registry in MLOps?</li>
+<li><strong>Level 3 (Math)</strong>: Write the mathematical formula for Population Stability Index (PSI) and explain the standard threshold values.</li>
+<li><strong>Level 5 (Deployments)</strong>: Compare Blue-Green, Canary, and Shadow (Dark Launch) deployments in terms of cost, latency, and blast radius.</li>
+<li><strong>Level 7 (Drift)</strong>: Explain the mathematical difference between Covariate Shift and Concept Drift.</li>
+<li><strong>Level 9 (Agent Workflows)</strong>: Why does rolling model deployment break long-running agent workflows, and how does session-affinity routing prevent split-brain state?</li>
+<li><strong>Level 10 (Principal Engineering)</strong>: Design an automated MLOps CI/CD platform that continuously fine-tunes a 70B agent on high-quality production logs, validates against a 5,000-prompt offline suite, provisions a Shadow deployment, evaluates PSI drift, and promotes to Canary with zero human intervention.</li>
+</ul>
         
         <!-- Navigation Footer -->
         <div class="doc-nav-footer">
-          <div></div>
           
-        <a href="01_MATHEMATICAL_FOUNDATIONS.html" class="doc-nav-btn" style="text-align: right;">
+        <a href="12_EVALUATION.html" class="doc-nav-btn">
+          <span class="label">← Previous</span>
+          <span class="title">12_EVALUATION</span>
+        </a>
+        
+          
+        <a href="14_OBSERVABILITY_AND_DEBUGGING.html" class="doc-nav-btn" style="text-align: right;">
           <span class="label">Next →</span>
-          <span class="title">01_MATHEMATICAL_FOUNDATIONS</span>
+          <span class="title">14_OBSERVABILITY_AND_DEBUGGING</span>
         </a>
         
         </div>
@@ -864,35 +843,31 @@
         <ul class="toc-list">
           
         <li class="toc-item">
-          <a href="#heading-0" class="toc-link">Role Context &amp; Core Hypothesis</a>
-        </li>
-        
-        <li class="toc-item">
-          <a href="#heading-1" class="toc-link">Role Decomposition</a>
+          <a href="#heading-0" class="toc-link">Mathematical Foundations of Distribution Drift Detection</a>
         </li>
         
         <li class="toc-item h3">
-          <a href="#heading-2" class="toc-link">Explicit Technical Requirements</a>
+          <a href="#heading-1" class="toc-link">Population Stability Index (PSI)</a>
         </li>
         
         <li class="toc-item h3">
-          <a href="#heading-3" class="toc-link">Implicit Technical Requirements</a>
-        </li>
-        
-        <li class="toc-item h3">
-          <a href="#heading-4" class="toc-link">Staff/Principal-Level Requirements</a>
+          <a href="#heading-2" class="toc-link">Two-Sample Kolmogorov-Smirnov (KS) Test</a>
         </li>
         
         <li class="toc-item">
-          <a href="#heading-5" class="toc-link">Role Competency Model &amp; Priority Matrix</a>
+          <a href="#heading-3" class="toc-link">Production Deployment Strategies: Canary, Shadow, and Blue-Green</a>
         </li>
         
         <li class="toc-item">
-          <a href="#heading-6" class="toc-link">Internal Dependency Graph</a>
+          <a href="#heading-4" class="toc-link">Session Pinning &amp; Affinity Routing in Agentic Systems</a>
         </li>
         
         <li class="toc-item">
-          <a href="#heading-7" class="toc-link">Depth Philosophy &amp; Technical Bridge</a>
+          <a href="#heading-5" class="toc-link">Python Implementation: Population Stability Index (PSI) Calculator</a>
+        </li>
+        
+        <li class="toc-item">
+          <a href="#heading-6" class="toc-link">Deep Interview Interrogation Ladder</a>
         </li>
         
         </ul>

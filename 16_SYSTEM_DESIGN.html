@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>00_ROLE_ANALYSIS — ML Engineer (SSK)</title>
+  <title>16_SYSTEM_DESIGN — ML Engineer (SSK)</title>
   
   <!-- Fonts -->
   <link rel="preconnect" href="https://fonts.googleapis.com">
@@ -513,7 +513,7 @@
     <ul class="nav-list" id="navList">
       <li class="nav-phase-header">Phase 0: Architecture</li>
         <li>
-          <a href="00_ROLE_ANALYSIS.html" class="nav-item active">
+          <a href="00_ROLE_ANALYSIS.html" class="nav-item">
             <span>00_ROLE_ANALYSIS</span>
             <span class="priority-badge priority-p1">P1</span>
           </a>
@@ -625,7 +625,7 @@
         </li>
         <li class="nav-phase-header">Phase 8: Synthesis & Interview Prep</li>
         <li>
-          <a href="16_SYSTEM_DESIGN.html" class="nav-item">
+          <a href="16_SYSTEM_DESIGN.html" class="nav-item active">
             <span>16_SYSTEM_DESIGN</span>
             <span class="priority-badge priority-p1">P1</span>
           </a>
@@ -682,9 +682,9 @@
       <div class="breadcrumbs">
         <a href="index.html">Curriculum</a>
         <span>/</span>
-        <span>Phase 0: Architecture</span>
+        <span>Phase 8: Synthesis & Interview Prep</span>
         <span>/</span>
-        <span class="current">00_ROLE_ANALYSIS</span>
+        <span class="current">16_SYSTEM_DESIGN</span>
       </div>
       <div class="tool-actions">
         <button class="btn" onclick="window.print()">🖨️ Print / PDF</button>
@@ -693,167 +693,128 @@
 
     <div class="content-container">
       <article class="markdown-body" id="docContent">
-        <h1>00_ROLE_ANALYSIS — ML Engineer (LLM &amp; Agentic Systems)</h1>
-<h2 id="heading-0">1. Role Context &amp; Core Hypothesis</h2>
-<p><strong>Role Context:</strong> This role targets building a proactive AI assistant that executes real-world tasks, performs multi-step reasoning, interacts with external tools, and handles long-running workflows with high reliability under production constraints.</p>
-<p><strong>Core Interview Hypothesis:</strong> "Can this candidate take an ML/LLM research idea, turn it into a trainable system, adapt it effectively, deploy it efficiently, integrate it into an agentic product, measure whether it actually works, debug it in production, and continuously improve it under latency, cost, reliability, and safety constraints?"</p>
-<p>The ML execution layer sits exactly at the boundary of Research, Systems Engineering, and Product Outcomes. The candidate must span these seamlessly.</p>
+        <h1>16_SYSTEM_DESIGN — Whiteboard Architecture &amp; Calculations</h1>
+<blockquote>
+<p><strong>Audience</strong>: ML Engineers, LLM Systems Engineers, and AI Researchers preparing for senior/principal technical interviews.<br />
+<strong>Core Objective</strong>: Provide three end-to-end, production-grade system designs with quantitative dimensioning, back-of-the-envelope math, component diagrams, and failure isolation boundaries.</p>
+</blockquote>
 <hr />
-<h2 id="heading-1">2. Role Decomposition</h2>
-<h3 id="heading-2">Explicit Technical Requirements</h3>
+<h2 id="heading-0">1. The 6-Step Principal ML System Design Framework</h2>
+<p>When presented with an open-ended system design prompt in a technical interview:</p>
+<ol>
+<li><strong>Clarify Requirements &amp; Constraints</strong> (Functional vs. Non-Functional, Latency targets, QPS, Token budgets).</li>
+<li><strong>Back-of-the-Envelope Dimensioning</strong> (VRAM, FLOPs, Bandwidth, Storage, Cluster Size).</li>
+<li><strong>High-Level API Design</strong> (gRPC / REST / Server-Sent Events).</li>
+<li><strong>Data Schemas &amp; Storage Architecture</strong> (Relational, Vector, Key-Value, Blob).</li>
+<li><strong>Detailed Component Architecture &amp; Control Flow</strong> (Drawing boxes and data pipelines).</li>
+<li><strong>Deep Dives &amp; Failure Modes</strong> (OOM prevention, tail latency mitigation, failover).</li>
+</ol>
+<hr />
+<h2 id="heading-1">2. Case Study 1: Ultra-High-Throughput Distributed LLM Serving Platform (100k QPS)</h2>
+<p><strong>Prompt</strong>: <em>"Design a distributed inference system to serve a 70B parameter model at 100,000 requests per minute with P99 TTFT <span class="katex-inline">$&lt; 200\text{ ms}$</span> and TPOT <span class="katex-inline">$&lt; 25\text{ ms/token}$</span>."</em></p>
+<pre><code>                                    ┌────────────────────────────────────────────────────────┐
+                                    │                Anycast DNS &amp; Cloudflare                │
+                                    └───────────────────────────┬────────────────────────────┘
+                                                                │
+                                                                ▼
+                                    ┌────────────────────────────────────────────────────────┐
+                                    │         API Gateway &amp; Envoy Load Balancers             │
+                                    │  (TLS Termination, Rate Limiting, User Authentication) │
+                                    └───────────────────────────┬────────────────────────────┘
+                                                                │
+                                                                ▼
+                                    ┌────────────────────────────────────────────────────────┐
+                                    │            Global Radix Router Fleet                   │
+                                    │  - Evaluates Prefix Matches (RadixAttention Cache)     │
+                                    │  - Dispatches Prefill vs Decode Jobs via gRPC          │
+                                    └─────────────┬────────────────────────────┬─────────────┘
+                                                  │                            │
+                   ┌──────────────────────────────┘                            └──────────────────────────────┐
+                   ▼                                                                                          ▼
+┌────────────────────────────────────────────────────────┐                                 ┌────────────────────────────────────────────────────────┐
+│           Prefill GPU Fleet (H100 SXM5)                │                                 │            Decode GPU Fleet (H100 SXM5)                │
+│  - Compute-Bound Dense GEMMs (FlashAttention-3)        │                                 │  - Memory-Bandwidth-Bound Iteration Batching           │
+│  - Chunked Prefill (512 token blocks)                  │                                 │  - Continuous Batching (vLLM / SGLang)                 │
+│  - Generates initial KV Cache                          │                                 │  - FP8 Quantized Weights &amp; KV Cache                    │
+└──────────────────────────┬─────────────────────────────┘                                 └──────────────────────────▲─────────────────────────────┘
+                           │                                                                                          │
+                           └────────────────────────────── RDMA KV Transfer ──────────────────────────────────────────┘
+                                                          (100 GB/s InfiniBand NDR)
+</code></pre>
+<h3 id="heading-2">2.1 Back-of-the-Envelope Dimensioning Math</h3>
 <ul>
-<li>Python, PyTorch, CUDA, Triton</li>
-<li>GPU-based training and inference architecture (vLLM, SGLang, Megatron-LM, FSDP-2)</li>
-<li>SFT, LoRA, QLoRA, DPO, GRPO (Reasoning Models)</li>
-<li>Data pipelines (MinHash LSH, Synthetic data curation, Decontamination)</li>
-<li>Evaluation systems (SWE-bench, GAIA, Statistical significance) and latency/cost optimization</li>
+<li><strong>Throughput</strong>: <span class="katex-inline">$100,000 \text{ RPM} \approx 1,667 \text{ QPS}$</span>.</li>
+<li><strong>Average Workload</strong>: <span class="katex-inline">$S_p = 2,048$</span> prompt tokens, <span class="katex-inline">$S_o = 256$</span> generated tokens.</li>
+<li><strong>Total Prompt Tokens/sec</strong>: <span class="katex-inline">$1,667 \times 2,048 \approx 3.41 \times 10^6 \text{ tokens/s}$</span>.</li>
+<li><strong>Total Generation Tokens/sec</strong>: <span class="katex-inline">$1,667 \times 256 \approx 4.27 \times 10^5 \text{ tokens/s}$</span>.</li>
+<li><strong>Model Weight Footprint (70B in FP8)</strong>: <span class="katex-inline">$70\text{ GB}$</span>.</li>
+<li><strong>Prefill Compute Needs</strong>:<br />
+  <div class="katex-display">$$\text{FLOPs/s} = 3.41 \times 10^6 \times 2 \times (70 \times 10^9) = 4.77 \times 10^{17} \text{ FLOPs/s} = 477 \text{ PFLOPs/s}$$</div></li>
 </ul>
-<h3 id="heading-3">Implicit Technical Requirements</h3>
+<p>Assuming an H100 achieves <span class="katex-inline">$600\text{ TFLOPs}$</span> effective prefill compute:<br />
+  <div class="katex-display">$$\text{Prefill GPUs Needed} = \frac{477 \times 10^{15}}{600 \times 10^{12}} \approx \mathbf{795 \text{ H100 GPUs}}$$</div></p>
 <ul>
-<li><strong>Hardware/Software Co-design Awareness</strong>: Understanding how PyTorch ops map to CUDA kernels, SRAM tiling, and memory bandwidth bounds.</li>
-<li><strong>Probabilistic Engineering</strong>: Building deterministic, reliable long-running workflows on top of inherently non-deterministic LLM behavior.</li>
+<li><strong>Decode Memory Bandwidth Needs</strong>:<br />
+  Each decode GPU with TP=4 has <span class="katex-inline">$4 \times 3.35 \text{ TB/s} = 13.4 \text{ TB/s}$</span> bandwidth.<br />
+  Loading 70B model (<span class="katex-inline">$70\text{ GB}$</span>) takes <span class="katex-inline">$\frac{70}{13.4 \times 10^3} \approx 5.22\text{ ms/step}$</span>.<br />
+  With continuous batch size <span class="katex-inline">$B=128$</span>, tokens/sec per 4-GPU replica <span class="katex-inline">$= \frac{128}{0.00522} \approx 24,500 \text{ tokens/s}$</span>.<br />
+  <div class="katex-display">$$\text{Decode 4-GPU Replicas Needed} = \frac{427,000}{24,500} \approx 18 \text{ Replicas} = \mathbf{72 \text{ GPUs}}$$</div>
+</li>
 </ul>
-<h3 id="heading-4">Staff/Principal-Level Requirements</h3>
+<hr />
+<h2 id="heading-3">3. Case Study 2: Proactive Autonomous Agent Runtime with Durable Execution</h2>
+<p><strong>Prompt</strong>: <em>"Architect the backend platform for an AI assistant that executes multi-step web scraping, code execution, and financial transactions lasting up to 48 hours."</em></p>
+<pre><code>Webhooks / Cron ──► [ Kafka Event Bus ] ──► [ Temporal Workflow Worker Pool ]
+                                                    │
+                 ┌──────────────────────────────────┼──────────────────────────────────┐
+                 ▼                                  ▼                                  ▼
+      [ Step 1: LLM Planner ]             [ Step 2: Tool Worker ]             [ Step 3: HITL Gating ]
+      - Structured JSON via FSM           - Idempotency-Key Gateway           - Async SMS/App Push
+      - Outlines / Pydantic               - gVisor / Firecracker Sandboxes    - Suspends Workflow
+</code></pre>
+<hr />
+<h2 id="heading-4">4. Case Study 3: Enterprise Continuous Self-Improving RAG Pipeline</h2>
+<pre><code>Knowledge Corpus (PDFs, Notion, Confluence, GitHub)
+        │
+        ▼
+[ Document Parser &amp; Chunker ] (Semantic Chunking, 512 tokens + 10% overlap)
+        │
+        ├───► Dense Embedding (OpenAI text-embed-3) ──► [ Qdrant / Milvus Vector DB ]
+        └───► Sparse Shingles Tokenizer ─────────────► [ Elasticsearch / BM25 ]
+                                                              │
+User Query ──► [ Query Expansion ] ───────────────────────────┤
+                                                              ▼
+                                               [ Reciprocal Rank Fusion ]
+                                                              │ (Top-30 Candidates)
+                                                              ▼
+                                               [ Cross-Encoder Neural Reranker ]
+                                                              │ (Top-5 High-Signal Passages)
+                                                              ▼
+                                               [ Context Compactor ] ──► LLM Generation
+</code></pre>
+<hr />
+<h2 id="heading-5">5. Deep Interview Interrogation Ladder</h2>
 <ul>
-<li><strong>Architectural Judgment</strong>: Knowing when to use full fine-tuning vs. LoRA vs. Prompt Engineering vs. Distillation vs. GRPO based on data scale and latency budgets.</li>
-<li><strong>Incident Leadership</strong>: Ability to trace a 99th percentile (P99) latency spike from the network layer down to KV-cache fragmentation on a specific GPU.</li>
+<li><strong>Level 1 (Concept)</strong>: What is the purpose of load-balancing via affinity routing in LLM serving?</li>
+<li><strong>Level 3 (Math)</strong>: Walk through the exact back-of-the-envelope calculation to size the number of GPUs needed for 1,000 QPS on a 70B model.</li>
+<li><strong>Level 5 (Serving Architecture)</strong>: Why does Disaggregated Prefill/Decode achieve higher hardware efficiency than unified continuous batching?</li>
+<li><strong>Level 7 (RAG)</strong>: Explain why Cross-Encoder neural rerankers are placed downstream of Hybrid Dense/Sparse retrieval rather than being used for initial search.</li>
+<li><strong>Level 9 (Reliability)</strong>: In an enterprise RAG system serving 50,000 employees, document permissions change dynamically. How do you design real-time access-control filtering into vector search without rebuilding indexes?</li>
+<li><strong>Level 10 (Principal Engineering)</strong>: Architect a globally distributed, multi-region agentic platform with active-active failover, KV cache synchronization across regions, and zero data loss under a full datacenter outage.</li>
 </ul>
-<hr />
-<h2 id="heading-5">3. Role Competency Model &amp; Priority Matrix</h2>
-<table>
-<thead>
-<tr>
-<th style="text-align: center;">Priority</th>
-<th style="text-align: left;">Category</th>
-<th style="text-align: left;">Topics</th>
-<th style="text-align: left;">Files</th>
-</tr>
-</thead>
-<tbody>
-<tr>
-<td style="text-align: center;"><strong>P0</strong></td>
-<td style="text-align: left;"><strong>Agentic ML Systems</strong></td>
-<td style="text-align: left;">ReAct, Tool Routing, Context/Memory, MCP, FSM JSON</td>
-<td style="text-align: left;"><a href="./10_AGENTIC_ML_SYSTEMS.md">10_AGENTIC_ML_SYSTEMS.md</a></td>
-</tr>
-<tr>
-<td style="text-align: center;"><strong>P0</strong></td>
-<td style="text-align: left;"><strong>Long-Running Workflows</strong></td>
-<td style="text-align: left;">Durable State, Temporal, Sagas, Idempotency, Retries</td>
-<td style="text-align: left;"><a href="./11_LONG_RUNNING_WORKFLOW_RELIABILITY.md">11_LONG_RUNNING_WORKFLOW_RELIABILITY.md</a></td>
-</tr>
-<tr>
-<td style="text-align: center;"><strong>P0</strong></td>
-<td style="text-align: left;"><strong>Post-Training &amp; Reasoning</strong></td>
-<td style="text-align: left;">SFT, LoRA, QLoRA, DPO, GRPO, Test-Time Compute</td>
-<td style="text-align: left;"><a href="./05_POST_TRAINING.md">05_POST_TRAINING.md</a></td>
-</tr>
-<tr>
-<td style="text-align: center;"><strong>P0</strong></td>
-<td style="text-align: left;"><strong>LLM &amp; Inference</strong></td>
-<td style="text-align: left;">PagedAttention, RadixAttention, PD Split, Chunked Prefill</td>
-<td style="text-align: left;"><a href="./04_TRANSFORMERS_AND_LLMS.md">04_TRANSFORMERS_AND_LLMS.md</a> · <a href="./09_INFERENCE_SYSTEMS.md">09_INFERENCE_SYSTEMS.md</a></td>
-</tr>
-<tr>
-<td style="text-align: center;"><strong>P0</strong></td>
-<td style="text-align: left;"><strong>GPU Architecture</strong></td>
-<td style="text-align: left;">SMs, SRAM Tiling, FlashAttention-3, Roofline Model</td>
-<td style="text-align: left;"><a href="./08_GPU_AND_PERFORMANCE.md">08_GPU_AND_PERFORMANCE.md</a></td>
-</tr>
-<tr>
-<td style="text-align: center;"><strong>P0</strong></td>
-<td style="text-align: left;"><strong>Evaluation &amp; Reliability</strong></td>
-<td style="text-align: left;">Z-Tests, ELO Ratings, SWE-bench, LLM-as-judge</td>
-<td style="text-align: left;"><a href="./12_EVALUATION.md">12_EVALUATION.md</a></td>
-</tr>
-<tr>
-<td style="text-align: center;"><strong>P1</strong></td>
-<td style="text-align: left;"><strong>Mathematical Foundations</strong></td>
-<td style="text-align: left;">SVD, Low-Rank, Information Theory, AdamW, Optimization</td>
-<td style="text-align: left;"><a href="./01_MATHEMATICAL_FOUNDATIONS.md">01_MATHEMATICAL_FOUNDATIONS.md</a></td>
-</tr>
-<tr>
-<td style="text-align: center;"><strong>P1</strong></td>
-<td style="text-align: left;"><strong>Training Systems</strong></td>
-<td style="text-align: left;">FSDP-2, 3D Parallelism, Context Parallelism, Checkpointing</td>
-<td style="text-align: left;"><a href="./07_TRAINING_SYSTEMS.md">07_TRAINING_SYSTEMS.md</a></td>
-</tr>
-<tr>
-<td style="text-align: center;"><strong>P1</strong></td>
-<td style="text-align: left;"><strong>Data Engineering</strong></td>
-<td style="text-align: left;">MinHash LSH, Model Collapse, Synthetic Curation</td>
-<td style="text-align: left;"><a href="./06_DATA_AND_SYNTHETIC_DATA.md">06_DATA_AND_SYNTHETIC_DATA.md</a></td>
-</tr>
-<tr>
-<td style="text-align: center;"><strong>P1</strong></td>
-<td style="text-align: left;"><strong>Distributed Systems</strong></td>
-<td style="text-align: left;">Ring All-Reduce, GPUDirect RDMA, InfiniBand NDR</td>
-<td style="text-align: left;"><a href="./18_DISTRIBUTED_SYSTEMS.md">18_DISTRIBUTED_SYSTEMS.md</a></td>
-</tr>
-<tr>
-<td style="text-align: center;"><strong>P1</strong></td>
-<td style="text-align: left;"><strong>Observability</strong></td>
-<td style="text-align: left;">Little's Law, MFU, OpenTelemetry Tracing</td>
-<td style="text-align: left;"><a href="./14_OBSERVABILITY_AND_DEBUGGING.md">14_OBSERVABILITY_AND_DEBUGGING.md</a></td>
-</tr>
-<tr>
-<td style="text-align: center;"><strong>P1</strong></td>
-<td style="text-align: left;"><strong>Systems / ML Design</strong></td>
-<td style="text-align: left;">Architecture Trade-offs, Cost/Latency Scaling</td>
-<td style="text-align: left;"><a href="./16_SYSTEM_DESIGN.md">16_SYSTEM_DESIGN.md</a> · <a href="./13_PRODUCTION_ML.md">13_PRODUCTION_ML.md</a></td>
-</tr>
-<tr>
-<td style="text-align: center;"><strong>P1</strong></td>
-<td style="text-align: left;"><strong>Deep Learning</strong></td>
-<td style="text-align: left;">Backpropagation, Softmax Jacobians, LayerNorm/RMSNorm</td>
-<td style="text-align: left;"><a href="./02_03_ML_AND_DL_FOUNDATIONS.md">02_03_ML_AND_DL_FOUNDATIONS.md</a></td>
-</tr>
-<tr>
-<td style="text-align: center;"><strong>P2</strong></td>
-<td style="text-align: left;"><strong>Python &amp; Coding</strong></td>
-<td style="text-align: left;">PyTorch Modules, FSM Parsers, Continuous Batching</td>
-<td style="text-align: left;"><a href="./17_PYTHON_AND_CODING.md">17_PYTHON_AND_CODING.md</a></td>
-</tr>
-</tbody>
-</table>
-<hr />
-<h2 id="heading-6">4. Internal Dependency Graph</h2>
-<div class="mermaid">flowchart TD
-    %% Base Layer
-    Math[&quot;01: Mathematical Foundations (SVD, Info Theory, Optimization)&quot;] --&gt; DL[&quot;02_03: Deep Learning (Backprop, RMSNorm, Loss Landscapes)&quot;]
-    DL --&gt; LLM[&quot;04: Modern LLMs (Attention, RoPE, MLA, MoE)&quot;]
-    
-    %% Hardware &amp; Performance Layer
-    GPU[&quot;08: GPU Architecture &amp; FlashAttention-3&quot;] --&gt; Inf[&quot;09: Inference Systems (PagedAttention, SGLang, PD Split)&quot;]
-    GPU --&gt; TS[&quot;07: Training Systems (FSDP-2, 3D Parallelism)&quot;]
-    Net[&quot;18: Distributed Systems (Ring All-Reduce, RDMA)&quot;] --&gt; TS
-    LLM --&gt; Inf
-    LLM --&gt; TS
-    
-    %% Training &amp; Alignment Layer
-    Data[&quot;06: Data Engineering (MinHash LSH, Synthetic Flywheels)&quot;] --&gt; PT[&quot;05: Post-Training (SFT, LoRA, DPO, GRPO)&quot;]
-    LLM --&gt; PT
-    PT --&gt; Eval[&quot;12: Evaluation (Z-Tests, ELO, SWE-bench)&quot;]
-    
-    %% Serving &amp; Agent Layer
-    Inf --&gt; Agent[&quot;10: Agentic Systems (ReAct, FSM JSON, MCP, Hybrid RAG)&quot;]
-    Agent --&gt; Rel[&quot;11: Long-Running Workflows (Temporal, Sagas, Jitter)&quot;]
-    Rel --&gt; Prod[&quot;13/14/15: Production MLOps, Tracing, Safety Guardrails&quot;]
-    
-    %% Synthesis Layer
-    Prod --&gt; SysDes[&quot;16-22: System Design, Production Code &amp; Playbooks&quot;]</div>
-
-<hr />
-<h2 id="heading-7">5. Depth Philosophy &amp; Technical Bridge</h2>
-<p>Every document in this Single Source of Knowledge (SSK) follows the <strong>10-Level Depth Framework</strong>, bridging <strong>Mathematics <span class="katex-inline">$\longleftrightarrow$</span> Algorithms <span class="katex-inline">$\longleftrightarrow$</span> GPU Execution <span class="katex-inline">$\longleftrightarrow$</span> Production Systems</strong>.</p>
         
         <!-- Navigation Footer -->
         <div class="doc-nav-footer">
-          <div></div>
           
-        <a href="01_MATHEMATICAL_FOUNDATIONS.html" class="doc-nav-btn" style="text-align: right;">
+        <a href="14_OBSERVABILITY_AND_DEBUGGING.html" class="doc-nav-btn">
+          <span class="label">← Previous</span>
+          <span class="title">14_OBSERVABILITY_AND_DEBUGGING</span>
+        </a>
+        
+          
+        <a href="17_PYTHON_AND_CODING.html" class="doc-nav-btn" style="text-align: right;">
           <span class="label">Next →</span>
-          <span class="title">01_MATHEMATICAL_FOUNDATIONS</span>
+          <span class="title">17_PYTHON_AND_CODING</span>
         </a>
         
         </div>
@@ -864,35 +825,27 @@
         <ul class="toc-list">
           
         <li class="toc-item">
-          <a href="#heading-0" class="toc-link">Role Context &amp; Core Hypothesis</a>
+          <a href="#heading-0" class="toc-link">The 6-Step Principal ML System Design Framework</a>
         </li>
         
         <li class="toc-item">
-          <a href="#heading-1" class="toc-link">Role Decomposition</a>
+          <a href="#heading-1" class="toc-link">Case Study 1: Ultra-High-Throughput Distributed LLM Serving Platform (100k QPS)</a>
         </li>
         
         <li class="toc-item h3">
-          <a href="#heading-2" class="toc-link">Explicit Technical Requirements</a>
-        </li>
-        
-        <li class="toc-item h3">
-          <a href="#heading-3" class="toc-link">Implicit Technical Requirements</a>
-        </li>
-        
-        <li class="toc-item h3">
-          <a href="#heading-4" class="toc-link">Staff/Principal-Level Requirements</a>
+          <a href="#heading-2" class="toc-link">Back-of-the-Envelope Dimensioning Math</a>
         </li>
         
         <li class="toc-item">
-          <a href="#heading-5" class="toc-link">Role Competency Model &amp; Priority Matrix</a>
+          <a href="#heading-3" class="toc-link">Case Study 2: Proactive Autonomous Agent Runtime with Durable Execution</a>
         </li>
         
         <li class="toc-item">
-          <a href="#heading-6" class="toc-link">Internal Dependency Graph</a>
+          <a href="#heading-4" class="toc-link">Case Study 3: Enterprise Continuous Self-Improving RAG Pipeline</a>
         </li>
         
         <li class="toc-item">
-          <a href="#heading-7" class="toc-link">Depth Philosophy &amp; Technical Bridge</a>
+          <a href="#heading-5" class="toc-link">Deep Interview Interrogation Ladder</a>
         </li>
         
         </ul>

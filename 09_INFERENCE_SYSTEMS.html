@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>00_ROLE_ANALYSIS — ML Engineer (SSK)</title>
+  <title>09_INFERENCE_SYSTEMS — ML Engineer (SSK)</title>
   
   <!-- Fonts -->
   <link rel="preconnect" href="https://fonts.googleapis.com">
@@ -513,7 +513,7 @@
     <ul class="nav-list" id="navList">
       <li class="nav-phase-header">Phase 0: Architecture</li>
         <li>
-          <a href="00_ROLE_ANALYSIS.html" class="nav-item active">
+          <a href="00_ROLE_ANALYSIS.html" class="nav-item">
             <span>00_ROLE_ANALYSIS</span>
             <span class="priority-badge priority-p1">P1</span>
           </a>
@@ -562,7 +562,7 @@
         </li>
         
         <li>
-          <a href="09_INFERENCE_SYSTEMS.html" class="nav-item">
+          <a href="09_INFERENCE_SYSTEMS.html" class="nav-item active">
             <span>09_INFERENCE_SYSTEMS</span>
             <span class="priority-badge priority-p0">P0</span>
           </a>
@@ -682,9 +682,9 @@
       <div class="breadcrumbs">
         <a href="index.html">Curriculum</a>
         <span>/</span>
-        <span>Phase 0: Architecture</span>
+        <span>Phase 4: Hardware & Inference</span>
         <span>/</span>
-        <span class="current">00_ROLE_ANALYSIS</span>
+        <span class="current">09_INFERENCE_SYSTEMS</span>
       </div>
       <div class="tool-actions">
         <button class="btn" onclick="window.print()">🖨️ Print / PDF</button>
@@ -693,167 +693,266 @@
 
     <div class="content-container">
       <article class="markdown-body" id="docContent">
-        <h1>00_ROLE_ANALYSIS — ML Engineer (LLM &amp; Agentic Systems)</h1>
-<h2 id="heading-0">1. Role Context &amp; Core Hypothesis</h2>
-<p><strong>Role Context:</strong> This role targets building a proactive AI assistant that executes real-world tasks, performs multi-step reasoning, interacts with external tools, and handles long-running workflows with high reliability under production constraints.</p>
-<p><strong>Core Interview Hypothesis:</strong> "Can this candidate take an ML/LLM research idea, turn it into a trainable system, adapt it effectively, deploy it efficiently, integrate it into an agentic product, measure whether it actually works, debug it in production, and continuously improve it under latency, cost, reliability, and safety constraints?"</p>
-<p>The ML execution layer sits exactly at the boundary of Research, Systems Engineering, and Product Outcomes. The candidate must span these seamlessly.</p>
+        <h1>09_INFERENCE_SYSTEMS — Mathematical &amp; Systems Engineering Reference</h1>
+<blockquote>
+<p><strong>Audience</strong>: ML Engineers, LLM Systems Engineers, and AI Researchers preparing for senior/principal technical interviews.<br />
+<strong>Core Objective</strong>: Provide an exhaustive mathematical, algorithmic, and systems reference on LLM Inference — covering PagedAttention, SGLang's RadixAttention, Disaggregated Prefill/Decode (PD split), Chunked Prefill scheduling, Speculative Decoding acceptance proofs, and FP8/INT4 quantization.</p>
+</blockquote>
 <hr />
-<h2 id="heading-1">2. Role Decomposition</h2>
-<h3 id="heading-2">Explicit Technical Requirements</h3>
-<ul>
-<li>Python, PyTorch, CUDA, Triton</li>
-<li>GPU-based training and inference architecture (vLLM, SGLang, Megatron-LM, FSDP-2)</li>
-<li>SFT, LoRA, QLoRA, DPO, GRPO (Reasoning Models)</li>
-<li>Data pipelines (MinHash LSH, Synthetic data curation, Decontamination)</li>
-<li>Evaluation systems (SWE-bench, GAIA, Statistical significance) and latency/cost optimization</li>
-</ul>
-<h3 id="heading-3">Implicit Technical Requirements</h3>
-<ul>
-<li><strong>Hardware/Software Co-design Awareness</strong>: Understanding how PyTorch ops map to CUDA kernels, SRAM tiling, and memory bandwidth bounds.</li>
-<li><strong>Probabilistic Engineering</strong>: Building deterministic, reliable long-running workflows on top of inherently non-deterministic LLM behavior.</li>
-</ul>
-<h3 id="heading-4">Staff/Principal-Level Requirements</h3>
-<ul>
-<li><strong>Architectural Judgment</strong>: Knowing when to use full fine-tuning vs. LoRA vs. Prompt Engineering vs. Distillation vs. GRPO based on data scale and latency budgets.</li>
-<li><strong>Incident Leadership</strong>: Ability to trace a 99th percentile (P99) latency spike from the network layer down to KV-cache fragmentation on a specific GPU.</li>
-</ul>
-<hr />
-<h2 id="heading-5">3. Role Competency Model &amp; Priority Matrix</h2>
-<table>
-<thead>
-<tr>
-<th style="text-align: center;">Priority</th>
-<th style="text-align: left;">Category</th>
-<th style="text-align: left;">Topics</th>
-<th style="text-align: left;">Files</th>
-</tr>
-</thead>
-<tbody>
-<tr>
-<td style="text-align: center;"><strong>P0</strong></td>
-<td style="text-align: left;"><strong>Agentic ML Systems</strong></td>
-<td style="text-align: left;">ReAct, Tool Routing, Context/Memory, MCP, FSM JSON</td>
-<td style="text-align: left;"><a href="./10_AGENTIC_ML_SYSTEMS.md">10_AGENTIC_ML_SYSTEMS.md</a></td>
-</tr>
-<tr>
-<td style="text-align: center;"><strong>P0</strong></td>
-<td style="text-align: left;"><strong>Long-Running Workflows</strong></td>
-<td style="text-align: left;">Durable State, Temporal, Sagas, Idempotency, Retries</td>
-<td style="text-align: left;"><a href="./11_LONG_RUNNING_WORKFLOW_RELIABILITY.md">11_LONG_RUNNING_WORKFLOW_RELIABILITY.md</a></td>
-</tr>
-<tr>
-<td style="text-align: center;"><strong>P0</strong></td>
-<td style="text-align: left;"><strong>Post-Training &amp; Reasoning</strong></td>
-<td style="text-align: left;">SFT, LoRA, QLoRA, DPO, GRPO, Test-Time Compute</td>
-<td style="text-align: left;"><a href="./05_POST_TRAINING.md">05_POST_TRAINING.md</a></td>
-</tr>
-<tr>
-<td style="text-align: center;"><strong>P0</strong></td>
-<td style="text-align: left;"><strong>LLM &amp; Inference</strong></td>
-<td style="text-align: left;">PagedAttention, RadixAttention, PD Split, Chunked Prefill</td>
-<td style="text-align: left;"><a href="./04_TRANSFORMERS_AND_LLMS.md">04_TRANSFORMERS_AND_LLMS.md</a> · <a href="./09_INFERENCE_SYSTEMS.md">09_INFERENCE_SYSTEMS.md</a></td>
-</tr>
-<tr>
-<td style="text-align: center;"><strong>P0</strong></td>
-<td style="text-align: left;"><strong>GPU Architecture</strong></td>
-<td style="text-align: left;">SMs, SRAM Tiling, FlashAttention-3, Roofline Model</td>
-<td style="text-align: left;"><a href="./08_GPU_AND_PERFORMANCE.md">08_GPU_AND_PERFORMANCE.md</a></td>
-</tr>
-<tr>
-<td style="text-align: center;"><strong>P0</strong></td>
-<td style="text-align: left;"><strong>Evaluation &amp; Reliability</strong></td>
-<td style="text-align: left;">Z-Tests, ELO Ratings, SWE-bench, LLM-as-judge</td>
-<td style="text-align: left;"><a href="./12_EVALUATION.md">12_EVALUATION.md</a></td>
-</tr>
-<tr>
-<td style="text-align: center;"><strong>P1</strong></td>
-<td style="text-align: left;"><strong>Mathematical Foundations</strong></td>
-<td style="text-align: left;">SVD, Low-Rank, Information Theory, AdamW, Optimization</td>
-<td style="text-align: left;"><a href="./01_MATHEMATICAL_FOUNDATIONS.md">01_MATHEMATICAL_FOUNDATIONS.md</a></td>
-</tr>
-<tr>
-<td style="text-align: center;"><strong>P1</strong></td>
-<td style="text-align: left;"><strong>Training Systems</strong></td>
-<td style="text-align: left;">FSDP-2, 3D Parallelism, Context Parallelism, Checkpointing</td>
-<td style="text-align: left;"><a href="./07_TRAINING_SYSTEMS.md">07_TRAINING_SYSTEMS.md</a></td>
-</tr>
-<tr>
-<td style="text-align: center;"><strong>P1</strong></td>
-<td style="text-align: left;"><strong>Data Engineering</strong></td>
-<td style="text-align: left;">MinHash LSH, Model Collapse, Synthetic Curation</td>
-<td style="text-align: left;"><a href="./06_DATA_AND_SYNTHETIC_DATA.md">06_DATA_AND_SYNTHETIC_DATA.md</a></td>
-</tr>
-<tr>
-<td style="text-align: center;"><strong>P1</strong></td>
-<td style="text-align: left;"><strong>Distributed Systems</strong></td>
-<td style="text-align: left;">Ring All-Reduce, GPUDirect RDMA, InfiniBand NDR</td>
-<td style="text-align: left;"><a href="./18_DISTRIBUTED_SYSTEMS.md">18_DISTRIBUTED_SYSTEMS.md</a></td>
-</tr>
-<tr>
-<td style="text-align: center;"><strong>P1</strong></td>
-<td style="text-align: left;"><strong>Observability</strong></td>
-<td style="text-align: left;">Little's Law, MFU, OpenTelemetry Tracing</td>
-<td style="text-align: left;"><a href="./14_OBSERVABILITY_AND_DEBUGGING.md">14_OBSERVABILITY_AND_DEBUGGING.md</a></td>
-</tr>
-<tr>
-<td style="text-align: center;"><strong>P1</strong></td>
-<td style="text-align: left;"><strong>Systems / ML Design</strong></td>
-<td style="text-align: left;">Architecture Trade-offs, Cost/Latency Scaling</td>
-<td style="text-align: left;"><a href="./16_SYSTEM_DESIGN.md">16_SYSTEM_DESIGN.md</a> · <a href="./13_PRODUCTION_ML.md">13_PRODUCTION_ML.md</a></td>
-</tr>
-<tr>
-<td style="text-align: center;"><strong>P1</strong></td>
-<td style="text-align: left;"><strong>Deep Learning</strong></td>
-<td style="text-align: left;">Backpropagation, Softmax Jacobians, LayerNorm/RMSNorm</td>
-<td style="text-align: left;"><a href="./02_03_ML_AND_DL_FOUNDATIONS.md">02_03_ML_AND_DL_FOUNDATIONS.md</a></td>
-</tr>
-<tr>
-<td style="text-align: center;"><strong>P2</strong></td>
-<td style="text-align: left;"><strong>Python &amp; Coding</strong></td>
-<td style="text-align: left;">PyTorch Modules, FSM Parsers, Continuous Batching</td>
-<td style="text-align: left;"><a href="./17_PYTHON_AND_CODING.md">17_PYTHON_AND_CODING.md</a></td>
-</tr>
-</tbody>
-</table>
-<hr />
-<h2 id="heading-6">4. Internal Dependency Graph</h2>
-<div class="mermaid">flowchart TD
-    %% Base Layer
-    Math[&quot;01: Mathematical Foundations (SVD, Info Theory, Optimization)&quot;] --&gt; DL[&quot;02_03: Deep Learning (Backprop, RMSNorm, Loss Landscapes)&quot;]
-    DL --&gt; LLM[&quot;04: Modern LLMs (Attention, RoPE, MLA, MoE)&quot;]
-    
-    %% Hardware &amp; Performance Layer
-    GPU[&quot;08: GPU Architecture &amp; FlashAttention-3&quot;] --&gt; Inf[&quot;09: Inference Systems (PagedAttention, SGLang, PD Split)&quot;]
-    GPU --&gt; TS[&quot;07: Training Systems (FSDP-2, 3D Parallelism)&quot;]
-    Net[&quot;18: Distributed Systems (Ring All-Reduce, RDMA)&quot;] --&gt; TS
-    LLM --&gt; Inf
-    LLM --&gt; TS
-    
-    %% Training &amp; Alignment Layer
-    Data[&quot;06: Data Engineering (MinHash LSH, Synthetic Flywheels)&quot;] --&gt; PT[&quot;05: Post-Training (SFT, LoRA, DPO, GRPO)&quot;]
-    LLM --&gt; PT
-    PT --&gt; Eval[&quot;12: Evaluation (Z-Tests, ELO, SWE-bench)&quot;]
-    
-    %% Serving &amp; Agent Layer
-    Inf --&gt; Agent[&quot;10: Agentic Systems (ReAct, FSM JSON, MCP, Hybrid RAG)&quot;]
-    Agent --&gt; Rel[&quot;11: Long-Running Workflows (Temporal, Sagas, Jitter)&quot;]
-    Rel --&gt; Prod[&quot;13/14/15: Production MLOps, Tracing, Safety Guardrails&quot;]
-    
-    %% Synthesis Layer
-    Prod --&gt; SysDes[&quot;16-22: System Design, Production Code &amp; Playbooks&quot;]</div>
+<h2 id="heading-0">1. The Two-Phase Inference Lifecycle &amp; Latency Modeling</h2>
+<p>Autoregressive LLM generation operates in two radically distinct phases:</p>
+<pre><code>[Request Arrives]
+      │
+      ▼
+┌────────────────────────────────────────────────────────┐
+│  Phase 1: Prefill (Prompt Processing)                  │
+│  - Input: Entire Prompt of S_p tokens in parallel       │
+│  - Nature: Compute-Bound (Dense GEMM on Tensor Cores)  │
+│  - Metric: Time To First Token (TTFT)                  │
+└───────────────────────┬────────────────────────────────┘
+                        │ Initial KV Cache Generated &amp; Cached
+                        ▼
+┌────────────────────────────────────────────────────────┐
+│  Phase 2: Decode (Autoregressive Token Generation)     │
+│  - Input: 1 new token per step, reads past S_t KV cache │
+│  - Nature: Memory-Bound (Loading weights &amp; KV from HBM)│
+│  - Metric: Time Per Output Token (TPOT) / Inter-Token  │
+└────────────────────────────────────────────────────────┘
+</code></pre>
+<h3 id="heading-1">1.1 First-Principles Latency &amp; Throughput Formulations</h3>
+<p>Let:<br />
+- <span class="katex-inline">$P$</span>: Model parameter count (e.g. <span class="katex-inline">$70 \times 10^9$</span>).<br />
+- <span class="katex-inline">$S_p$</span>: Prompt sequence length.<br />
+- <span class="katex-inline">$S_o$</span>: Generated output sequence length.<br />
+- <span class="katex-inline">$B$</span>: Concurrent batch size.<br />
+- <span class="katex-inline">$C_{\text{peak}}$</span>: Peak GPU compute throughput (FLOPs/s, e.g. <span class="katex-inline">$989 \times 10^{12}$</span> for H100 FP16).<br />
+- <span class="katex-inline">$B_{\text{mem}}$</span>: Peak GPU memory bandwidth (Bytes/s, e.g. <span class="katex-inline">$3.35 \times 10^{12}$</span> for H100 HBM3).<br />
+- <span class="katex-inline">$b_{\text{model}}$</span>: Bytes per model parameter (2 for FP16, 1 for FP8).<br />
+- <span class="katex-inline">$b_{\text{kv}}$</span>: Bytes per KV cache element (2 for FP16, 1 for FP8).</p>
+<h4>1. Time To First Token (TTFT):</h4>
+<p>During prefill, the model computes <span class="katex-inline">$2 P$</span> FLOPs per prompt token across batch <span class="katex-inline">$B$</span>:</p>
+<div class="katex-display">$$\text{FLOPs}_{\text{prefill}} = 2 \cdot P \cdot B \cdot S_p + 2 \cdot L \cdot N_h \cdot d_k \cdot B \cdot S_p^2$$</div>
+<p>Assuming compute dominates (<span class="katex-inline">$S_p \gg 1$</span>):</p>
+<div class="katex-display">$$\mathbf{\text{TTFT} \approx \frac{2 \cdot P \cdot S_p}{\text{MFU} \cdot C_{\text{peak}}}}$$</div>
+<p><em>Example</em>: Processing <span class="katex-inline">$S_p = 4096$</span> prompt tokens on a 70B model using an 8xH100 node (<span class="katex-inline">$\text{MFU} \approx 0.60$</span>, <span class="katex-inline">$C_{\text{peak}} = 8 \times 989\text{ TFLOPs}$</span>):</p>
+<div class="katex-display">$$\text{TTFT} = \frac{2 \times (70 \times 10^9) \times 4096}{0.60 \times (8 \times 989 \times 10^{12})} \approx \mathbf{0.121 \text{ seconds (121 ms)}}$$</div>
+
+<h4>2. Time Per Output Token (TPOT / Decode Step Latency):</h4>
+<p>At each decode step, the model loads all <span class="katex-inline">$P$</span> weights and the cumulative KV cache for all <span class="katex-inline">$B$</span> requests:</p>
+<div class="katex-display">$$\text{Bytes Transferred per Step} = (P \cdot b_{\text{model}}) + B \cdot \text{KVCache}_{\text{size}}(S_t)$$</div>
+<div class="katex-display">$$\mathbf{\text{TPOT}(t) = \frac{P \cdot b_{\text{model}} + B \cdot (2 \cdot L \cdot N_{kv} \cdot d_h \cdot b_{\text{kv}} \cdot S_t)}{B_{\text{mem}}}}$$</div>
 
 <hr />
-<h2 id="heading-7">5. Depth Philosophy &amp; Technical Bridge</h2>
-<p>Every document in this Single Source of Knowledge (SSK) follows the <strong>10-Level Depth Framework</strong>, bridging <strong>Mathematics <span class="katex-inline">$\longleftrightarrow$</span> Algorithms <span class="katex-inline">$\longleftrightarrow$</span> GPU Execution <span class="katex-inline">$\longleftrightarrow$</span> Production Systems</strong>.</p>
+<h3 id="heading-2">1.2 The KV Cache Memory Equation</h3>
+<p>For a Transformer with <span class="katex-inline">$L$</span> layers, <span class="katex-inline">$N_{kv}$</span> Key/Value heads, head dimension <span class="katex-inline">$d_h$</span>, sequence length <span class="katex-inline">$S$</span>, and batch size <span class="katex-inline">$B$</span>:</p>
+<div class="katex-display">$$\mathbf{\text{Memory}_{\text{KV}} = 2 \times B \times S \times L \times N_{kv} \times d_h \times b_{\text{kv}} \quad [\text{Bytes}]}$$</div>
+
+<h4>Concrete Production Sizing Example:</h4>
+<ul>
+<li>Model: LLaMA-3 70B (<span class="katex-inline">$L = 80, N_q = 64, N_{kv} = 8, d_h = 128$</span>).</li>
+<li>Precision: FP16 (<span class="katex-inline">$b_{\text{kv}} = 2\text{ bytes}$</span>).</li>
+<li>Context Length: <span class="katex-inline">$S = 8192$</span>, Batch Size: <span class="katex-inline">$B = 32$</span>.</li>
+</ul>
+<div class="katex-display">$$\text{Memory}_{\text{KV}} = 2 \times 32 \times 8192 \times 80 \times 8 \times 128 \times 2 = 85,899,345,920 \text{ Bytes} \approx \mathbf{80.0 \text{ GB}}$$</div>
+
+<p><em>Insight</em>: The KV cache alone occupies an entire 80GB H100 GPU's VRAM. Without memory management, KV cache fragmentation causes premature Out-Of-Memory (OOM) failures.</p>
+<hr />
+<h2 id="heading-3">2. Memory &amp; Scheduling Engines: PagedAttention vs. RadixAttention</h2>
+<h3 id="heading-4">2.1 PagedAttention (vLLM Architecture)</h3>
+<p>In traditional serving, KV caches are allocated contiguously for maximum sequence length (<span class="katex-inline">$S_{\max}$</span>), causing <strong><span class="katex-inline">$60\%-80\%$</span> VRAM waste</strong> due to internal fragmentation, external fragmentation, and reservation waste.</p>
+<h4>OS Virtual Memory Analogy:</h4>
+<p>PagedAttention partitions the KV cache into fixed-size <strong>Physical Blocks (Pages)</strong> (e.g. 16 or 32 tokens).<br />
+- <strong>Logical KV Blocks</strong>: Continuous token indices <span class="katex-inline">$0 \dots S-1$</span>.<br />
+- <strong>Physical Block Table</strong>: Maps logical blocks to non-contiguous physical pages in GPU VRAM.<br />
+- <strong>Copy-on-Write (CoW)</strong>: When an agent branches or forks multiple parallel generation trajectories (e.g. Tree-of-Thought, Beam Search), child processes share parent physical pages until a new token is appended.</p>
+<pre><code>Logical Blocks (Request A):   [ Block 0 ] ──► Physical Page #14 (VRAM)
+                              [ Block 1 ] ──► Physical Page #3  (VRAM)
+                              [ Block 2 ] ──► Physical Page #89 (VRAM)
+</code></pre>
+<div class="katex-display">$$\text{Memory Waste in PagedAttention} \leq \frac{\text{Block Size} - 1}{\text{Average Sequence Length}} \approx \frac{15}{2048} &lt; \mathbf{0.73\%}$$</div>
+
+<hr />
+<h3 id="heading-5">2.2 RadixAttention (SGLang Architecture)</h3>
+<p>While PagedAttention manages memory per request, multi-turn AI agents and tool-calling loops frequently reuse long shared system prompts, tool schemas, and multi-turn dialogue histories.</p>
+<h4>Radix Tree Structure:</h4>
+<p>SGLang maintains a global <strong>Radix Tree (Prefix Trie)</strong> over all past and present KV cache pages in GPU VRAM:<br />
+- Nodes in the tree represent token sequences with associated KV cache pointers.<br />
+- When a new request arrives, SGLang traverses the Radix Tree to find the <strong>longest common prefix match</strong>.<br />
+- If matched, the engine <strong>skips prefill entirely</strong> for the matched prefix, reducing TTFT from seconds to milliseconds.<br />
+- <strong>Cache Eviction Policy (LRU)</strong>: When VRAM is full, least recently used leaf nodes are recursively evicted.</p>
+<pre><code>                  [ Root (Empty) ]
+                         │
+        ┌────────────────┴────────────────┐
+        ▼                                 ▼
+[ System Prompt &amp; Tool Schemas (1.5k tok) ] [ Math Agent Prompt (800 tok) ]
+        │
+   ┌────┴────────────────────────┐
+   ▼                             ▼
+[ Turn 1: User Query A ]   [ Turn 1: User Query B ]
+   │
+[ Turn 2: Tool Execution Result ]
+</code></pre>
+<hr />
+<h2 id="heading-6">3. Advanced Serving Architectures</h2>
+<h3 id="heading-7">3.1 Disaggregated Prefill and Decode (PD Split / Mooncake / Splitwise)</h3>
+<p>In unified serving nodes, heavy prefills and continuous decodes run on the same GPUs, causing:<br />
+1. <strong>Preemption Stalls</strong>: A massive prefill monopolizes Tensor Cores, stalling active decode streams and creating massive P99 TPOT latency spikes.<br />
+2. <strong>Hardware Inefficiency</strong>: Prefill requires massive compute (FLOPs-bound), while decode requires massive memory bandwidth.</p>
+<h4>The Disaggregated Architecture:</h4>
+<ul>
+<li><strong>Prefill Fleet</strong>: Compute-optimized GPUs (e.g. NVIDIA H100 with high TFLOPs) dedicated exclusively to processing prompt tokens.</li>
+<li><strong>KV Transfer Network</strong>: High-speed RDMA / PCIe / NVLink transfers the generated KV cache directly to the Decode Fleet.</li>
+<li><strong>Decode Fleet</strong>: Memory-bandwidth-optimized GPUs (or large clustered pools) dedicated exclusively to autoregressive token generation.</li>
+</ul>
+<pre><code>Incoming Request ──► [ Prefill Node (Compute Heavy) ] 
+                            │ 
+                            ▼ (RDMA KV Cache Transfer: ~100 GB/s)
+                     [ Decode Node (Bandwidth Heavy) ] ──► Token Stream
+</code></pre>
+<hr />
+<h3 id="heading-8">3.2 Chunked Prefill &amp; Iteration-Level Continuous Batching (Sarathi-Serve)</h3>
+<p>To prevent prefill requests from starving decode steps in a unified engine:<br />
+- Chunk long prefills into smaller segments (e.g., <span class="katex-inline">$C = 512$</span> tokens).<br />
+- Interleave chunked prefill GEMMs with ongoing decode steps within the same continuous batch iteration:<br />
+  <div class="katex-display">$$\text{Batch Budget} = \text{Chunked Prefill}(512 \text{ tokens}) + \sum_{i=1}^{B_{\text{decode}}} \text{Decode}(1 \text{ token})$$</div></p>
+<ul>
+<li>Keeps GPU compute utilization near 100% while strictly bounding P99 Inter-Token Latency (ITL).</li>
+</ul>
+<hr />
+<h2 id="heading-9">4. Speculative Decoding Mathematics</h2>
+<h3 id="heading-10">4.1 Target Model Verification &amp; Expected Acceptance Length</h3>
+<p>Let <span class="katex-inline">$M_p$</span> be a small, fast <strong>Draft Model</strong> (e.g. 1B params), and <span class="katex-inline">$M_q$</span> be the large <strong>Target Model</strong> (e.g. 70B params).<br />
+1. Draft model autoregressively generates <span class="katex-inline">$K$</span> draft tokens: <span class="katex-inline">$(\tilde{x}_1, \dots, \tilde{x}_K)$</span>.<br />
+2. Target model evaluates all <span class="katex-inline">$K$</span> tokens in a <strong>single parallel forward pass</strong> (as a prefill).<br />
+3. The acceptance criterion for token <span class="katex-inline">$\tilde{x}_{n}$</span> (Leviathan et al., 2023) is:<br />
+   <div class="katex-display">$$P(\text{Accept } \tilde{x}_n) = \min\left( 1, \; \frac{q(\tilde{x}_n \mid x_{&lt;n})}{p(\tilde{x}_n \mid x_{&lt;n})} \right)$$</div></p>
+<p>If rejected, sample replacement token from the residual distribution:<br />
+   <div class="katex-display">$$P_{\text{res}}(x) = \frac{\max(0, q(x) - p(x))}{1 - \sum_y \min(p(y), q(y))}$$</div>
+</p>
+<h4>Mathematical Proof: Expected Tokens per Step (<span class="katex-inline">$\mathbb{E}[N]$</span>)</h4>
+<p>Let <span class="katex-inline">$\alpha \in [0, 1]$</span> be the average acceptance probability per token:</p>
+<div class="katex-display">$$\mathbb{E}[N] = 1 + \sum_{k=1}^K \alpha^k = 1 + \frac{\alpha(1 - \alpha^K)}{1 - \alpha} = \mathbf{\frac{1 - \alpha^{K+1}}{1 - \alpha}}$$</div>
+
+<ul>
+<li>
+<p>If <span class="katex-inline">$\alpha = 0.8$</span> and <span class="katex-inline">$K = 5$</span>:<br />
+  <div class="katex-display">$$\mathbb{E}[N] = \frac{1 - 0.8^6}{1 - 0.8} = \frac{1 - 0.262}{0.2} = \mathbf{3.69 \text{ tokens/step}}$$</div>
+</p>
+</li>
+<li>
+<p><strong>Theoretical Latency Speedup</strong>:<br />
+  Let <span class="katex-inline">$t_p$</span> be the draft step time, and <span class="katex-inline">$t_q$</span> be the target step time (<span class="katex-inline">$t_p \ll t_q$</span>).<br />
+  <div class="katex-display">$$\text{Speedup} = \frac{\mathbb{E}[N] \cdot t_q}{K \cdot t_p + t_q} = \frac{\frac{1 - \alpha^{K+1}}{1 - \alpha}}{1 + K \frac{t_p}{t_q}}$$</div>
+</p>
+</li>
+</ul>
+<hr />
+<h2 id="heading-11">5. Quantization Mathematics: FP8, INT8, and INT4</h2>
+<pre><code>FP16:  1 Sign | 5 Exponent | 10 Mantissa  (Dynamic Range: 10^-5 to 6.5x10^4)
+FP8 E4M3: 1 Sign | 4 Exponent | 3 Mantissa  (Higher Precision: Best for Weights &amp; Activations)
+FP8 E5M2: 1 Sign | 5 Exponent | 2 Mantissa  (Wider Dynamic Range: Best for Gradients &amp; KV Cache)
+</code></pre>
+<h3 id="heading-12">5.1 Symmetric Block Quantization</h3>
+<p>Given continuous weight vector <span class="katex-inline">$W \in \mathbb{R}^N$</span>:</p>
+<div class="katex-display">$$s = \frac{\max(|W|)}{2^{b-1} - 1} \quad \text{(Quantization Scale Factor)}$$</div>
+<div class="katex-display">$$W_{\text{quant}} = \text{clamp}\left( \left\lfloor \frac{W}{s} \right\rceil, \; -2^{b-1}, \; 2^{b-1} - 1 \right)$$</div>
+<div class="katex-display">$$W_{\text{dequant}} = W_{\text{quant}} \times s$$</div>
+
+<h3 id="heading-13">5.2 SmoothQuant: Outlier Migration (Xiao et al., 2023)</h3>
+<p>In LLMs, activations have extreme systematic outlier channels (<span class="katex-inline">$&gt; 100\times$</span> normal values), making activation quantization difficult.<br />
+SmoothQuant mathematically migrates the quantization difficulty from activations <span class="katex-inline">$X$</span> to weights <span class="katex-inline">$W$</span> by scaling channels with diagonal matrix <span class="katex-inline">$S = \text{diag}(s)$</span>:</p>
+<div class="katex-display">$$Y = X W = (X S^{-1}) (S W) = \hat{X} \hat{W}$$</div>
+<p>Where the per-channel scale <span class="katex-inline">$s_j$</span> is:</p>
+<div class="katex-display">$$s_j = \frac{\max(|X_j|)^\alpha}{\max(|W_j|)^{1 - \alpha}} \quad (\alpha = 0.5 \text{ splits difficulty equally})$$</div>
+
+<hr />
+<h2 id="heading-14">6. PyTorch Simulation: Paged KV-Cache Allocator</h2>
+<pre><code class="language-python">import torch
+from typing import List, Dict
+
+class PagedKVCacheManager:
+    &quot;&quot;&quot;
+    Physical Block Memory Allocator for PagedAttention.
+    &quot;&quot;&quot;
+    def __init__(self, num_blocks: int, block_size: int, num_layers: int, num_heads: int, head_dim: int):
+        self.block_size = block_size
+        self.num_layers = num_layers
+        self.num_heads = num_heads
+        self.head_dim = head_dim
+
+        # Allocate physical memory pool: [Num_Blocks, Num_Layers, 2 (K/V), Block_Size, Num_Heads, Head_Dim]
+        self.gpu_memory_pool = torch.zeros(
+            (num_blocks, num_layers, 2, block_size, num_heads, head_dim),
+            dtype=torch.float16,
+            device=&quot;cuda&quot; if torch.cuda.is_available() else &quot;cpu&quot;
+        )
+
+        # Free list tracking available physical block IDs
+        self.free_blocks = list(range(num_blocks))
+        self.block_tables: Dict[int, List[int]] = {} # Request ID -&gt; [Physical Block IDs]
+
+    def allocate_request(self, request_id: int, prompt_len: int) -&gt; List[int]:
+        num_blocks_needed = (prompt_len + self.block_size - 1) // self.block_size
+        assert len(self.free_blocks) &gt;= num_blocks_needed, &quot;Out of Memory (OOM): No free physical blocks!&quot;
+
+        allocated = [self.free_blocks.pop(0) for _ in range(num_blocks_needed)]
+        self.block_tables[request_id] = allocated
+        return allocated
+
+    def append_token(self, request_id: int, current_len: int) -&gt; int:
+        &quot;&quot;&quot;
+        Allocates a new block if the current sequence length crosses block boundary.
+        &quot;&quot;&quot;
+        if current_len % self.block_size == 0:
+            assert len(self.free_blocks) &gt; 0, &quot;OOM during token decode!&quot;
+            new_block = self.free_blocks.pop(0)
+            self.block_tables[request_id].append(new_block)
+            return new_block
+        return self.block_tables[request_id][-1]
+
+    def free_request(self, request_id: int):
+        if request_id in self.block_tables:
+            self.free_blocks.extend(self.block_tables[request_id])
+            del self.block_tables[request_id]
+
+if __name__ == &quot;__main__&quot;:
+    manager = PagedKVCacheManager(num_blocks=100, block_size=16, num_layers=4, num_heads=8, head_dim=64)
+    req1_blocks = manager.allocate_request(request_id=1, prompt_len=35) # Requires 3 blocks
+    assert len(req1_blocks) == 3
+    print(f&quot;Request 1 assigned physical blocks: {req1_blocks}&quot;)
+
+    # Simulate generating tokens until new page is triggered
+    manager.append_token(request_id=1, current_len=48) # 48 % 16 == 0 -&gt; Allocates 4th block
+    assert len(manager.block_tables[1]) == 4
+    print(f&quot;Request 1 expanded to physical blocks: {manager.block_tables[1]}&quot;)
+
+    manager.free_request(request_id=1)
+    assert len(manager.free_blocks) == 100
+    print(&quot;Paged KV Cache Allocation and Free Lifecycle Verified.&quot;)
+</code></pre>
+<hr />
+<h2 id="heading-15">7. Deep Interview Interrogation Ladder</h2>
+<ul>
+<li><strong>Level 1 (Concept)</strong>: What is the primary hardware difference between the prefill phase and the decode phase in LLM serving?</li>
+<li><strong>Level 3 (Derivation)</strong>: Calculate the exact KV cache memory footprint for a 70B parameter model (<span class="katex-inline">$L=80, N_{kv}=8, d_h=128$</span>) at batch size 64 with 8k context in FP16.</li>
+<li><strong>Level 5 (Mechanics)</strong>: How does PagedAttention eliminate external and internal memory fragmentation?</li>
+<li><strong>Level 7 (Speculative Decoding Proof)</strong>: Prove mathematically why the expected number of tokens accepted per step in Speculative Decoding is <span class="katex-inline">$\frac{1 - \alpha^{K+1}}{1 - \alpha}$</span>.</li>
+<li><strong>Level 9 (Serving Architecture)</strong>: Why does unified serving suffer from P99 latency spikes during long prefills, and how does Disaggregated Prefill/Decode (PD Disaggregation) resolve it?</li>
+<li><strong>Level 10 (Principal Engineering)</strong>: Design an inference cluster architecture serving a high-volume agentic workflow with shared system prompts and dynamic multi-step branching. Detail the cache eviction policy, KV transfer protocol across nodes, and speculative draft validation strategy.</li>
+</ul>
         
         <!-- Navigation Footer -->
         <div class="doc-nav-footer">
-          <div></div>
           
-        <a href="01_MATHEMATICAL_FOUNDATIONS.html" class="doc-nav-btn" style="text-align: right;">
+        <a href="08_GPU_AND_PERFORMANCE.html" class="doc-nav-btn">
+          <span class="label">← Previous</span>
+          <span class="title">08_GPU_AND_PERFORMANCE</span>
+        </a>
+        
+          
+        <a href="07_TRAINING_SYSTEMS.html" class="doc-nav-btn" style="text-align: right;">
           <span class="label">Next →</span>
-          <span class="title">01_MATHEMATICAL_FOUNDATIONS</span>
+          <span class="title">07_TRAINING_SYSTEMS</span>
         </a>
         
         </div>
@@ -864,35 +963,67 @@
         <ul class="toc-list">
           
         <li class="toc-item">
-          <a href="#heading-0" class="toc-link">Role Context &amp; Core Hypothesis</a>
-        </li>
-        
-        <li class="toc-item">
-          <a href="#heading-1" class="toc-link">Role Decomposition</a>
+          <a href="#heading-0" class="toc-link">The Two-Phase Inference Lifecycle &amp; Latency Modeling</a>
         </li>
         
         <li class="toc-item h3">
-          <a href="#heading-2" class="toc-link">Explicit Technical Requirements</a>
+          <a href="#heading-1" class="toc-link">First-Principles Latency &amp; Throughput Formulations</a>
         </li>
         
         <li class="toc-item h3">
-          <a href="#heading-3" class="toc-link">Implicit Technical Requirements</a>
+          <a href="#heading-2" class="toc-link">The KV Cache Memory Equation</a>
+        </li>
+        
+        <li class="toc-item">
+          <a href="#heading-3" class="toc-link">Memory &amp; Scheduling Engines: PagedAttention vs. RadixAttention</a>
         </li>
         
         <li class="toc-item h3">
-          <a href="#heading-4" class="toc-link">Staff/Principal-Level Requirements</a>
+          <a href="#heading-4" class="toc-link">PagedAttention (vLLM Architecture)</a>
+        </li>
+        
+        <li class="toc-item h3">
+          <a href="#heading-5" class="toc-link">RadixAttention (SGLang Architecture)</a>
         </li>
         
         <li class="toc-item">
-          <a href="#heading-5" class="toc-link">Role Competency Model &amp; Priority Matrix</a>
+          <a href="#heading-6" class="toc-link">Advanced Serving Architectures</a>
+        </li>
+        
+        <li class="toc-item h3">
+          <a href="#heading-7" class="toc-link">Disaggregated Prefill and Decode (PD Split / Mooncake / Splitwise)</a>
+        </li>
+        
+        <li class="toc-item h3">
+          <a href="#heading-8" class="toc-link">Chunked Prefill &amp; Iteration-Level Continuous Batching (Sarathi-Serve)</a>
         </li>
         
         <li class="toc-item">
-          <a href="#heading-6" class="toc-link">Internal Dependency Graph</a>
+          <a href="#heading-9" class="toc-link">Speculative Decoding Mathematics</a>
+        </li>
+        
+        <li class="toc-item h3">
+          <a href="#heading-10" class="toc-link">Target Model Verification &amp; Expected Acceptance Length</a>
         </li>
         
         <li class="toc-item">
-          <a href="#heading-7" class="toc-link">Depth Philosophy &amp; Technical Bridge</a>
+          <a href="#heading-11" class="toc-link">Quantization Mathematics: FP8, INT8, and INT4</a>
+        </li>
+        
+        <li class="toc-item h3">
+          <a href="#heading-12" class="toc-link">Symmetric Block Quantization</a>
+        </li>
+        
+        <li class="toc-item h3">
+          <a href="#heading-13" class="toc-link">SmoothQuant: Outlier Migration (Xiao et al., 2023)</a>
+        </li>
+        
+        <li class="toc-item">
+          <a href="#heading-14" class="toc-link">PyTorch Simulation: Paged KV-Cache Allocator</a>
+        </li>
+        
+        <li class="toc-item">
+          <a href="#heading-15" class="toc-link">Deep Interview Interrogation Ladder</a>
         </li>
         
         </ul>
